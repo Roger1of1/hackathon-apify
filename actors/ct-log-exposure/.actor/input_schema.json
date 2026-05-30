@@ -1,0 +1,48 @@
+{
+  "title": "Ex-Ditector CT-Log Exposure Self-Check Input",
+  "description": "Enumerates the hostnames a domain you OWN has published to PUBLIC Certificate Transparency logs (RFC 6962, via crt.sh), and grades the exposure. Prohibited scopes are intentionally absent from the enum; only self/public_figure are accepted because CT subdomain enumeration is a dual-use technique permitted only for a domain you own or a public figure's public domain.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "This CT enumeration is permitted ONLY for your own domain (self) or a genuine public figure's public domain (public_figure). Other compliant scopes (consented/brand/safety_evidence) intentionally cannot run this actor.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (a domain you own)", "Public figure (their public domain)"],
+      "default": "self"
+    },
+    "domain": {
+      "title": "Domain to audit",
+      "type": "string",
+      "description": "The registrable domain you OWN, e.g. \"example.com\". Only PUBLIC Certificate Transparency log data (issued-cert hostnames) is read. A pasted URL, user@domain, or *.domain is tolerated and normalized to the base domain.",
+      "editor": "textfield"
+    },
+    "ct_index_url": {
+      "title": "CT index base URL",
+      "type": "string",
+      "description": "Public Certificate Transparency index endpoint that returns JSON for ?identity=%.<domain>&output=json. Defaults to crt.sh. Must be https://.",
+      "editor": "textfield",
+      "default": "https://crt.sh/"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name or org). Used only for reporting; scanned by the compliance gate for prohibited intent.",
+      "editor": "textfield"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    }
+  },
+  "required": ["scope_type", "domain"]
+}

@@ -673,6 +673,76 @@ a { color: var(--heading); }
 .apify-fields { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
 .apify-fields .input { flex: 1 1 220px; }
 
+/* ============ report provenance banner (SYNTHETIC vs LIVE) ============ */
+.report-provenance {
+  margin: 6px 0 16px; border-radius: var(--radius-sm);
+  padding: 13px 16px; border: 1px solid var(--line);
+}
+.report-provenance.synthetic { background: var(--warn-bg); border-color: #e6d3a0; }
+.report-provenance.live { background: var(--ok-bg); border-color: #b6d6ad; }
+.prov-tag {
+  display: inline-block; font-family: var(--font-mono); font-size: .62rem;
+  letter-spacing: .07em; text-transform: uppercase; font-weight: 700;
+  padding: 3px 10px; border-radius: var(--radius-pill);
+  color: #6a4a00; background: #fff; border: 1px solid #e6d3a0;
+}
+.report-provenance.live .prov-tag { color: var(--ok); border-color: #b6d6ad; }
+.prov-label { margin: 9px 0 0; font-weight: 700; color: var(--ink); font-size: .9rem; }
+.prov-notice { margin: 6px 0 0; color: var(--ink-soft); font-size: .86rem; }
+.prov-src { margin: 7px 0 0; font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+
+/* real findings: count badge tone + an evidence one-liner per finding */
+.fg-count.real { color: #fff; border: none; }
+.fg-count.real.high { background: var(--danger); }
+.fg-count.real.medium { background: var(--warn); }
+.fg-count.real.low { background: var(--ok); }
+.finding-item.real { border-top-color: var(--line-strong); }
+.fi-facts {
+  font-family: var(--font-mono); font-size: .76rem; color: var(--ink-soft);
+  margin: 7px 0 0; word-break: break-all;
+}
+.fi-facts b { color: var(--ink); font-family: var(--font-ui); }
+
+/* evidence table in real mode: let URL column wrap, keep event_type mono */
+.ev-table td.ev-url { white-space: normal; word-break: break-all; }
+.ev-table td.ev-url, .ev-table td.ev-mod { font-family: var(--font-mono); font-size: .78rem; }
+.ev-table td.ev-event { font-family: var(--font-mono); color: var(--heading); white-space: nowrap; }
+
+/* ============ suggested actions checklist ============ */
+.actions-card {
+  margin-top: 16px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px 22px;
+}
+.actions-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.actions-head h3 { margin: 0; font-size: 1.05rem; color: var(--ink); }
+.actions-intro { color: var(--ink-soft); font-size: .92rem; margin: 12px 0 14px; }
+.action-list { list-style: none; margin: 0; padding: 0; counter-reset: act; }
+.action-item {
+  counter-increment: act; position: relative;
+  padding: 13px 0 13px 38px; border-top: 1px solid var(--line);
+}
+.action-item:first-child { border-top: none; }
+.action-item::before {
+  content: counter(act); position: absolute; left: 0; top: 13px;
+  width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: .8rem; font-weight: 700;
+  background: var(--card-tint); color: var(--heading);
+}
+.action-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.action-title { font-weight: 600; color: var(--ink); }
+.action-count {
+  font-family: var(--font-mono); font-size: .68rem; color: var(--ink-soft);
+  background: var(--bg); border: 1px solid var(--line); padding: 2px 9px;
+  border-radius: var(--radius-pill);
+}
+.action-do { font-size: .9rem; color: var(--ink); margin: 7px 0 0;
+  padding-left: 12px; border-left: 2px solid var(--heading); }
+.action-ref { font-family: var(--font-mono); font-size: .72rem; color: var(--muted);
+  margin: 6px 0 0; word-break: break-all; }
+.action-empty { color: var(--muted); font-size: .9rem; padding: 8px 0; }
+.actions-foot { font-size: .82rem; color: var(--muted); margin: 14px 0 0; }
+.actions-foot a { color: var(--heading); font-weight: 600; }
+
 /* ============ footer ============ */
 .footer {
   max-width: var(--maxw); margin: 0 auto; padding: 40px 20px 56px;

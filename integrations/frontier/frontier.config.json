@@ -1,0 +1,47 @@
+{
+  "_comment": "TEMPLATE / SOURCE-OF-TRUTH for the APIFY REQUEST QUEUE ('frontier') layer — the deduplicated, lockable, resumable URL frontier the self-audit crawl pulls from. This is the ONE managed-storage primitive the rest of the integrations did not yet wire (ingest/standby/webhooks/schedules/exports/proxy/notify/mcp are already covered). It holds NO credentials; queueId/actorIds are PLACEHOLDERS and deployed:false. The live queueId + APIFY_TOKEN are supplied by the operator at the LAST deploy step. Nothing here performs a network call or enqueues a real request. See docs/apify/frontier.md.",
+
+  "queue": {
+    "named": true,
+    "name_template": "<PLACEHOLDER:exditector-selfaudit-{subject_token}>",
+    "queueId": "<PLACEHOLDER:REQUEST_QUEUE_ID>",
+    "_note": "A NAMED request queue (named queues persist; unnamed default queues are wiped between runs). One queue per audited subject keeps each subject's frontier isolated — no cross-subject bleed. The name carries a non-reversible subject_token, never a raw label/url (Closure-Mode / minimum-disclosure).",
+    "store_path": "/v2/request-queues/{queueId}"
+  },
+
+  "_dedup_doctrine": "uniqueKey is the deduplication key Apify enforces server-side: a second addRequest with a uniqueKey already in the queue returns the EXISTING request and adds nothing (wasAlreadyPresent:true). We make uniqueKey the canonicalized URL so the SAME public surface is fetched AT MOST ONCE per audit. Dedup is not a perf trick here, it is COMPLIANCE: minimum-disclosure / anti-dragnet — never re-pull a page we already hold.",
+
+  "scopes_allowed_to_enqueue": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+  "_scope_note": "Enqueue is the SAME chokepoint as ingest: every URL is routed through shared/scope.js validateScope() (read-only require) before it may enter the frontier, and any URL whose host is in PRIVATE_SOCIAL_HOSTS is REFUSED entry. A queue can never widen scope; it inherits the gate's verdict.",
+
+  "caps": {
+    "max_queue_size": 200,
+    "max_enqueue_batch": 25,
+    "max_url_length": 2048,
+    "_note": "Hard ceilings. max_enqueue_batch=25 mirrors the Apify batch-add API limit (POST /v2/request-queues/{queueId}/requests/batch accepts at most 25 requests per call). max_queue_size is the anti-dragnet floor: once the frontier holds this many distinct surfaces, further enqueues are REFUSED (clamped to zero), never grown. A self-audit reads a bounded own-surface, it does not crawl the open web."
+  },
+
+  "lock": {
+    "default_lock_secs": 60,
+    "max_lock_secs": 300,
+    "_note": "head-and-lock (GET /v2/request-queues/{queueId}/head/lock?lockSecs=) hands the head request to ONE client exclusively for lockSecs, so two parallel crawl clients never fetch the same surface at once. This is politeness, not evasion: it SLOWS concurrent pressure on a target host. lockSecs is clamped DOWN to max_lock_secs, never up."
+  },
+
+  "request_defaults": {
+    "method": "GET",
+    "_userData": {
+      "respectRobotsTxtFile": true,
+      "scope_reasserted": true
+    },
+    "_note": "userData rides with each request through the queue. respectRobotsTxtFile is forced true and CANNOT be turned off by the caller (anti-evasion floor, same as ingest.config forced_overrides). scope_reasserted records that validateScope() passed at enqueue time so a downstream consumer can re-check fail-closed."
+  },
+
+  "forced_overrides": {
+    "respectRobotsTxtFile": true,
+    "_why": "Robots compliance is not negotiable. Even if a caller passes respectRobotsTxtFile:false in userData, the builder overwrites it to true before the request may be enqueued. Mirrors integrations/ingest/ingest.config.json and the proxy policy."
+  },
+
+  "blocked_host_note": "Host-level blocking (login-walled private social) is NOT re-implemented here — it lives in shared/scope.js (PRIVATE_SOCIAL_HOSTS) and is enforced by reading validateScope() before any request is built. Two doors: validateScope AND this frontier policy.",
+
+  "deployed": false
+}

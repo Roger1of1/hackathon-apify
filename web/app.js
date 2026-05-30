@@ -416,6 +416,27 @@
     }
   ];
 
+  // The latest REAL produced report (synthetic-fixture or live pipeline output),
+  // or null when none has loaded. When set, the report view renders its REAL
+  // detector findings; when null, the view shows the honest template catalog.
+  let LOADED_REPORT = null;
+
+  // Flatten FINDING_GROUPS into an event_type -> metadata lookup, so a real
+  // finding's event_type resolves to its category + "why it matters" + remediation
+  // copy. This keeps ONE vocabulary shared by the template catalog and real report.
+  const EVENT_META = (function buildEventMeta() {
+    const m = {};
+    FINDING_GROUPS.forEach(function (g) {
+      g.items.forEach(function (it) {
+        m[it.event] = {
+          groupId: g.id, groupTitle: g.title, groupIcon: g.icon, module: g.module,
+          name: it.name, why: it.why, fix: it.fix, sev: it.sev, vis: it.vis
+        };
+      });
+    });
+    return m;
+  })();
+
   // Per-finding evidence-quality note (mirrors shared/enrich/evidence-quality.js +
   // k-anonymity.js framing): template checks have no real evidence yet.
   const SEV_LABEL = { high: "高", medium: "中", low: "低", info: "提示" };
@@ -722,6 +743,86 @@
     return wrap;
   }
 
+  /* ---- REAL finding -> STIX Observed Data --------------------------------
+   * When a produced report is loaded, build the STIX 2.1 Observed Data object
+   * from the finding's ACTUAL values (event_type, source_url, risk, visibility,
+   * confidence, source_module). Fields a synthetic fixture genuinely lacks
+   * (timestamps, content hash) are rendered as the report's own placeholder so
+   * provenance stays honest — we never invent a hash or a capture time. */
+  function observedDataReal(f, report) {
+    const ev = String(f.event_type || "");
+    const category = OBSERVABLE_CATEGORY[ev] || "observed-data";
+    const synthetic = report && /SYNTHETIC|TEMPLATE/i.test(String(report.__label || ""));
+    const ph = synthetic ? "<SYNTHETIC fixture — no real capture timestamp/hash>" : null;
+    const id = stixId("observed-data", ev, f.source_url || "", String(f.confidence));
+    return {
+      type: "observed-data",
+      spec_version: "2.1",
+      id: id,
+      created: report && report.generated_at ? report.generated_at : ph,
+      modified: report && report.generated_at ? report.generated_at : ph,
+      first_observed: ph,
+      last_observed: ph,
+      number_observed: 1,
+      x_source_module: f.source_module || EVENT_SOURCE_MODULE[ev] || "sfp_detector",
+      x_event_type: ev,
+      x_scope_note: "Public observation of the SELF subject footprint. No third-party-private inference.",
+      x_confidence: f.confidence != null ? f.confidence : ph,
+      x_visibility: f.visibility || null,
+      x_risk: f.risk || null,
+      x_severity_band: f.severity_band || null,
+      x_source_url: f.source_url != null ? f.source_url : ph,
+      x_integrity: { content_sha256: ph, html_sha256: ph, html_key: ph, screenshot_key: ph },
+      objects: { 0: { type: category, x_value: ph, x_meta: {} } }
+    };
+  }
+
+  // Per-real-finding portable evidence block (collapsible, mirrors the template
+  // one but populated from the loaded report's actual finding values).
+  function stixEvidenceBlockReal(f, report) {
+    const ev = String(f.event_type || "");
+    const od = observedDataReal(f, report);
+    const cat = OBSERVABLE_CATEGORY[ev] || "observed-data";
+    const wrap = el("details", "stix-ev");
+    const summary = el("summary", "stix-summary");
+    summary.appendChild(el("span", "stix-summary-label",
+      "可移植证据 · STIX 2.1 Observed Data（OpenCTI / MISP 互通）"));
+    summary.appendChild(el("span", "stix-cat-chip", esc(cat)));
+    wrap.appendChild(summary);
+
+    const note = el("p", "stix-note");
+    note.innerHTML =
+      "本对象由<b>真实检测器发现</b>填充（event_type / source_url / confidence / risk / source_module 来自加载的报告）。" +
+      "时间戳与内容哈希等字段在合成 fixture 上以占位串呈现——指向真实经闸门的抓取即会写入真实哈希，绝不编造。";
+    wrap.appendChild(note);
+
+    const pre = el("pre", "stix-json");
+    pre.appendChild(el("code", null, esc(JSON.stringify(od, null, 2))));
+    wrap.appendChild(pre);
+
+    const actions = el("div", "stix-actions");
+    const copyBtn = el("button", "btn btn-primary btn-tiny", "复制 STIX JSON");
+    copyBtn.type = "button";
+    copyBtn.addEventListener("click", function () {
+      const text = JSON.stringify(od, null, 2);
+      const done = function () { copyBtn.textContent = "已复制 ✓"; setTimeout(function () { copyBtn.textContent = "复制 STIX JSON"; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+      } else { fallbackCopy(text); done(); }
+    });
+    actions.appendChild(copyBtn);
+    actions.appendChild(el("span", "stix-template-flag",
+      (report && /SYNTHETIC|TEMPLATE/i.test(String(report.__label || ""))) ? "合成 fixture · 真实检测器产出" : "真实流水线产出"));
+    wrap.appendChild(actions);
+
+    const ref = el("p", "stix-ref");
+    ref.innerHTML =
+      "代码：<b>shared/enrich/stix-evidence.js</b>（toObservedData，与此处同字段）。" +
+      "引用：OASIS STIX 2.1 Observed Data SDO；OpenCTI / MISP STIX 2.1 互通映射。";
+    wrap.appendChild(ref);
+    return wrap;
+  }
+
   // Clipboard fallback for older/file:// browsers without async clipboard.
   function fallbackCopy(text) {
     try {
@@ -938,7 +1039,151 @@
       "真实运行经闸门、scope=self 后，命中的条目才会带 URL+时间戳+哈希填入下方各类别。"));
   }
 
+  // Pull the REAL findings array out of a produced report (the detector output).
+  function reportFindings(report) {
+    if (!report || typeof report !== "object") return [];
+    const f = report.findings;
+    return Array.isArray(f) ? f.filter(x => x && x.event_type) : [];
+  }
+  function isSynthetic(report) {
+    return !!(report && /SYNTHETIC|TEMPLATE/i.test(String(report.__label || "")));
+  }
+  const RISK_RANK = { high: 3, medium: 2, low: 1, info: 0 };
+
+  // Render the unmistakable provenance banner above the report data whenever a
+  // report is loaded: shows the report's own __label/__notice so a reader can
+  // see at a glance whether the data is a SYNTHETIC fixture or live output.
+  function renderProvenance(report) {
+    const wrap = document.getElementById("reportProvenance");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    if (!report) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    wrap.className = "report-provenance " + (isSynthetic(report) ? "synthetic" : "live");
+    const tag = el("span", "prov-tag", isSynthetic(report) ? "合成 fixture · 真实检测器→评分流水线" : "真实流水线产出");
+    wrap.appendChild(tag);
+    if (report.__label) wrap.appendChild(el("p", "prov-label", esc(report.__label)));
+    if (report.__notice) wrap.appendChild(el("p", "prov-notice", esc(report.__notice)));
+    const src = [];
+    if (report.generated_at) src.push("生成时间 " + report.generated_at);
+    if (report.provenance && report.provenance.fixture) src.push("fixture " + report.provenance.fixture);
+    if (src.length) wrap.appendChild(el("p", "prov-src", esc(src.join(" · "))));
+  }
+
+  // Dispatcher: real report findings if one is loaded, else the template catalog.
   function renderFindings() {
+    if (reportFindings(LOADED_REPORT).length) { renderRealFindings(LOADED_REPORT); return; }
+    renderTemplateCatalog();
+  }
+
+  // Group the report's REAL findings under the SAME category structure used by
+  // the template catalog, so the vocabulary is identical. Each group shows its
+  // real instance count + worst risk; each finding shows its real source URL,
+  // confidence, risk and visibility, plus a real-valued STIX evidence block.
+  function renderRealFindings(report) {
+    const wrap = document.getElementById("findingsGroups");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    const findings = reportFindings(report);
+
+    // bucket findings by their category (groupId via EVENT_META)
+    const byGroup = {};
+    findings.forEach(f => {
+      const meta = EVENT_META[f.event_type];
+      const gid = meta ? meta.groupId : "other";
+      (byGroup[gid] = byGroup[gid] || []).push(f);
+    });
+
+    // preserve FINDING_GROUPS order; only render groups that actually have hits
+    FINDING_GROUPS.forEach(g => {
+      const list = byGroup[g.id];
+      if (!list || !list.length) return;
+      // worst risk in this group, for the count badge tone
+      list.sort((a, b) => (RISK_RANK[b.risk] || 0) - (RISK_RANK[a.risk] || 0));
+      const worst = list[0].risk || "low";
+
+      const card = el("div", "finding-group");
+      const head = el("div", "fg-head");
+      head.appendChild(el("span", "fg-icon", esc(g.icon)));
+      const titleWrap = el("div");
+      titleWrap.appendChild(el("div", "fg-title", esc(g.title)));
+      titleWrap.appendChild(el("div", "fg-module", esc(g.module)));
+      head.appendChild(titleWrap);
+      head.appendChild(el("span", "fg-count real " + worst, list.length + " 条发现"));
+      card.appendChild(head);
+
+      const body = el("div", "fg-body");
+      body.appendChild(el("p", "fg-desc", esc(g.desc)));
+
+      list.forEach(f => {
+        const meta = EVENT_META[f.event_type] || {};
+        const item = el("div", "finding-item real");
+        const row = el("div", "fi-row");
+        row.appendChild(el("span", "fi-name", esc(meta.name || f.event_type)));
+        const risk = f.risk || meta.sev || "low";
+        row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + "暴露")));
+        const vis = f.visibility || meta.vis;
+        if (vis) row.appendChild(el("span", "vis-badge", esc(VIS_LABEL[vis] || vis)));
+        row.appendChild(el("span", "event-chip", esc(f.event_type)));
+        item.appendChild(row);
+
+        // real evidence one-liner: source URL + confidence + source module
+        const facts = el("p", "fi-facts");
+        const conf = (f.confidence != null) ? "置信度 " + f.confidence : "";
+        const urlTxt = f.source_url ? f.source_url : "（无公开 URL — 如 k-匿名泄露比对）";
+        facts.innerHTML =
+          "<b>来源：</b>" + esc(urlTxt) +
+          (conf ? " · " + esc(conf) : "") +
+          (f.source_module ? " · " + esc(f.source_module) : "");
+        item.appendChild(facts);
+
+        if (meta.why) {
+          const why = el("p", "fi-why");
+          why.innerHTML = "<b>为什么重要：</b>" + esc(meta.why);
+          item.appendChild(why);
+        }
+        if (meta.fix) item.appendChild(el("p", "fi-fix", "建议处置：" + esc(meta.fix)));
+
+        item.appendChild(stixEvidenceBlockReal(f, report));
+        body.appendChild(item);
+      });
+
+      card.appendChild(body);
+      wrap.appendChild(card);
+    });
+
+    // any findings whose event_type isn't in the catalog (defensive, no fabrication)
+    const known = new Set(Object.keys(EVENT_META));
+    const orphans = findings.filter(f => !known.has(f.event_type));
+    if (orphans.length) {
+      const card = el("div", "finding-group");
+      const head = el("div", "fg-head");
+      head.appendChild(el("span", "fg-icon", "◌"));
+      const tw = el("div");
+      tw.appendChild(el("div", "fg-title", "其他检测器发现"));
+      tw.appendChild(el("div", "fg-module", "未在前端目录中的 event_type"));
+      head.appendChild(tw);
+      head.appendChild(el("span", "fg-count real low", orphans.length + " 条发现"));
+      card.appendChild(head);
+      const body = el("div", "fg-body");
+      orphans.forEach(f => {
+        const item = el("div", "finding-item real");
+        const row = el("div", "fi-row");
+        row.appendChild(el("span", "fi-name", esc(f.event_type)));
+        const risk = f.risk || "low";
+        row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + "暴露")));
+        item.appendChild(row);
+        if (f.source_url) item.appendChild(el("p", "fi-facts", "来源：" + esc(f.source_url)));
+        item.appendChild(stixEvidenceBlockReal(f, report));
+        body.appendChild(item);
+      });
+      card.appendChild(body);
+      wrap.appendChild(card);
+    }
+  }
+
+  // The honest TEMPLATE catalog (no report loaded): "what we look for".
+  function renderTemplateCatalog() {
     const wrap = document.getElementById("findingsGroups");
     if (!wrap) return;
     wrap.innerHTML = "";
@@ -1196,16 +1441,123 @@
     renderList("pipeItemList", PIPE_ITEM);
   }
 
+  // Evidence index. With a loaded report: one row per REAL finding (Blacklight's
+  // plain evidence table — event, source URL, confidence, visibility, module).
+  // With no report: the evidence-index SCHEMA (which fields a real capture fills).
   function renderEvidenceTable() {
-    const r = PLAN.report;
     const tbody = document.querySelector("#evTable tbody");
+    const headRow = document.getElementById("evHeadRow");
+    const head = document.getElementById("evHead");
+    const intro = document.getElementById("evIntro");
     if (!tbody) return;
-    r.evidenceIndexFields.forEach(f => {
+    tbody.innerHTML = "";
+
+    const findings = reportFindings(LOADED_REPORT);
+    if (findings.length) {
+      if (head) head.textContent = "证据索引 · 真实检测器发现（每行一条）";
+      if (intro) intro.innerHTML = isSynthetic(LOADED_REPORT)
+        ? "下表每行是<b>真实检测器</b>在合成 fixture 上产出的一条发现（非编造）。展开上方各条的「可移植证据」可得 STIX JSON。"
+        : "下表每行是真实流水线产出的一条发现。";
+      if (headRow) headRow.innerHTML =
+        "<tr><th>event_type</th><th>来源 URL</th><th>置信度</th><th>可见性</th><th>风险</th><th>来源模块</th></tr>";
+      findings
+        .slice()
+        .sort((a, b) => (RISK_RANK[b.risk] || 0) - (RISK_RANK[a.risk] || 0))
+        .forEach(f => {
+          const tr = el("tr");
+          tr.appendChild(el("td", "ev-event", esc(f.event_type)));
+          const url = f.source_url ? f.source_url : "—";
+          const urlTd = el("td", "ev-url");
+          if (f.source_url) {
+            const a = el("a", "optout-link", esc(f.source_url));
+            a.href = f.source_url; a.target = "_blank"; a.rel = "noopener noreferrer";
+            urlTd.appendChild(a);
+          } else { urlTd.textContent = url; }
+          tr.appendChild(urlTd);
+          tr.appendChild(el("td", null, f.confidence != null ? esc(String(f.confidence)) : "—"));
+          const vis = f.visibility;
+          tr.appendChild(el("td", null, esc(vis ? (VIS_LABEL[vis] || vis) : "—")));
+          const risk = f.risk || "low";
+          const riskTd = el("td", null, null);
+          riskTd.appendChild(el("span", "sev-badge " + risk, esc(SEV_LABEL[risk] || risk)));
+          tr.appendChild(riskTd);
+          tr.appendChild(el("td", "ev-mod", esc(f.source_module || "—")));
+          tbody.appendChild(tr);
+        });
+      return;
+    }
+
+    // no report: honest evidence-index SCHEMA
+    if (head) head.textContent = "每条证据的字段 · evidence index";
+    if (intro) intro.textContent = "真实运行时，每个发现都会保全为可引用的一行：";
+    if (headRow) headRow.innerHTML = "<tr><th>字段</th><th>说明</th></tr>";
+    (PLAN.report.evidenceIndexFields || []).forEach(f => {
       const tr = el("tr");
       tr.appendChild(el("td", null, esc(f.field)));
       tr.appendChild(el("td", null, esc(f.desc)));
       tbody.appendChild(tr);
     });
+  }
+
+  /* SUGGESTED ACTIONS — the report's "now what do I do" checklist, derived from
+   * the loaded report's REAL findings. We collapse findings to ONE action per
+   * distinct exposure type, order by worst risk then instance count (Blacklight
+   * closes with "what you can do"; GOV.UK ordered task list). With no report we
+   * show an honest empty state — we never invent tasks for an unscanned subject. */
+  function renderSuggestedActions() {
+    const list = document.getElementById("actionList");
+    const intro = document.getElementById("actionsIntro");
+    const foot = document.getElementById("actionsFoot");
+    if (!list) return;
+    list.innerHTML = "";
+
+    const findings = reportFindings(LOADED_REPORT);
+    if (!findings.length) {
+      if (intro) intro.textContent =
+        "尚未加载报告 · 暂无处置清单。运行一次真实自审后，这里会按「最高暴露优先」列出每类可执行的下一步。";
+      if (foot) foot.innerHTML =
+        "处置文案与上方各发现的「建议处置」同源（FINDING_GROUPS.fix）。绝不为未扫描对象编造任务。";
+      const li = el("li", "action-empty", "（无发现 → 无建议动作。这是诚实的空状态，不编造任务。）");
+      list.appendChild(li);
+      return;
+    }
+
+    // collapse to one action per event_type, tracking instance count + worst risk
+    const byEvent = {};
+    findings.forEach(f => {
+      const k = f.event_type;
+      const rec = byEvent[k] || (byEvent[k] = { event: k, count: 0, worst: "low", sample: f.source_url || null });
+      rec.count += 1;
+      if ((RISK_RANK[f.risk] || 0) > (RISK_RANK[rec.worst] || 0)) rec.worst = f.risk || rec.worst;
+      if (!rec.sample && f.source_url) rec.sample = f.source_url;
+    });
+    const actions = Object.keys(byEvent).map(k => byEvent[k]);
+    actions.sort((a, b) =>
+      (RISK_RANK[b.worst] || 0) - (RISK_RANK[a.worst] || 0) || b.count - a.count);
+
+    if (intro) intro.innerHTML = isSynthetic(LOADED_REPORT)
+      ? "按<b>最高暴露优先</b>排序，逐条处置（来自真实检测器在合成 fixture 上的发现）："
+      : "按<b>最高暴露优先</b>排序，逐条处置：";
+
+    actions.forEach(a => {
+      const meta = EVENT_META[a.event] || {};
+      const li = el("li", "action-item");
+      const head = el("div", "action-head");
+      head.appendChild(el("span", "sev-badge " + a.worst, esc((SEV_LABEL[a.worst] || a.worst) + "暴露")));
+      head.appendChild(el("span", "action-title", esc(meta.name || a.event)));
+      head.appendChild(el("span", "action-count", a.count + " 处"));
+      li.appendChild(head);
+      li.appendChild(el("p", "action-do", esc(meta.fix || "审查该公开痕迹并评估是否下线/收敛。")));
+      if (a.sample) {
+        const ref = el("p", "action-ref");
+        ref.innerHTML = "示例来源：" + esc(a.sample);
+        li.appendChild(ref);
+      }
+      list.appendChild(li);
+    });
+
+    if (foot) foot.innerHTML =
+      "处置文案与上方各发现的「建议处置」同源。下方<a href=\"#optoutCard\">数据中介下架</a>是其中最常见的一类具体动作。";
   }
 
   /* =========================================================================
@@ -1426,8 +1778,14 @@
    * exists yet, we stay in the honest "no grade" state — we never invent one. */
   function applyReport(report) {
     if (!report || typeof report !== "object") return;
+    LOADED_REPORT = report;
     const vm = gradeFromReport(report);
     if (vm) renderExposureGrade(vm);
+    // re-drive the whole report view from the REAL produced report
+    renderProvenance(report);
+    renderFindings();
+    renderEvidenceTable();
+    renderSuggestedActions();
   }
   function loadExampleReport() {
     if (window.__EX_REPORT__) { applyReport(window.__EX_REPORT__); return; }
@@ -1452,11 +1810,13 @@
     renderScopeSelect();
     renderPresets();
     renderExposureGrade(null);   // honest "no grade yet" until a real report loads
-    loadExampleReport();         // async; fills the grade if a produced report exists
+    renderProvenance(null);      // hidden until a report loads
     renderCoverage();
-    renderFindings();
+    renderFindings();            // template catalog until a real report loads
     renderClusterCard();
-    renderEvidenceTable();
+    renderEvidenceTable();       // evidence-index schema until a real report loads
+    renderSuggestedActions();    // honest empty until a real report loads
+    loadExampleReport();         // async; re-drives grade+findings+evidence+actions if a report exists
     renderOptout();
     renderClosure();
     renderArch();

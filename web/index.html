@@ -93,7 +93,7 @@
       <div class="section-head">
         <span class="step-tag">第 2 步</span>
         <h2>自我足迹报告 · 我们会检查什么</h2>
-        <p class="lead">闸门放行 <code>self</code> 或 <code>public_figure</code> 后，报告按类别列出第三方能轻易发现关于你的东西——借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审。下面展示的是<strong>检查项结构（模板）</strong>，每条都说明「为什么重要」，真实运行才会填入带 URL + 时间戳 + 哈希的条目。</p>
+        <p class="lead">报告按类别列出第三方能轻易发现关于你的东西——借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审。<strong>未加载报告时</strong>这里是<strong>检查项目录（模板）</strong>，说明每类「会查什么 / 为什么重要」；<strong>加载真实产出报告后</strong>，同样的类别会被它的<strong>真实检测器发现</strong>驱动（带来源 URL、置信度、可移植 STIX 证据）。每条数据都标注它来自合成 fixture 还是真实流水线产出，绝不编造。</p>
       </div>
 
       <!-- ===== PLAIN HERO GRADE (Mozilla Observatory / SecurityHeaders A–F) =====
@@ -115,7 +115,13 @@
            real check catalog below — this is the audit SCHEMA, not findings. -->
       <div class="coverage" id="coverageSummary" aria-label="自审覆盖范围概览"></div>
 
-      <!-- grouped finding categories — fed by shared/detectors EVENT_TYPES -->
+      <!-- provenance banner for any loaded report: makes "SYNTHETIC fixture /
+           REAL pipeline output, no fabrication" unmistakable next to the data. -->
+      <div class="report-provenance" id="reportProvenance" hidden></div>
+
+      <!-- grouped finding categories. With NO report loaded these are the
+           template CHECK CATALOG (what we look for). When a real produced report
+           loads, the SAME groups are driven by its REAL detector findings. -->
       <div class="findings" id="findingsGroups"></div>
 
       <!-- correlation / cluster view (SpiderFoot correlation engine) -->
@@ -160,12 +166,27 @@
 
       <!-- evidence index schema -->
       <div class="ev-card">
-        <h3>每条证据的字段 · evidence index</h3>
-        <p class="muted">真实运行时，每个发现都会保全为可引用的一行：</p>
+        <h3 id="evHead">每条证据的字段 · evidence index</h3>
+        <p class="muted" id="evIntro">真实运行时，每个发现都会保全为可引用的一行：</p>
         <table class="ev-table" id="evTable">
-          <thead><tr><th>字段</th><th>说明</th></tr></thead>
+          <thead id="evHeadRow"><tr><th>字段</th><th>说明</th></tr></thead>
           <tbody></tbody>
         </table>
+      </div>
+
+      <!-- SUGGESTED ACTIONS — the plain "now what do I do" checklist, derived
+           from the loaded report's REAL findings (one prioritised remediation per
+           distinct exposure, highest exposure first). Blacklight ends its report
+           with "what you can do"; GOV.UK pattern: a clear, ordered task list. With
+           no report loaded this shows an honest empty state, never invented tasks. -->
+      <div class="actions-card" id="actionsCard">
+        <div class="actions-head">
+          <span class="optout-step">下一步处置</span>
+          <h3>建议处置清单 · Suggested actions</h3>
+        </div>
+        <p class="actions-intro" id="actionsIntro"></p>
+        <ol class="action-list" id="actionList"></ol>
+        <p class="actions-foot" id="actionsFoot"></p>
       </div>
 
       <!-- DATA-BROKER OPT-OUT — the concrete "now what do I do" action. Plain,

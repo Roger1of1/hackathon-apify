@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-ct-log-exposure",
+  "title": "Ex-Ditector AUX — Certificate-Transparency Exposure Self-Check (CT logs / crt.sh)",
+  "description": "Auxiliary actor. Enumerates the hostnames a domain the SELF subject OWNS (or a genuine public_figure's public domain) has published to the PUBLIC Certificate Transparency logs (RFC 6962), read via the public crt.sh JSON index. It surfaces forgotten staging/dev/admin/vpn/internal hostnames and wildcard certs, flags sensitive labels with a cited OWASP-style reason, grades the exposure surface A-F, and emits typed module-events (record_type/event_type/source_module/domain/confidence/data) carrying a `domain` co-occurrence key for the SpiderFoot-style correlation engine. Scope-gated to self/public_figure ONLY via shared/scope.js (subdomain enumeration is a dual-use technique); the prohibited scopes are absent from the input enum. NO fake data: an empty CT response is reported as not_found and graded honestly; out-of-scope names returned by the index are dropped, never invented. No login walls, no captcha bypass, no private social graphs, no person-tracking, no romance/gender/intimacy inference; rate limits are honored (back off on 429).",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "./Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "CT-log exposure module-events",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 1024
+}

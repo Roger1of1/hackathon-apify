@@ -317,6 +317,44 @@
       },
       "docs": "docs/apify/notify.md",
       "deployed": false
+    },
+    "frontier": {
+      "path": "integrations/frontier",
+      "capability": "Apify Request Queue — the deduplicated, lockable, resumable self-audit URL 'frontier' (managed storage)",
+      "summary": "Wires the Apify Request Queue: the platform's server-side, deduplicated, lockable, resumable URL frontier the compliant self-audit crawl pulls from. This is the ONE managed-storage primitive the other integrations had not yet wired (ingest/standby/webhooks/schedules/exports/proxy/optout/mcp/grade/notify already covered). Here a queue is a RED-LINE ENFORCER, not a perf trick: (1) uniqueKey dedup => minimum-disclosure — uniqueKey is the canonicalized URL (lowercased scheme+host, default ports + trailing slash stripped, query sorted, fragment dropped), so the SAME public surface is fetched at most once per audit and we never re-pull a page we already hold; (2) max_queue_size => anti-dragnet — the frontier is BOUNDED, once full further enqueues are REFUSED (clamped to zero), never grown; (3) scope re-asserted at enqueue => the SAME chokepoint as ingest — every URL routes through shared/scope.js validateScope() (read-only require) before it may enter, and any PRIVATE_SOCIAL_HOSTS host is refused entry (a second door behind the gate); (4) lockSecs head-and-lock => politeness not evasion — one client owns the head for lockSecs so two crawl clients never hit the same surface at once (clamped DOWN, never up); (5) respectRobotsTxtFile FORCED true in every request's userData even if the caller turns it off (anti-evasion floor, same as ingest.config + proxy). PURE planner + dry-run client: with no APIFY_TOKEN it returns the exact Request Queue API descriptors (create-named-queue, batch-add <=25/call, head-and-lock) it WOULD send with usedNetwork:false, fabricating NO queue state and NO wasAlreadyPresent dedup flag (those only exist after a real call). A refused subject yields zero requests and descriptors:null (fail-closed). NO network, deployed:false.",
+      "entrypoints": {
+        "policy": "integrations/frontier/frontier-policy.js",
+        "client": "integrations/frontier/frontier-client.js",
+        "tests": "integrations/frontier/frontier_selftest.js"
+      },
+      "config": {
+        "frontier": "integrations/frontier/frontier.config.json"
+      },
+      "reuses": {
+        "scope_gate": "shared/scope.js (validateScope + PRIVATE_SOCIAL_HOSTS + hostOf, read-only — front door of every enqueue)"
+      },
+      "env": {
+        "APIFY_TOKEN": "write token for POST /v2/request-queues + /requests/batch + /head/lock. Without it the client DRY-RUNS and returns the exact request descriptors it would send (never live, never fabricated dedup flags)."
+      },
+      "compliance_levers": {
+        "dedup": "uniqueKey = canonical URL => minimum-disclosure (each surface at most once)",
+        "anti_dragnet": "max_queue_size cap (200); full frontier refuses new enqueue",
+        "scope_at_enqueue": "validateScope() re-asserted; private-social hosts refused entry",
+        "politeness": "head-and-lock lockSecs (clamped down); not retry-and-rotate evasion",
+        "robots_floor": "respectRobotsTxtFile forced true in userData (cannot be disabled by caller)"
+      },
+      "platform_constraints": {
+        "batch_add_limit": "<=25 requests per POST /v2/request-queues/{id}/requests/batch call",
+        "dedup": "server-side on uniqueKey; response.processedRequests[].wasAlreadyPresent is the truth",
+        "named_queue": "named queues persist across runs; unnamed default queue is wiped per run",
+        "head_lock": "POST /v2/request-queues/{id}/head/lock?lockSecs= grants the head to one client"
+      },
+      "reference_architectures": {
+        "apify_request_queue": "borrows the {url,uniqueKey,method,userData} request shape, server-side uniqueKey dedup, <=25/call batch-add, and head-and-lock lockSecs verbatim (https://docs.apify.com/platform/storage/request-queue, https://docs.apify.com/api/v2/request-queue-requests-batch-post, https://docs.apify.com/api/client/js/reference/class/RequestQueueClient)",
+        "crawlee_scrapy_frontier": "deduped/resumable frontier at the centre of a polite crawl — canonical request fingerprint (Scrapy request_fingerprint / Crawlee uniqueKey) schedules each URL once, bounded scheduler + per-domain throttle (Crawlee maxRequestsPerCrawl, Scrapy DEPTH_LIMIT/AUTOTHROTTLE); we add the scope gate at the queue mouth so it is provably own-surface only (https://crawlee.dev/js/api/core/class/RequestQueue, https://docs.scrapy.org/en/latest/topics/settings.html)"
+      },
+      "docs": "docs/apify/frontier.md",
+      "deployed": false
     }
   },
   "ci": {
