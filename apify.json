@@ -276,6 +276,47 @@
       "no_fake_data": "empty-in => grade:null (no data, no grade)",
       "docs": "docs/apify/grade.md",
       "deployed": false
+    },
+    "notify": {
+      "path": "integrations/notify",
+      "capability": "Apify native Integrations (Slack / Make / n8n / Zapier / generic webhook) as a COMPLIANT, Closure-Mode notification dispatch — the audit-result last mile",
+      "summary": "Apify can fan a run event (ACTOR.RUN.SUCCEEDED/FAILED/TIMED_OUT/ABORTED) out to Slack/Make/n8n/Zapier/generic-webhook with a Handlebars template over the run document — the last mile of how a result leaves the platform. For a normal scraper you'd template a clickable Console/dataset link; for THIS product that is harmful two ways (LEAK: the run doc + dataset carry raw url/storage-key/subject_label; COMPULSION: a real-time 'new change, click here' ping is the slot-machine loop Closure Mode exists to break). decideNotification() is the chokepoint that turns a raw run event into a SAFE, PACED, LINKLESS payload, REUSING (never reimplementing) three existing modules: (1) integrations/exports/redaction-policy.js — every change row is redacted by TLP marking; external channels default to TLP:GREEN and TLP:RED to an external sink is REFUSED, so url/html_key/screenshot_key/subject_label physically cannot leave (only prove-it-changed hashes/flags/timestamps do); (2) integrations/webhooks/output-health.js — success != valid output: an EMPTY/MALFORMED/FAILED/COMPLIANCE-STOP run yields not_ready/compliance_stop and dispatch:false, NEVER a fake 'your audit is ready' (NO-FAKE-DATA); (3) integrations/schedules/cadence-policy.js — the minimum gap between notifications IS the distress-aware anti-compulsion floor (no high-frequency option; higher distress => SLOWER, never faster; a second send inside the floor is suppressed with suppressed_until). The default and most common notification is a calm 'no change — nothing to do' reassurance; a change notification states what + what-next with clickable_target ALWAYS null. PURE: no network I/O, ships no credentials, fabricates no data — it only shapes a payload from REAL inputs and refuses to announce a bad/empty run. The transport (actually POSTing to a platform) is a thin glue an operator wires LAST.",
+      "entrypoints": {
+        "policy": "integrations/notify/notify-policy.js",
+        "tests": "integrations/notify/_selftest.js"
+      },
+      "config": {
+        "notify": "integrations/notify/notify.config.json"
+      },
+      "reuses": {
+        "redaction": "integrations/exports/redaction-policy.js (redactRecord/isMarking; raw locators are TLP:RED-only)",
+        "output_health": "integrations/webhooks/output-health.js (evaluateOutputHealth; success != valid output)",
+        "cadence_floor": "integrations/schedules/cadence-policy.js (evaluateCadence; anti-compulsion pacing)"
+      },
+      "channels": ["slack", "make", "n8n", "zapier", "generic_webhook"],
+      "notify_kinds": ["no_change", "digest", "compliance_stop", "not_ready"],
+      "external_marking_default": "TLP:GREEN",
+      "refuses_to_external": ["TLP:RED (raw url/storage-key/subject_label)"],
+      "schedulable_scopes": ["self", "public_figure"],
+      "never_dispatch_when": [
+        "output health empty/malformed/failed/unknown",
+        "scope not auto-schedulable (consented/brand/safety_evidence)",
+        "inside the distress-aware anti-compulsion floor",
+        "TLP:RED to an external channel",
+        "unknown channel or marking"
+      ],
+      "no_click_bait": "payload.clickable_target is ALWAYS null (Closure Mode)",
+      "platform_constraints": {
+        "slack_message_template": "Handlebars over the policy payload (NOT the raw run document); 2..4000 chars; mrkdwn-safe; NO Console/dataset link templated",
+        "n8n_node": "@apify/n8n-nodes-apify (official)",
+        "event_types": ["ACTOR.RUN.SUCCEEDED"]
+      },
+      "reference_architectures": {
+        "observatory_securityheaders": "grade LETTER as the calm headline, not per-event alarms (https://developer.mozilla.org/en-US/observatory/docs/tests_and_scoring, https://securityheaders.com/)",
+        "govuk_design_system": "green notification-banner / confirmation-page voice — confirm the expected thing happened, use sparingly, state what-next (https://design-system.service.gov.uk/components/notification-banner/, https://design-system.service.gov.uk/patterns/confirmation-pages/)"
+      },
+      "docs": "docs/apify/notify.md",
+      "deployed": false
     }
   },
   "ci": {

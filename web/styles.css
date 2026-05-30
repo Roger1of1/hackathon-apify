@@ -276,6 +276,58 @@ a { color: var(--heading); }
 .scope-tag { display: inline-block; margin-top: 4px; font-family: var(--font-mono); font-size: .72rem; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--info); color: #fff; }
 
 /* ============ report (Blacklight-style grouped findings) ============ */
+/* ---- plain hero exposure grade (Mozilla Observatory / SecurityHeaders A–F)
+   No gauge, dial, or animation: one big letter + one plain-language line, the
+   way SecurityHeaders.com and the Mozilla HTTP Observatory present a grade. ---- */
+.grade-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px 24px; margin-bottom: 20px;
+  display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center;
+}
+.grade-letter {
+  font-family: var(--font-mono); font-weight: 700; line-height: 1;
+  font-size: clamp(3.4rem, 9vw, 5rem);
+  width: clamp(96px, 22vw, 132px); height: clamp(96px, 22vw, 132px);
+  display: grid; place-items: center; border-radius: var(--radius);
+  border: 2px solid currentColor; flex: none; letter-spacing: -.02em;
+}
+/* grade band colours reuse the existing semantic severity palette (AA contrast) */
+.grade-letter.g-a { color: var(--ok);     background: var(--ok-bg); }
+.grade-letter.g-b { color: var(--info);   background: var(--info-bg); }
+.grade-letter.g-c { color: var(--warn);   background: var(--warn-bg); }
+.grade-letter.g-d { color: var(--warn);   background: var(--warn-bg); }
+.grade-letter.g-f { color: var(--danger); background: var(--danger-bg); }
+.grade-letter.g-none {
+  color: var(--muted); background: var(--bg);
+  font-size: clamp(1.5rem, 4vw, 2rem); letter-spacing: 0;
+}
+.grade-body { display: grid; gap: 6px; min-width: 0; }
+.grade-eyebrow {
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-soft); margin: 0;
+}
+.grade-meaning { margin: 0; font-size: 1.06rem; font-weight: 600; color: var(--ink); }
+.grade-detail { margin: 0; font-size: .9rem; color: var(--ink-soft); line-height: 1.55; }
+/* GOV.UK-style "what to do next" line for the no-grade empty state: clearer than
+   the muted note, with a strong inline link to Step 1 — actionable, not a dead end. */
+.grade-next { margin: 2px 0 0; font-size: .92rem; color: var(--ink); line-height: 1.55; }
+.grade-next a { color: var(--heading); font-weight: 700; text-decoration: underline; }
+.grade-next code { font-family: var(--font-mono); }
+.grade-scale {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px;
+  font-family: var(--font-mono); font-size: .72rem;
+}
+.grade-scale .gs {
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  border: 1px solid var(--line); color: var(--muted);
+}
+.grade-scale .gs.cur { border-color: currentColor; font-weight: 700; color: var(--ink); }
+.grade-note { margin: 0; font-size: .82rem; color: var(--muted); line-height: 1.55; }
+.grade-note code { font-family: var(--font-mono); }
+@media (max-width: 560px) {
+  .grade-card { grid-template-columns: 1fr; justify-items: start; }
+}
+
 .report-banner {
   background: var(--info-bg); border: 1px solid #c3d6f3; color: #284a82;
   border-radius: var(--radius-sm); padding: 13px 17px; font-size: .92rem; margin-bottom: 24px;

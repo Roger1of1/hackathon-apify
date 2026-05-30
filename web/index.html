@@ -96,6 +96,15 @@
         <p class="lead">闸门放行 <code>self</code> 或 <code>public_figure</code> 后，报告按类别列出第三方能轻易发现关于你的东西——借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审。下面展示的是<strong>检查项结构（模板）</strong>，每条都说明「为什么重要」，真实运行才会填入带 URL + 时间戳 + 哈希的条目。</p>
       </div>
 
+      <!-- ===== PLAIN HERO GRADE (Mozilla Observatory / SecurityHeaders A–F) =====
+           A single, plain letter grade for "how exposed is this self subject".
+           NO gauge, dial, spinner, or animation — just the letter + one plain line,
+           exactly like SecurityHeaders.com / Mozilla HTTP Observatory render their
+           grade. Filled ONLY from a real produced report JSON (shared grade module
+           output). With no real scan it shows an honest "not scanned · no grade"
+           state and NEVER defaults an unscanned subject to A. -->
+      <div class="grade-card" id="exposureGrade" aria-live="polite"></div>
+
       <!-- top-of-report exposure summary (only meaningful after a self/public_figure accept) -->
       <div class="report-banner" id="reportGateBanner">
         先在<a href="#gate">第 1 步</a>用 <code>self</code> 或 <code>public_figure</code> 范围通过闸门，下面的检查项就会按你的范围呈现。当前显示的是完整检查项目录。

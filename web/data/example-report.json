@@ -1,0 +1,267 @@
+{
+  "__label": "SYNTHETIC / TEMPLATE-DERIVED REPORT — produced by integrations/run-self-audit.js",
+  "__notice": "Findings below are the REAL output of shared/detectors over a clearly-labelled SYNTHETIC fixture (integrations/fixtures/self-audit-fixture.json). Nothing is fabricated: the grade is computed by integrations/grade/exposure-grade.js from exactly these findings. Point the runner at a real gate-approved capture for a real report.",
+  "__source": "synthetic self-audit fixture (template) · real detector→grade pipeline",
+  "generated_at": "2026-05-30T15:05:28.326Z",
+  "scope": {
+    "scope_type": "self",
+    "subject": {
+      "self_attestation": true,
+      "owns_targets": true
+    },
+    "targets": [
+      "https://self-demo.example/about",
+      "https://self-demo.example/contact"
+    ]
+  },
+  "grade": {
+    "graded": true,
+    "grade": "F",
+    "score": 12,
+    "baseline": 100,
+    "total_deduction": 88.5,
+    "breakdown": [
+      {
+        "category": "TRACKER_SESSION_RECORDING",
+        "instances": 1,
+        "deduction": 20,
+        "worst_instance_penalty": 20
+      },
+      {
+        "category": "BREACH_RANGE_HIT",
+        "instances": 1,
+        "deduction": 17,
+        "worst_instance_penalty": 17
+      },
+      {
+        "category": "PII_PHONE_PUBLIC",
+        "instances": 1,
+        "deduction": 15,
+        "worst_instance_penalty": 15
+      },
+      {
+        "category": "PII_EMAIL_PUBLIC",
+        "instances": 2,
+        "deduction": 13.8,
+        "worst_instance_penalty": 10.2
+      },
+      {
+        "category": "PII_HANDLE_PUBLIC",
+        "instances": 2,
+        "deduction": 7.8,
+        "worst_instance_penalty": 5.8
+      },
+      {
+        "category": "PII_GEO_HINT_PUBLIC",
+        "instances": 1,
+        "deduction": 5.8,
+        "worst_instance_penalty": 5.8
+      },
+      {
+        "category": "TRACKER_THIRD_PARTY",
+        "instances": 1,
+        "deduction": 4.8,
+        "worst_instance_penalty": 4.8
+      },
+      {
+        "category": "COOKIE_THIRD_PARTY",
+        "instances": 1,
+        "deduction": 4.3,
+        "worst_instance_penalty": 4.3
+      }
+    ],
+    "event_count": 10,
+    "counted_event_count": 10,
+    "severity_band": "critical",
+    "model": {
+      "name": "self-exposure-grade",
+      "version": 1,
+      "baseline": 100,
+      "method": "Mozilla HTTP Observatory / SecurityHeaders-style baseline-100 weighted-deduction grade, reframed from security headers to SELF privacy exposures.",
+      "refs": [
+        "https://developer.mozilla.org/en-US/observatory/docs/tests_and_scoring",
+        "https://github.com/mozilla/http-observatory/blob/main/httpobs/docs/scoring.md"
+      ],
+      "grade_bands": [
+        {
+          "grade": "A+",
+          "min": 100
+        },
+        {
+          "grade": "A",
+          "min": 90
+        },
+        {
+          "grade": "A-",
+          "min": 85
+        },
+        {
+          "grade": "B+",
+          "min": 80
+        },
+        {
+          "grade": "B",
+          "min": 75
+        },
+        {
+          "grade": "B-",
+          "min": 70
+        },
+        {
+          "grade": "C+",
+          "min": 65
+        },
+        {
+          "grade": "C",
+          "min": 60
+        },
+        {
+          "grade": "C-",
+          "min": 55
+        },
+        {
+          "grade": "D+",
+          "min": 50
+        },
+        {
+          "grade": "D",
+          "min": 45
+        },
+        {
+          "grade": "D-",
+          "min": 40
+        },
+        {
+          "grade": "F",
+          "min": 0
+        }
+      ]
+    }
+  },
+  "severity": {
+    "severity": 81,
+    "band": "critical",
+    "max_event_severity": 96,
+    "exposure_score": 46,
+    "event_count": 10
+  },
+  "crawl_summary": {
+    "reachablePages": 2,
+    "distinctHosts": 1,
+    "indexablePages": 3
+  },
+  "findings": [
+    {
+      "event_type": "TRACKER_SESSION_RECORDING",
+      "source_module": "tracker_detector",
+      "risk": "high",
+      "visibility": "indexed",
+      "confidence": 0.85,
+      "source_url": "https://self-demo.example/about",
+      "severity_band": "critical"
+    },
+    {
+      "event_type": "COOKIE_THIRD_PARTY",
+      "source_module": "tracker_detector",
+      "risk": "medium",
+      "visibility": "indexed",
+      "confidence": 0.9,
+      "source_url": "https://self-demo.example/about",
+      "severity_band": "critical"
+    },
+    {
+      "event_type": "PII_EMAIL_PUBLIC",
+      "source_module": "pii_detector",
+      "risk": "medium",
+      "visibility": "linked",
+      "confidence": 0.95,
+      "source_url": "https://self-demo.example/contact",
+      "severity_band": "high"
+    },
+    {
+      "event_type": "PII_EMAIL_PUBLIC",
+      "source_module": "pii_detector",
+      "risk": "medium",
+      "visibility": "linked",
+      "confidence": 0.95,
+      "source_url": "https://self-demo.example/about",
+      "severity_band": "high"
+    },
+    {
+      "event_type": "TRACKER_THIRD_PARTY",
+      "source_module": "tracker_detector",
+      "risk": "low",
+      "visibility": "indexed",
+      "confidence": 0.85,
+      "source_url": "https://self-demo.example/about",
+      "severity_band": "high"
+    },
+    {
+      "event_type": "PII_PHONE_PUBLIC",
+      "source_module": "pii_detector",
+      "risk": "medium",
+      "visibility": "linked",
+      "confidence": 0.7,
+      "source_url": "https://self-demo.example/contact",
+      "severity_band": "medium"
+    },
+    {
+      "event_type": "BREACH_RANGE_HIT",
+      "source_module": "breach_range_detector",
+      "risk": "medium",
+      "visibility": "private",
+      "confidence": 0.99,
+      "source_url": null,
+      "severity_band": "medium"
+    },
+    {
+      "event_type": "PII_HANDLE_PUBLIC",
+      "source_module": "pii_detector",
+      "risk": "low",
+      "visibility": "linked",
+      "confidence": 0.6,
+      "source_url": "https://self-demo.example/contact",
+      "severity_band": "medium"
+    },
+    {
+      "event_type": "PII_HANDLE_PUBLIC",
+      "source_module": "pii_detector",
+      "risk": "low",
+      "visibility": "linked",
+      "confidence": 0.6,
+      "source_url": "https://self-demo.example/about",
+      "severity_band": "medium"
+    },
+    {
+      "event_type": "PII_GEO_HINT_PUBLIC",
+      "source_module": "pii_detector",
+      "risk": "low",
+      "visibility": "linked",
+      "confidence": 0.55,
+      "source_url": "https://self-demo.example/contact",
+      "severity_band": "medium"
+    }
+  ],
+  "counts": {
+    "artifacts_in": 4,
+    "findings_out": 10,
+    "counted_in_grade": 10
+  },
+  "provenance": {
+    "runner": "integrations/run-self-audit.js",
+    "fixture": "integrations/fixtures/self-audit-fixture.json",
+    "input_store": "integrations/storage/key_value_stores/default/INPUT.json",
+    "findings_dataset": "integrations/storage/datasets/default/",
+    "pipeline": [
+      "shared/detectors/index.js",
+      "shared/enrich/severity.js",
+      "integrations/grade/exposure-grade.js"
+    ],
+    "grade_module": "integrations/grade/exposure-grade.js (read-only)",
+    "reference_architectures": {
+      "apify_cli_local_run": "https://docs.apify.com/cli/docs/reference",
+      "apify_kvs_input": "https://docs.apify.com/platform/storage/key-value-store",
+      "crawlee_dataset": "https://crawlee.dev/js/docs/introduction/saving-data"
+    }
+  }
+}

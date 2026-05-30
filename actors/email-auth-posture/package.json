@@ -1,0 +1,17 @@
+{
+  "name": "ex-ditector-email-auth-posture",
+  "version": "1.0.0",
+  "description": "AUX email-auth posture self-check — public-DNS SPF/DMARC/DKIM/MTA-STS spoofability audit (A-F grade) for Ex-Ditector.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6",
+    "got-scraping": "^4.0.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

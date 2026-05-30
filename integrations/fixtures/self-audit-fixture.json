@@ -1,0 +1,53 @@
+{
+  "__label": "SYNTHETIC / TEMPLATE FIXTURE — NOT REAL DATA",
+  "__notice": "Every string below is invented placeholder content authored for this fixture. It depicts NO real person, account, address, key, or site. Its ONLY purpose is to give the REAL detectors (shared/detectors/**) genuine input to parse, so the end-to-end proof runner (integrations/run-self-audit.js) can emit findings the detectors ACTUALLY produce — never fabricated findings. The detectors run on this exactly as they would on a real gate-approved self-owned page; nothing here is a pre-baked result. Domains use the reserved .invalid / example.* per RFC 2606/6761 so they can never resolve.",
+  "__scope": "This fixture models a scope_type=self run: the subject auditing pages they themselves control + a precomputed k-anon breach-range result for their own credential.",
+  "input": {
+    "scope_type": "self",
+    "subject": {
+      "self_attestation": true,
+      "owns_targets": true
+    },
+    "targets": [
+      "https://self-demo.example/about",
+      "https://self-demo.example/contact"
+    ]
+  },
+  "captured_artifacts": [
+    {
+      "kind": "page_text",
+      "url": "https://self-demo.example/contact",
+      "text": "Contact the demo subject. You can reach me by email at jordan.placeholder@self-demo.example or call +1 555 0100 200. I am based in Springfield. Follow me as @demo_subject_handle on the open web."
+    },
+    {
+      "kind": "page_text",
+      "url": "https://self-demo.example/about",
+      "text": "About the demo subject. This synthetic about-page repeats the public handle @demo_subject_handle and the same contact email jordan.placeholder@self-demo.example so the corroboration pass has two surfaces to cluster. No secrets, no real identity."
+    },
+    {
+      "kind": "page_resources",
+      "url": "https://self-demo.example/about",
+      "scripts": [
+        "https://self-demo.example/assets/site.js",
+        "https://www.google-analytics.com/analytics.js",
+        "https://static.hotjar.com/c/hotjar-0000.js"
+      ],
+      "cookies": [
+        { "name": "_ga", "domain": "self-demo.example", "third_party": false },
+        { "name": "_hjSession", "domain": "hotjar.com", "third_party": true }
+      ],
+      "js_api_calls": [],
+      "outbound_links": ["https://self-demo.example/about?ref=jordan.placeholder@self-demo.example"]
+    },
+    {
+      "kind": "breach_range",
+      "scope_type": "self",
+      "label": "subject's own login email (synthetic)",
+      "suffix": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+      "rangeMap": {
+        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": 42,
+        "1234567890ABCDEF1234567890ABCDE": 7
+      }
+    }
+  ]
+}

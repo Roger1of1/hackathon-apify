@@ -1,0 +1,55 @@
+{
+  "title": "Ex-Ditector Email-Auth Posture Self-Check Input",
+  "description": "Audits the PUBLIC email-authentication posture (spoofability) of a domain you OWN, using only public DNS records. Prohibited scopes are intentionally absent from the enum; only self/public_figure are accepted because this is a self-/public-only audit.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "This posture audit is permitted ONLY for your own domain (self) or a genuine public figure's public domain (public_figure). Other compliant scopes (consented/brand/safety_evidence) intentionally cannot run this actor.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (a domain you own)", "Public figure (their public domain)"],
+      "default": "self"
+    },
+    "domain": {
+      "title": "Domain to audit",
+      "type": "string",
+      "description": "The registrable domain you OWN, e.g. \"example.com\". Only PUBLIC DNS records (SPF/DMARC/DKIM/MX/MTA-STS) are read. A pasted URL or user@domain is tolerated and normalized.",
+      "editor": "textfield"
+    },
+    "dkim_selectors": {
+      "title": "DKIM selector names (optional)",
+      "type": "array",
+      "description": "DKIM selectors are NOT enumerable from DNS, so supply your own selector name(s) (e.g. \"google\", \"selector1\", \"k1\") to verify your DKIM keys. With no selector, DKIM is reported as 'unknown' rather than fabricated as failing.",
+      "editor": "stringList",
+      "default": []
+    },
+    "doh_resolver": {
+      "title": "DNS-over-HTTPS resolver URL",
+      "type": "string",
+      "description": "Public DoH endpoint (application/dns-json, RFC 8484). Defaults to Cloudflare's DNSSEC-validating resolver. Must be https://.",
+      "editor": "textfield",
+      "default": "https://cloudflare-dns.com/dns-query"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name or org). Used only for reporting; scanned by the compliance gate for prohibited intent.",
+      "editor": "textfield"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    }
+  },
+  "required": ["scope_type", "domain"]
+}

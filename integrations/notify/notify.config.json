@@ -1,0 +1,94 @@
+{
+  "_comment": "TEMPLATE / SOURCE-OF-TRUTH for the COMPLIANT NOTIFICATION DISPATCH layer (Apify native integrations: Slack / Make / n8n / Zapier / generic webhook). Apply by configuring the corresponding Apify Integration on the report-builder actor/task, mirroring the message template + marking below. Nothing here is auto-deployed; <PLACEHOLDERS> are filled by YOU at deploy time. See docs/apify/notify.md. NO clickable Apify Console link is templated by design (Closure Mode).",
+
+  "policy": "integrations/notify/notify-policy.js",
+  "tests": "integrations/notify/_selftest.js",
+
+  "voice": {
+    "default_kind": "no_change",
+    "reassurance_first": true,
+    "clickable_target": null,
+    "_note": "GOV.UK notification-banner / confirmation-page pattern: confirm 'the expected thing happened', use notifications sparingly, state what-next. Observatory/SecurityHeaders pattern: the GRADE LETTER is the headline, not a stream of per-event alarms."
+  },
+
+  "external_marking_default": "TLP:GREEN",
+  "external_marking_max": "TLP:AMBER",
+  "_marking_note": "Slack/Make/n8n/Zapier are OUTSIDE the platform. TLP:RED (raw url/storage-key/subject_label) is REFUSED to any external channel by notify-policy.js. The redacted rows that DO leave carry only content/markup HASHES, a change flag, coarse status and timestamps — proof that something changed WITHOUT a clickable destination. Redaction is delegated to integrations/exports/redaction-policy.js (never duplicated).",
+
+  "pacing": {
+    "derived_from": "integrations/schedules/cadence-policy.js (evaluateCadence)",
+    "default_cadence": "closure",
+    "min_gap": "weekly-or-slower (anti-compulsion floor; no high-frequency option exists)",
+    "distress_rule": "a higher distress_risk_score SLOWS the minimum gap between notifications, never speeds it",
+    "_note": "A second notification inside the floor is SUPPRESSED, not sent. suppressed_until tells the operator when the next send becomes allowed. This is Closure Mode in the notification layer."
+  },
+
+  "schedulable_scopes": ["self", "public_figure"],
+  "_scope_note": "Notification pacing reuses the cadence gate, so dispatch is allowed only for scopes that are auto-schedulable. consented/brand/safety_evidence are not auto-notified (fail-closed).",
+
+  "channels": {
+    "slack": {
+      "apify_integration": "https://docs.apify.com/platform/integrations/slack",
+      "config_form_keys": ["Event types", "Workspace", "Channel", "Message"],
+      "event_types": ["ACTOR.RUN.SUCCEEDED"],
+      "message_template_handlebars": "Self-audit complete for {{subject_token}}. Exposure grade: {{grade}}. {{change_count}} change(s) since last check. {{what_next}}",
+      "_message_note": "Handlebars over the NOTIFY-POLICY payload (NOT the raw Apify run document). Do NOT template {{resource.defaultDatasetId}} or any Console link — that would bait a click. Keep 2..4000 chars; mrkdwn-safe."
+    },
+    "zapier": {
+      "apify_integration": "https://docs.apify.com/platform/integrations/zapier",
+      "trigger": "Finished Actor run (ACTOR.RUN.SUCCEEDED)",
+      "_note": "A zap can fan the redacted digest to email/Sheets/Trello. Because the payload is already TLP:GREEN-redacted and link-free, downstream zaps physically cannot forward a viewable artifact or a re-targetable URL."
+    },
+    "make": {
+      "apify_integration": "https://docs.apify.com/platform/integrations/make",
+      "trigger_module": "Watch Actor Runs / Webhook",
+      "_note": "Make scenario consumes the same normalized payload shape; map payload.title/text/what_next/grade/change_count to the destination module."
+    },
+    "n8n": {
+      "apify_integration": "https://docs.apify.com/platform/integrations/n8n",
+      "node": "@apify/n8n-nodes-apify (official, npm)",
+      "trigger": "Apify Trigger node on ACTOR.RUN.SUCCEEDED, then HTTP/Slack node consuming the redacted payload",
+      "_note": "Self-hostable n8n keeps even the redacted digest inside the operator's own infrastructure if desired."
+    },
+    "generic_webhook": {
+      "apify_integration": "https://docs.apify.com/platform/integrations/webhooks",
+      "_note": "Lowest-common-denominator sink. The receiver MUST treat the payload as already-redacted and MUST NOT attempt to fetch the dataset behind it; doing so would re-introduce raw locators the marking deliberately stripped."
+    }
+  },
+
+  "payload_contract": {
+    "_comment": "The channel-agnostic shape notify-policy.js emits. A thin transport maps it onto each platform at deploy time.",
+    "kind": "no_change | digest | compliance_stop | not_ready",
+    "title": "string (reassurance-first headline)",
+    "text": "string (plain, calm body; grade letter inline)",
+    "what_next": "string (GOV.UK 'what happens next')",
+    "grade": "string|null (Self-Exposure grade LETTER — the Observatory headline)",
+    "change_count": "number (count only; never the items themselves unless redacted)",
+    "changes": "array of redaction-policy projected rows (hashes/flags/timestamps; NO url/keys/labels below TLP:RED)",
+    "marking": "TLP:GREEN | TLP:AMBER (external)",
+    "health": "the output-health verdict that authorized this announcement",
+    "clickable_target": "ALWAYS null (Closure Mode: no click bait)",
+    "generated_at": "ISO timestamp"
+  },
+
+  "never_dispatch_when": [
+    "run output health is empty / malformed / failed / unknown (success != valid output)",
+    "scope is not auto-schedulable (consented / brand / safety_evidence)",
+    "inside the distress-aware anti-compulsion floor since the last notification",
+    "marking is TLP:RED (raw locators) to an external channel",
+    "channel or marking is unknown (fail closed)"
+  ],
+
+  "reference_architectures": {
+    "mozilla_observatory_securityheaders": [
+      "https://developer.mozilla.org/en-US/observatory/docs/tests_and_scoring",
+      "https://securityheaders.com/"
+    ],
+    "govuk_design_system": [
+      "https://design-system.service.gov.uk/components/notification-banner/",
+      "https://design-system.service.gov.uk/patterns/confirmation-pages/"
+    ]
+  },
+
+  "deployed": false
+}

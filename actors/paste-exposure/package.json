@@ -1,0 +1,17 @@
+{
+  "name": "ex-ditector-paste-exposure",
+  "version": "1.0.0",
+  "description": "AUX public-paste self-exposure scan — searches public paste indexes for the SELF subject's own email/domain/handle, emitting privacy-preserving typed module-events for Ex-Ditector.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6",
+    "got-scraping": "^4.0.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

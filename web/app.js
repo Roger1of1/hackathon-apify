@@ -61,7 +61,8 @@
       patterns: [
         /(tinder|bumble|探探|陌陌|soul|hinge|okcupid|grindr|交友(软件|app)|约会(软件|app)|相亲(软件|app))/i,
         /(在不在|有没有(用|注册)|是否(注册|活跃|刷)).{0,12}(交友|约会|相亲|tinder|bumble|探探|陌陌)/i,
-        /(swipe|likes|matches|followers|comments).{0,18}(tinder|bumble|instagram|ig|facebook|fb)/i
+        /(swipe|likes|matches|followers|comments).{0,18}(tinder|bumble|instagram|ig|facebook|fb)/i,
+        /(tinder|bumble|instagram|ig|facebook|fb|微博|抖音|小红书)\s*(的)?\s*(followers?|likes?|comments?|matches|粉丝|关注|点赞|评论)/i
       ]
     },
     {
@@ -743,6 +744,142 @@
    * NO FAKE DATA: every number here is COUNTED from the real FINDING_GROUPS check
    * catalog rendered below — it describes the audit SCHEMA ("会检查什么"), never a
    * scraped result. Labels make that explicit so it can't be read as findings. */
+  /* =========================================================================
+   * SELF-EXPOSURE GRADE  (A+…F)  —  plain hero letter, no gauge/dial/animation.
+   *
+   * This mirrors, byte-for-byte, the rubric in integrations/grade/exposure-grade.js:
+   *   - same frozen GRADE_BANDS thresholds (A+=100, A=90, …, F<40)
+   *   - same letterFor() band map
+   * It is a Mozilla HTTP Observatory / SecurityHeaders-style grade: start from a
+   * baseline 100 and SUBTRACT weighted, capped, repeat-damped per-category
+   * deductions, then map the 0..100 score to an A–F letter. We INVERT the target
+   * from "site security headers" to "this person's OWN public exposure".
+   * Refs (same as the module): developer.mozilla.org/en-US/observatory/docs;
+   * github.com/mozilla/http-observatory scoring.md.
+   *
+   * NO FAKE DATA: the letter is rendered ONLY from a REAL produced report JSON
+   * (the Node grade-module output). With no real scan we render the module's own
+   * EMPTY-IN ⇒ NO GRADE semantics ("尚未扫描 · 暂无评分"), and NEVER default an
+   * unscanned subject to A. The web does not invent a score from template checks.
+   * =======================================================================*/
+  const GRADE_BANDS = [
+    { grade: "A+", min: 100 }, { grade: "A", min: 90 }, { grade: "A-", min: 85 },
+    { grade: "B+", min: 80 }, { grade: "B", min: 75 }, { grade: "B-", min: 70 },
+    { grade: "C+", min: 65 }, { grade: "C", min: 60 }, { grade: "C-", min: 55 },
+    { grade: "D+", min: 50 }, { grade: "D", min: 45 }, { grade: "D-", min: 40 },
+    { grade: "F", min: 0 }
+  ];
+  function letterFor(score) {
+    const s = Math.max(0, Math.min(100, Number(score) || 0));
+    for (const b of GRADE_BANDS) { if (s >= b.min) return b.grade; }
+    return "F";
+  }
+  // plain-language one-liner per band family (Observatory-style "what it means")
+  const GRADE_MEANING = {
+    A: "暴露面很小：第三方很难轻易拼出关于你的画像。保持现状即可。",
+    B: "暴露面较小：有少量公开痕迹可清理，但整体可控。",
+    C: "中等暴露：存在若干公开信息点，建议按下方清单逐条处置。",
+    D: "暴露偏高：多处公开痕迹可被串联，建议尽快处理高暴露项。",
+    F: "暴露很高：关键个人信息公开可得，应优先处置高暴露与密钥泄露项。"
+  };
+  function gradeFamily(letter) {
+    if (!letter) return "none";
+    const c = letter[0].toLowerCase();
+    return ["a", "b", "c", "d", "f"].includes(c) ? c : "none";
+  }
+
+  // Validate a produced report into a grade view-model, or null if not gradeable.
+  // Accepts either the grade-module shape ({graded,grade,score,...}) directly, or
+  // a report-builder report carrying a `grade` block / an `exposure_score`.
+  function gradeFromReport(report) {
+    if (!report || typeof report !== "object") return null;
+    const g = report.grade || report.exposure_grade || null;
+    if (g && typeof g === "object") {
+      if (g.graded === false || g.grade == null) {
+        return { graded: false, reason: g.reason || "no_data" };
+      }
+      return {
+        graded: true, grade: String(g.grade), score: g.score,
+        total_deduction: g.total_deduction, event_count: g.event_count,
+        counted_event_count: g.counted_event_count,
+        severity_band: g.severity_band, source: report.__source || null
+      };
+    }
+    // fall back to a bare numeric exposure_score if that's all the report carries
+    const sc = report.exposure_score != null ? report.exposure_score
+             : (report.scores && report.scores.exposure_score);
+    if (typeof sc === "number" && Number.isFinite(sc)) {
+      return { graded: true, grade: letterFor(sc), score: Math.round(sc), source: report.__source || null };
+    }
+    return null;
+  }
+
+  function renderExposureGrade(vm) {
+    const wrap = document.getElementById("exposureGrade");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    // ---- honest EMPTY-IN ⇒ NO GRADE state (mirrors module graded:false) ----
+    if (!vm || vm.graded === false) {
+      const letter = el("div", "grade-letter g-none", "—");
+      letter.setAttribute("role", "img");
+      letter.setAttribute("aria-label", "尚未扫描，暂无评分");
+      const body = el("div", "grade-body");
+      body.appendChild(el("p", "grade-eyebrow", "暴露评分 · EXPOSURE GRADE"));
+      body.appendChild(el("p", "grade-meaning", "尚未扫描 · 暂无评分"));
+      body.appendChild(el("p", "grade-detail",
+        "评分只在一次真实自审运行后给出。未扫描的对象不会被默认评为 A——「没有数据」就如实显示为「无评分」，绝不编造分数。"));
+      // GOV.UK Design System: an empty/zero state should tell the user what they
+      // can DO next, not just state absence. Point to Step 1 (the gate) so the
+      // no-grade card is an actionable starting point, not a dead end.
+      const next = el("p", "grade-next");
+      next.innerHTML =
+        "下一步：到<a href=\"#gate\">第 1 步 · 合规闸门</a>用 <code>self</code> 范围通过，再运行一次真实自审即可得到评分。";
+      body.appendChild(next);
+      body.appendChild(el("p", "grade-note",
+        "评分模型：Mozilla HTTP Observatory / SecurityHeaders 式 A–F（基线 100 减去加权扣分）。代码：integrations/grade/exposure-grade.js。"));
+      wrap.appendChild(letter);
+      wrap.appendChild(body);
+      return;
+    }
+
+    // ---- real graded state ----
+    const letter = String(vm.grade);
+    const fam = gradeFamily(letter);
+    const letterEl = el("div", "grade-letter g-" + fam, esc(letter));
+    letterEl.setAttribute("role", "img");
+    letterEl.setAttribute("aria-label", "暴露评分 " + letter + (vm.score != null ? "，分数 " + vm.score + " / 100" : ""));
+
+    const body = el("div", "grade-body");
+    body.appendChild(el("p", "grade-eyebrow", "暴露评分 · EXPOSURE GRADE"));
+    body.appendChild(el("p", "grade-meaning", GRADE_MEANING[fam.toUpperCase()] || ("评分 " + letter)));
+
+    const bits = [];
+    if (vm.score != null) bits.push("分数 " + vm.score + " / 100");
+    if (vm.total_deduction != null) bits.push("总扣分 " + vm.total_deduction);
+    if (vm.counted_event_count != null) bits.push("计分发现 " + vm.counted_event_count + " 条");
+    if (vm.severity_band) bits.push("最严重等级 " + vm.severity_band);
+    if (bits.length) body.appendChild(el("p", "grade-detail", esc(bits.join(" · "))));
+
+    // compact A–F scale strip, current band highlighted (Observatory legend, no dial)
+    const scale = el("div", "grade-scale");
+    scale.setAttribute("aria-hidden", "true");
+    ["A+", "A", "B", "C", "D", "F"].forEach(g => {
+      const cur = letter[0].toUpperCase() === g[0] && (g.length === 1 || g === letter);
+      scale.appendChild(el("span", "gs" + (cur ? " cur" : ""), g));
+    });
+    body.appendChild(scale);
+
+    const note = el("p", "grade-note", null);
+    const src = vm.source ? "来源：" + esc(vm.source) + "（合成/模板 fixture 经真实检测器流水线产出，非编造抓取结果）。 " : "";
+    note.innerHTML = src +
+      "评分模型：Mozilla HTTP Observatory / SecurityHeaders 式 A–F（基线 100 减加权扣分）。代码：<code>integrations/grade/exposure-grade.js</code>。";
+    body.appendChild(note);
+
+    wrap.appendChild(letterEl);
+    wrap.appendChild(body);
+  }
+
   function renderCoverage() {
     const wrap = document.getElementById("coverageSummary");
     if (!wrap) return;
@@ -1283,11 +1420,39 @@
     links.addEventListener("click", e => { if (e.target.tagName === "A") links.classList.remove("open"); });
   }
 
+  /* Load a REAL produced report JSON (the e2e self-audit output) and surface its
+   * grade. Tries data/example-report.json; on file:// (fetch blocked) falls back
+   * to an injected window.__EX_REPORT__ from data/example-report.js. If neither
+   * exists yet, we stay in the honest "no grade" state — we never invent one. */
+  function applyReport(report) {
+    if (!report || typeof report !== "object") return;
+    const vm = gradeFromReport(report);
+    if (vm) renderExposureGrade(vm);
+  }
+  function loadExampleReport() {
+    if (window.__EX_REPORT__) { applyReport(window.__EX_REPORT__); return; }
+    let done = false;
+    fetch("data/example-report.json")
+      .then(r => { if (!r.ok) throw new Error("no report"); return r.json(); })
+      .then(rep => { done = true; applyReport(rep); })
+      .catch(() => {
+        if (done || window.__EX_REPORT__) { if (window.__EX_REPORT__) applyReport(window.__EX_REPORT__); return; }
+        // file:// fallback: try the JS-wrapped copy, mirroring the plan loader.
+        const s = document.createElement("script");
+        s.src = "data/example-report.js";
+        s.onload = function () { if (window.__EX_REPORT__) applyReport(window.__EX_REPORT__); };
+        s.onerror = function () { /* no produced report yet — stay in honest no-grade state */ };
+        document.head.appendChild(s);
+      });
+  }
+
   function boot(plan) {
     PLAN = plan;
     renderHero();
     renderScopeSelect();
     renderPresets();
+    renderExposureGrade(null);   // honest "no grade yet" until a real report loads
+    loadExampleReport();         // async; fills the grade if a produced report exists
     renderCoverage();
     renderFindings();
     renderClusterCard();
