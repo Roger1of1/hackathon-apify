@@ -29,7 +29,7 @@
   </header>
 
   <main id="main">
-    <section class="hero" id="top">
+    <section class="hero color-block" id="top">
       <div class="hero-grid">
         <div>
           <p class="eyebrow">Public footprint intelligence · Powered by Apify</p>
@@ -63,11 +63,11 @@
       </details>
     </section>
 
-    <section class="brief-zone" id="brief">
+    <section class="brief-zone color-block" id="brief">
       <div class="brief-card" id="briefCard" aria-live="polite"></div>
     </section>
 
-    <section class="section compact-section" id="gate">
+    <section class="section compact-section color-block" id="gate">
       <div class="section-head">
         <span class="step-tag">Audit / 01</span>
         <h2>Choose your audit scope.</h2>
@@ -105,19 +105,19 @@
       <div class="section-head">
         <span class="step-tag">Map / 02</span>
         <h2>Read the exposure graph first.</h2>
-        <p class="lead">Sources orbit your profile. Severity, shared identifiers, and remediation stay visible without turning the report into a wall of text.</p>
+        <p class="lead">Sources orbit your profile. Color = severity, size = volume, dashed = shared identifier.</p>
       </div>
 
       <div class="privacy-guarantee" id="privacyGuarantee" role="note" aria-label="Privacy guarantee">
         <span class="pg-mark" aria-hidden="true">⛬</span>
-        <p><b>Session-local report.</b> Your graph stays in this browser session and clears on purge. MirrorTrace does not upload your findings.</p>
+        <p><b>Session-local.</b> Stays in this browser tab · cleared on purge · never uploaded.</p>
       </div>
 
       <div class="map-wrap" id="exposureMapWrap">
         <div class="map-head">
           <div class="map-head-text">
             <h3>Exposure Map</h3>
-            <p class="map-sub" id="mapSub">Each node is a public source. Color shows sensitivity, size shows finding volume, and dashed links reveal shared identifiers.</p>
+            <p class="map-sub" id="mapSub">Node = public source · color = sensitivity · dashed link = shared identifier.</p>
           </div>
           <div class="view-toggle" role="tablist" aria-label="Switch view: map or list">
             <button id="viewMapBtn" class="vt-btn active" role="tab" aria-selected="true" aria-controls="exposureMapWrap">Map</button>
@@ -170,8 +170,8 @@
           <div class="inspector-content">
             <div class="kanon" id="kanonCard">
               <span class="kanon-tag">k-anonymity · local demo</span>
-              <p class="kanon-intro">Enter your own credential or email. The browser hashes it locally and reveals the 5-character range prefix separately from the suffix retained on your device.</p>
-              <p class="kanon-offline"><b>Mechanism preview:</b> this demonstrates the privacy split without querying a breach corpus.</p>
+              <p class="kanon-intro">Hash your own credential locally. See the 5-char prefix (sent) vs the 35-char suffix (stays local).</p>
+              <p class="kanon-offline"><b>Mechanism preview:</b> privacy split only · no breach corpus queried.</p>
               <div class="kanon-field">
                 <label class="field-label" for="kanonInput">Value processed locally</label>
                 <input id="kanonInput" class="input" type="text" autocomplete="off" spellcheck="false" placeholder="you@example.com" />
@@ -233,7 +233,7 @@
       </div>
     </section>
 
-    <section class="section compact-section" id="how">
+    <section class="section compact-section dark-zone" id="how">
       <div class="section-head">
         <span class="step-tag">Pipeline / 03</span>
         <h2>Five actors, one focused workflow.</h2>
@@ -261,11 +261,11 @@
       </details>
     </section>
 
-    <section class="section workspace-section" id="workspace">
+    <section class="section workspace-section dark-zone" id="workspace">
       <div class="section-head">
         <span class="step-tag">Workspace / 04</span>
         <h2>Connect your Apify workspace.</h2>
-        <p class="lead">Validate your real Apify account, prepare the five core MirrorTrace actor IDs, and keep the token in this page session only.</p>
+        <p class="lead">Validate your account · prepare 5 core actor IDs · token stays session-only.</p>
       </div>
       <div class="apify-box workspace-box" id="apifyBox">
         <div class="workspace-top">
@@ -282,7 +282,7 @@
           <input id="apifyToken" class="input" type="password" placeholder="Apify API token" autocomplete="off" spellcheck="false" />
           <button class="btn btn-primary" id="apifyCheck">Connect workspace</button>
         </div>
-        <p class="workspace-note">The token is validated against Apify and retained only in memory for this tab.</p>
+        <p class="workspace-note">Validated against Apify · kept in memory for this tab only.</p>
         <p class="workspace-preview" id="apifyActorPreview" aria-live="polite"></p>
         <details class="workspace-advanced">
           <summary>Actor ID override</summary>

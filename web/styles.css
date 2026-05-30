@@ -857,16 +857,15 @@ a { color: var(--heading); }
  * ░░ LOCKED VISUAL LANGUAGE — DARK-LIGHT HYBRID ░░
  * "High contrast adds energy, motion demonstrates craft" · bounded and restrained · "light zones focus input, dark zones reveal technique".
  *
- * LIGHT zones (hero + Step-1 gate + the top brief): base #f8f8f6, strong type,
- * magenta #ff4cb2 ONLY for primary actions, generous whitespace — read & type.
- * DARK zone (Step-2 report / exposure map): deep ink ~#0b0b0e so neon severity
- * POPS — saturated red/amber/green with a soft glow; magenta × acid clash for
- * legends / active ring / CTA, WCAG-AA text on the dark bg.
- * A scroll-driven gradient (--scene 0→1) guides light conclusion → dark exposure scene.
- * Type: Space Grotesk (oversized bold headings) + Space Mono (data/labels).
+ * BRIGHT zones (hero + brief + Step-1 gate): bold SOLID COLOR BLOCKS that clash
+ * (blue / acid / magenta full-bleed bands), oversized Space Grotesk headings.
+ * DARK zone (report / exposure map + pipeline + workspace): deep ink ~#0b0b0e so
+ * neon severity POPS — saturated red/amber/green with a soft glow; magenta x acid
+ * clash for legends / active ring / CTA, WCAG-AA text on the dark bg.
+ * The bright -> dark transition is a HARD discrete cut (solid divider), NOT a
+ * scroll-driven gradient. Type: Space Grotesk headings + Space Mono labels.
  * =======================================================================*/
 :root {
-  --scene: 0;                 /* 0 = bright input zone, 1 = deep ink scene */
   --ink-deep: #0b0b0e;        /* deep ink canvas */
   --ink-deep2: #111016;       /* slightly lifted ink for cards */
   --ink-deep3: #17161d;       /* card surface on dark */
@@ -876,19 +875,91 @@ a { color: var(--heading); }
   --acid: #e8f80d;
 }
 
-/* scroll-driven body wash: interpolate off-white → deep ink by --scene.
-   color-mix keeps it ONE smooth band; the .dark-zone below is a solid floor so
-   reduced-motion / no-color-mix users still get a real dark section. */
-@supports (background: color-mix(in oklab, #000, #fff)) {
-  body {
-    background: color-mix(in oklab, var(--color-off-white), var(--ink-deep) calc(var(--scene) * 100%));
-    transition: background-color .12s linear;
-  }
-}
+/* NO scroll-driven body wash. The front half is bright SOLID COLOR BLOCKS that
+   clash; the dark exposure zone begins with a HARD discrete cut (a solid
+   divider), never a smooth bright-to-dark interpolation. --scene is retired. */
 
 /* ---- oversized confident headings (Space Grotesk) ---- */
 .hero h1 { font-size: clamp(2.1rem, 5.8vw, 3.5rem); }
 .section-head h2 { font-weight: 700; }
+
+/* ============================================================
+ * BRIGHT FRONT HALF — BOLD SOLID COLOR BLOCKS THAT CLASH
+ * Borrowed from personal-website-project: each front-half band is one
+ * full-bleed bold color (blue → acid → magenta), oversized Space Grotesk
+ * headings, hard color edges. No gradients here. The full-bleed technique
+ * reuses the proven .dark-zone trick (box-shadow ring + clip-path) so the
+ * color paints edge-to-edge while content stays in the centered max-width.
+ * ============================================================ */
+:root {
+  /* deep, saturated block colors chosen so WHITE body text clears WCAG-AA
+     (>=4.5:1) on the blue and magenta bands while still reading bold + clashing.
+     The acid band carries a white card, so its text contrast is handled there. */
+  --block-blue: #2f56b5;     /* hero band — deep electric blue (white text AA) */
+  --block-acid: #E8F80D;     /* brief band — acid (clashes with both neighbors) */
+  --block-magenta: #c81e7e;  /* gate band — deep magenta (white text AA) */
+}
+.color-block {
+  position: relative;
+  box-shadow: 0 0 0 100vmax var(--cb, transparent);
+  clip-path: inset(0 -100vmax);
+}
+
+/* HERO — bold blue block, off-white oversized type */
+.hero.color-block { --cb: var(--block-blue); background: var(--block-blue); }
+.hero.color-block .eyebrow { color: var(--block-acid); }
+.hero.color-block h1 { color: #fff; }
+.hero.color-block h1 .accent { color: var(--block-acid); -webkit-text-fill-color: var(--block-acid); }
+.hero.color-block .hero-one { color: #eaf0ff; }
+.hero.color-block .btn-primary { background: var(--color-magenta); border-color: var(--color-magenta); color: #fff; }
+.hero.color-block .btn-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.6); }
+.hero.color-block .btn-ghost:hover { background: rgba(255,255,255,.14); border-color: #fff; color: #fff; }
+.hero.color-block .hero-signal {
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.5); color: #fff;
+}
+.hero.color-block .hero-signal strong { color: #fff; }
+.hero.color-block .signal-label, .hero.color-block .signal-foot { color: #eaf0ff; }
+.hero.color-block .feature-tile {
+  background: rgba(255,255,255,.10); border-top: 2px solid #fff;
+}
+.hero.color-block .feature-tile span { color: var(--block-acid); }
+.hero.color-block .feature-tile b { color: #fff; }
+.hero.color-block .feature-tile small { color: #eaf0ff; }
+.hero.color-block .trust-drawer > summary { color: #fff; }
+.hero.color-block .trust-drawer > summary span { color: #eaf0ff; }
+
+/* BRIEF — acid block (clashes hard with the blue above), ink type for AA contrast */
+.brief-zone.color-block { --cb: var(--block-acid); background: var(--block-acid); padding-top: 34px; padding-bottom: 34px; }
+.brief-zone.color-block .brief-card {
+  background: #fff; border: 2.5px solid #0b0b0e;
+  box-shadow: 8px 8px 0 0 #0b0b0e;
+}
+.brief-zone.color-block .brief-card.empty { background: #fff; }
+.brief-zone.color-block .brief-card::before {
+  background: linear-gradient(90deg, var(--color-magenta) 0%, var(--color-magenta) 50%, var(--block-blue) 50%, var(--block-blue) 100%);
+  height: 6px;
+}
+.brief-zone.color-block .brief-eyebrow { color: #b3203f; }
+
+/* GATE — magenta block (clashes with the acid above), light type on magenta */
+.section.compact-section#gate.color-block { --cb: var(--block-magenta); background: var(--block-magenta); }
+#gate.color-block .step-tag { color: #5a0030; background: var(--block-acid); }
+#gate.color-block .section-head h2 { color: #fff; }
+#gate.color-block .lead { color: #ffe6f4; }
+#gate.color-block .lead strong { color: #fff; }
+/* keep the input + result cards white/legible against the magenta block */
+#gate.color-block .gate-panel, #gate.color-block .gate-result {
+  background: #fff; border: 2px solid #0b0b0e; box-shadow: 6px 6px 0 0 rgba(11,11,14,.35);
+}
+#gate.color-block .preset { border-color: #0b0b0e; }
+#gate.color-block .btn-primary { background: #0b0b0e; border-color: #0b0b0e; color: var(--block-acid); }
+#gate.color-block .btn-primary:hover { background: #000; border-color: #000; }
+#gate.color-block .btn-ghost { border-color: #0b0b0e; color: #0b0b0e; }
+
+/* the front-half color blocks have hard edges — drop the thin inter-section line */
+.hero.color-block + .brief-zone.color-block,
+.brief-zone.color-block + #gate.color-block { border-top: none; }
+#gate.color-block { border-top: none; }
 
 /* ============================================================
  * COMPREHENSIVE BRIEF — TOP, BRIGHT, HIGH-CONTRAST (conclusion first)
@@ -990,10 +1061,16 @@ a { color: var(--heading); }
 /* ============================================================
  * BANDED DIVIDER — the light → dark transition (not an abrupt jolt)
  * ============================================================ */
+/* HARD CUT — a clean discrete divider, NOT a gradient. Solid deep-ink band,
+   full-bleed, with a single acid edge line so the magenta gate above ends and
+   the dark exposure zone begins on a crisp seam. No bright→dark interpolation. */
 .zone-divider {
-  max-width: 100%; margin: 26px 0 0; height: 92px;
+  position: relative; margin: 0; height: 64px;
   display: grid; place-items: center;
-  background: linear-gradient(180deg, var(--color-off-white) 0%, var(--ink-deep) 100%);
+  background: var(--ink-deep);
+  box-shadow: 0 0 0 100vmax var(--ink-deep);
+  clip-path: inset(0 -100vmax);
+  border-top: 3px solid var(--acid);
 }
 .zone-divider-label {
   font-family: var(--font-mono); font-size: .68rem; letter-spacing: .18em;
@@ -1189,6 +1266,73 @@ a { color: var(--heading); }
 .purge-foot code { background: rgba(255,255,255,.08); color: var(--acid); }
 
 /* ============================================================
+ * PIPELINE (#how) + WORKSPACE (#workspace) — dark-zone sections with
+ * BRIGHT / LIGHT text at WCAG-AA contrast on the deep-ink bg. Previously these
+ * rendered dark ink on a dark background and were unreadable. Every label,
+ * value, and node now reads clearly: #fff headings, #d7d7de body, acid accents.
+ * ============================================================ */
+#how.dark-zone, #workspace.dark-zone { color: #d7d7de; }
+
+/* Pipeline tiles */
+#how .how-tile {
+  background: var(--ink-deep2); border-top: 2px solid var(--acid);
+}
+#how .how-tile b { color: #fff; }
+#how .how-tile span { color: #c9c9d4; }
+
+/* actor flow + middleware (revealed inside the implementation drawer) */
+#how .implementation-drawer {
+  border-top: 1px solid #2a2935; border-bottom: 1px solid #2a2935;
+}
+#how .implementation-drawer > summary { color: #fff; }
+#how .implementation-drawer > summary span { color: #9a9aa6; }
+#how .arch-node {
+  background: var(--ink-deep3); border-color: #3a3947; color: #d7d7de;
+}
+#how .arch-node:hover, #how .arch-node:focus-visible { border-color: var(--acid); }
+#how .arch-node.active { border-color: var(--accent); background: rgba(255,76,178,.10); }
+#how .arch-node .node-id { color: var(--acid); }
+#how .arch-node .node-name { color: #c9c9d4; }
+#how .arch-arrow { color: #5a5968; }
+#how .arch-detail { background: var(--ink-deep2); border-color: #2a2935; }
+#how .arch-detail h3 { color: var(--acid); }
+#how .arch-detail p, #how .arch-detail .muted { color: #c9c9d4; }
+#how .pipeline-card, #how .ev-card {
+  background: var(--ink-deep2); border-color: #2a2935;
+}
+#how .ev-card h3, #how #pipelineCard h3 { color: #fff; }
+#how .field-label { color: #c9c9d4; }
+#how .pipe-list li {
+  background: var(--ink-deep3); border-color: #2a2935; color: #d7d7de;
+}
+#how .pipe-list li .pstep { color: var(--acid); }
+
+/* Workspace box + fields */
+#workspace .workspace-box, #workspace .apify-box {
+  background: var(--ink-deep2); border-color: var(--acid);
+}
+#workspace .workspace-box h3, #workspace .apify-box h3 { color: #fff; }
+#workspace .workspace-eyebrow { color: var(--acid); }
+#workspace .workspace-chips span {
+  border-color: #3a3947; color: #c9c9d4;
+}
+#workspace .workspace-note { color: #9a9aa6; }
+#workspace .workspace-preview { color: var(--acid); }
+#workspace .workspace-advanced > summary { color: #d7d7de; }
+#workspace .input {
+  background: var(--ink-deep3); border-color: #3a3947; color: #fff;
+}
+#workspace .input::placeholder { color: #8b8b97; }
+#workspace .input:focus { border-color: var(--acid); outline-color: var(--acid); }
+#workspace .apify-state {
+  background: rgba(255,196,0,.10); border-color: #6a5a1e; color: var(--neon-amber);
+}
+#workspace .apify-state.connected { background: rgba(54,224,122,.10); border-color: #2d5b3e; color: var(--neon-green); }
+#workspace .apify-state.checking { background: rgba(47,95,176,.16); border-color: #2c4a78; color: #9cc0ff; }
+#workspace .apify-state.attention { background: rgba(255,196,0,.10); border-color: #6a5a1e; color: var(--neon-amber); }
+#workspace .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ============================================================
  * MOTION — purposeful, one-shot / on-interaction, reduced-motion safe
  * ============================================================ */
 /* verdict stamp-in (gate ✓/⊘) */
@@ -1208,16 +1352,14 @@ a { color: var(--heading); }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 22px -12px rgba(255,76,178,.7); }
 
 @media (prefers-reduced-motion: reduce) {
-  /* fully static fallback: no count-up implied motion, no settle, no apex pulse,
-     no scroll gradient (JS pins --scene = 0; the .dark-zone is statically dark). */
+  /* fully static fallback: no count-up implied motion, no settle, no apex pulse.
+     There is no scroll gradient at all now; the color blocks and .dark-zone are
+     statically painted, so reduced-motion needs no special background handling. */
   .map-node.is-apex .map-node-circle { animation: none !important; }
   .verdict.stamp-in { animation: none !important; }
   .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
   .btn-primary:hover, .btn-purge:hover, .btn-brief-go:hover { transform: none !important; }
   .map-edge { transition: none !important; stroke-dashoffset: 0 !important; }
-  @supports (background: color-mix(in oklab, #000, #fff)) {
-    body { background: var(--color-off-white) !important; transition: none !important; }
-  }
 }
 
 /* ============ responsive ============ */
@@ -1252,7 +1394,7 @@ a { color: var(--heading); }
 .trust-drawer > summary span, .implementation-drawer > summary span { color: var(--muted); margin-left: 8px; font-family: var(--font-ui); text-transform: none; }
 .trust-note { margin: 4px 0 0; padding: 16px 18px; border-radius: var(--radius-sm); }
 .compact-section { padding-top: 42px; padding-bottom: 42px; }
-.zone-divider { height: 58px; margin-top: 4px; }
+.zone-divider { height: 58px; margin-top: 0; }
 .dark-zone { padding-top: 42px; }
 .report-glance { display: grid; grid-template-columns: minmax(250px,.85fr) minmax(0,1.4fr); gap: 14px; align-items: stretch; margin: 0 0 22px; }
 .report-status { display: flex; flex-direction: column; gap: 10px; }

@@ -1497,7 +1497,7 @@
     if (!report || !reportFindings(report).length) {
       if (prov) {
         prov.className = "map-prov empty";
-        prov.innerHTML = "No report loaded · no source nodes yet. After a live self-audit passes Step 1 with scope=self, this map shows your exposure by source.";
+        prov.innerHTML = "No report loaded · no source nodes yet. Pass Step 1 (scope=self) to populate.";
       }
       renderMapCenterOnly(svg);
       renderMapLegend({ tally: { red: 0, yellow: 0, green: 0 } });
@@ -1511,10 +1511,9 @@
     if (prov) {
       prov.className = "map-prov " + (isSynthetic(report) ? "synthetic" : "live");
       prov.innerHTML =
-        (isSynthetic(report) ? "Synthetic fixture · real buildExposureGraph contract output" : "Live pipeline output") +
+        (isSynthetic(report) ? "Synthetic fixture" : "Live output") +
         " · " + graph.meta.source_count + " sources · " + graph.meta.finding_count + " findings · " +
-        graph.meta.shared_identifier_links + " cross-source links (same email or handle). " +
-        "This graph is built temporarily in your browser, never uploaded, and cleared when the tab closes.";
+        graph.meta.shared_identifier_links + " cross-source links · session-local, never uploaded.";
     }
     if (sub) {
       // keep the static explainer; nothing to change per-report
@@ -2748,33 +2747,15 @@
   }
 
   /* =========================================================================
-   * SCROLL-DRIVEN LIGHT → DARK GRADIENT (Job C, approved purposeful guide).
-   * As the user scrolls from the bright input zone into the report/exposure
-   * scene, the page background smoothly gradients from #f8f8f6 → #0b0b0e via a
-   * --scene CSS custom property (0..1) set from the report section's position.
-   * Under prefers-reduced-motion we DON'T animate — the lower zone is simply a
-   * static dark section (CSS handles that via the media query). NOT the removed
-   * mystery scroll-wheel: this is a one-directional light→dark scene guide.
+   * (REMOVED) scroll-driven light → dark gradient.
+   * The page no longer interpolates the body background from #f8f8f6 → #0b0b0e
+   * as you scroll. The front half is bright SOLID COLOR BLOCKS that clash; the
+   * dark exposure zone begins with a HARD discrete cut (the solid .zone-divider
+   * + the full-bleed .dark-zone floor in CSS). This stub stays so the boot()
+   * call site and any console reference keep resolving, but it drives nothing.
    * =======================================================================*/
   function wireSceneGradient() {
-    if (prefersReducedMotion()) { document.documentElement.style.setProperty("--scene", "0"); return; }
-    const divider = document.getElementById("zoneDivider");
-    if (!divider) return;
-    let ticking = false;
-    function update() {
-      ticking = false;
-      const rect = divider.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      // progress: 0 when the divider is a screen below the viewport center,
-      // 1 once it has scrolled to the top — a smooth band, not a jolt.
-      const p = 1 - Math.max(0, Math.min(1, (rect.top + rect.height * 0.5) / vh));
-      document.documentElement.style.setProperty("--scene", p.toFixed(3));
-    }
-    window.addEventListener("scroll", function () {
-      if (!ticking) { ticking = true; requestAnimationFrame(update); }
-    }, { passive: true });
-    window.addEventListener("resize", update, { passive: true });
-    update();
+    /* intentionally a no-op: --scene gradient retired, hard color-block cut now. */
   }
 
   /* =========================================================================
