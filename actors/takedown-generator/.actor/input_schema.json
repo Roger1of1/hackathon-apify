@@ -36,7 +36,7 @@
     "subject_name": {
       "title": "Your name (for the letter)",
       "type": "string",
-      "description": "Optional. Used to fill the requester name in the drafted letters. Left blank, it becomes a private personplicit [[ FILL IN ]] placeholder — never fabricated.",
+      "description": "Optional. Used to fill the requester name in the drafted letters. Left blank, it becomes an explicit [[ FILL IN ]] placeholder — never fabricated.",
       "editor": "textfield"
     },
     "case_id": {

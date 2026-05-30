@@ -750,6 +750,141 @@ a { color: var(--heading); }
 }
 .footer p { margin: 0 0 6px; }
 
+/* =========================================================================
+ * PRIVACY GUARANTEE banner — browser-only / ephemeral / zero server storage.
+ * =======================================================================*/
+.privacy-guarantee {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--ok-bg); border: 1px solid #b6d8a6;
+  border-radius: var(--radius-sm); padding: 13px 16px; margin: 18px 0 22px;
+}
+.privacy-guarantee .pg-mark { color: var(--ok); font-size: 1.2rem; line-height: 1.4; }
+.privacy-guarantee p { font-size: .92rem; color: var(--ink-soft); }
+.privacy-guarantee b { color: var(--ink); }
+
+/* =========================================================================
+ * EXPOSURE MAP — calm deterministic radial graph (the #1 deliverable).
+ * Maltego/SpiderFoot link-graph + Blacklight severity-at-a-glance. No
+ * perpetual motion; subtle one-shot ease-in only (honors reduced-motion).
+ * =======================================================================*/
+.map-wrap {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px 20px 18px; margin: 0 0 26px;
+}
+.map-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.map-head h3 { margin: 0 0 4px; color: var(--heading); font-size: 1.18rem; }
+.map-sub { font-size: .9rem; color: var(--ink-soft); max-width: 64ch; }
+.map-sub b { color: var(--ink); }
+
+.view-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius-pill); overflow: hidden; flex: none; }
+.vt-btn {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  font-family: var(--font-ui); font-size: .85rem; font-weight: 600;
+  padding: 7px 18px; color: var(--ink-soft);
+}
+.vt-btn.active { background: var(--ink); color: #fff; }
+.vt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.map-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+
+.map-prov {
+  font-family: var(--font-mono); font-size: .76rem; color: var(--ink-soft);
+  background: var(--card-tint); border-radius: 8px; padding: 7px 11px; margin: 10px 0 4px;
+}
+.map-prov.synthetic { background: var(--warn-bg); color: var(--warn); }
+.map-prov.live { background: var(--ok-bg); color: var(--ok); }
+.map-prov.empty { background: var(--card-tint); color: var(--muted); }
+
+.map-stage { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; margin-top: 12px; align-items: start; }
+.map-svg-wrap {
+  background:
+    radial-gradient(circle at 50% 50%, #ffffff 0%, #fbfdfb 60%, #f3f7f3 100%);
+  border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden;
+}
+.map-svg { width: 100%; height: auto; display: block; }
+
+/* nodes */
+.map-node { cursor: pointer; }
+.map-node-circle { transition: filter .15s ease; }
+.map-node:hover .map-node-circle,
+.map-node:focus-visible .map-node-circle { filter: brightness(1.12); }
+.map-node:focus-visible { outline: none; }
+.map-node:focus-visible .map-node-circle { stroke: var(--accent); stroke-width: 3.5; }
+.map-node.selected .map-node-circle { stroke: var(--accent); stroke-width: 4; }
+/* gentle hover scale only — no perpetual animation */
+.map-node:hover { transform-box: fill-box; }
+.map-node-count { font-family: var(--font-mono); font-weight: 700; font-size: 14px; pointer-events: none; }
+.map-node-label { font-family: var(--font-mono); font-size: 11px; fill: var(--ink-soft); pointer-events: none; }
+.map-node.is-fold .map-node-circle { fill: #4c5650 !important; stroke-dasharray: 3 3; }
+.map-center-text { font-family: var(--font-ui); font-weight: 700; font-size: 15px; pointer-events: none; }
+.map-edge.shared { pointer-events: stroke; }
+
+/* detail panel */
+.map-detail {
+  background: var(--card-tint); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 14px 14px 12px; min-height: 220px;
+  max-height: 520px; overflow: auto;
+}
+.map-detail-empty { font-size: .9rem; color: var(--ink-soft); }
+.md-head { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.md-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.md-dot.red { background: var(--danger); }
+.md-dot.yellow { background: var(--warn); }
+.md-dot.green { background: var(--ok); }
+.md-title { font-weight: 700; color: var(--ink); word-break: break-all; }
+.md-sub { font-family: var(--font-mono); font-size: .76rem; color: var(--ink-soft); }
+.md-corr {
+  font-size: .86rem; background: #fde7f2; border: 1px solid #f3b9d8;
+  color: #8a1d5c; border-radius: 8px; padding: 8px 11px; margin-bottom: 10px;
+}
+.md-fold-note { font-size: .86rem; color: var(--ink-soft); margin-bottom: 8px; }
+.md-fold-src { font-family: var(--font-mono); font-size: .78rem; color: var(--heading); margin: 10px 0 4px; }
+.md-finding { background: var(--card); margin-bottom: 8px; }
+
+/* legend */
+.map-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 14px 0 4px; }
+.ml-item { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--ink-soft); }
+.ml-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.ml-dot.red { background: var(--danger); }
+.ml-dot.yellow { background: var(--warn); }
+.ml-dot.green { background: var(--ok); }
+.ml-meta { color: var(--muted); }
+.ml-dash { display: inline-block; width: 22px; height: 0; border-top: 2px dashed var(--accent); flex: none; }
+.map-foot { font-size: .78rem; color: var(--muted); margin-top: 12px; }
+.map-wrap.show-list .map-prov { display: none; }
+
+/* =========================================================================
+ * IDENTITY GATE modal — tiered verification (sign-in for sensitive actions).
+ * =======================================================================*/
+.gate-modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.gate-modal[hidden] { display: none; }
+.gate-modal-backdrop { position: absolute; inset: 0; background: rgba(20,22,20,.5); }
+.gate-modal-card {
+  position: relative; background: var(--card); border: 1px solid var(--line-strong);
+  border-radius: var(--radius); padding: 24px 24px 20px; max-width: 460px; width: 100%;
+  box-shadow: 0 16px 48px rgba(0,0,0,.22);
+}
+.gate-modal-flag {
+  display: inline-block; font-family: var(--font-mono); font-size: .72rem;
+  background: var(--warn-bg); color: var(--warn); border-radius: var(--radius-pill);
+  padding: 4px 11px; margin-bottom: 12px;
+}
+.gate-modal-card h3 { margin: 0 0 8px; color: var(--heading); }
+.gate-modal-why { font-size: .92rem; color: var(--ink-soft); margin-bottom: 14px; }
+.gate-modal-actions { display: flex; flex-direction: column; gap: 9px; margin-bottom: 12px; }
+.gate-modal-note { font-size: .8rem; color: var(--muted); }
+.gate-modal-note.flash { color: var(--danger); }
+.gate-modal-close { position: absolute; top: 14px; right: 14px; }
+
+/* =========================================================================
+ * reduced motion — fully static map (no settle animation, no smooth scroll).
+ * =======================================================================*/
+@media (prefers-reduced-motion: reduce) {
+  .map-node { transition: none !important; }
+  .map-node-circle { transition: none !important; }
+  .map-node[style] { opacity: 1 !important; transform: none !important; }
+}
+
 /* ============ responsive ============ */
 @media (max-width: 860px) {
   .gate-grid { grid-template-columns: 1fr; }
@@ -757,4 +892,5 @@ a { color: var(--heading); }
   .nav-links.open { display: flex; }
   .nav-toggle { display: inline-block; }
   .nav-inner { flex-wrap: wrap; }
+  .map-stage { grid-template-columns: 1fr; }
 }

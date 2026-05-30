@@ -1241,6 +1241,705 @@
     });
   }
 
+  /* =========================================================================
+   * EXPOSURE MAP — the #1 deliverable. A dependency-free, file://-safe SVG
+   * radial node graph built in-browser from the loaded report.
+   *
+   * This re-implements the buildExposureGraph CONTRACT from
+   * shared/graph/build-exposure-graph.js client-side, kept aligned field-for-
+   * field: center "you" + one node per distinct SOURCE (host, or a hostless
+   * origin like a k-anonymity breach), node COLOR = severityTier (red/yellow/
+   * green from severity_band), node SIZE = infoCount (distinct findings at that
+   * source), center->source `exposes` edges, and cross-source `shared-identifier`
+   * edges wherever two sources expose the SAME identifier (same email/handle).
+   *
+   * Identity-join keys reuse the SAME honest extractor logic as
+   * shared/enrich/cluster-keys.js: host (the node itself, dropped for linking),
+   * handle (normalized), and email_prefix (the HIBP k-anonymity SHA-1 prefix —
+   * NEVER the plaintext email). We reuse the page's existing sha1HexUpper so the
+   * email prefix matches shared/aux/kanon.js byte-for-byte.
+   *
+   * LAYOUT: a calm DETERMINISTIC radial — severity rings (red inner, yellow mid,
+   * green outer), NOT a physics hairball. Long low-risk tail folds into one
+   * "+N 低风险" node so the map never becomes a hairball.
+   *
+   * Refs: Maltego entity-link graph; SpiderFoot 4.0 correlation engine;
+   * The Markup Blacklight (severity read at a glance). Prefer dependency-free SVG
+   * over d3-force given the file:// constraint.
+   * =======================================================================*/
+
+  // ---- client-side mirror of the shared builder's tier projection ----
+  const MAP_BAND_TO_TIER = { critical: "red", high: "red", medium: "yellow", low: "green", info: "green" };
+  const MAP_RISK_TO_BAND = { high: "high", medium: "medium", low: "low", info: "info" };
+  const MAP_TIER_RANK = { green: 0, yellow: 1, red: 2 };
+  const MAP_ORIGIN_LABELS = {
+    breach_range_detector: "泄露库（k-匿名）",
+    breach_detector: "泄露库"
+  };
+  function mapTierForBand(band) { return MAP_BAND_TO_TIER[band] || "green"; }
+
+  function mapHostOf(url) {
+    if (typeof url !== "string" || !url) return null;
+    try { return new URL(url).hostname.toLowerCase() || null; } catch (e) { return null; }
+  }
+  function mapNormalizeHandle(h) {
+    if (typeof h !== "string") return null;
+    const v = h.trim().replace(/^@+/, "").toLowerCase();
+    return v.length ? v : null;
+  }
+  // The stable source key a finding belongs to (host, or hostless origin).
+  function mapSourceOf(f) {
+    const host = mapHostOf(f.source_url);
+    if (host) return { id: "host:" + host, host: host, label: host, kind: "host" };
+    const mod = f.source_module || "origin";
+    return { id: "origin:" + mod, host: null, label: MAP_ORIGIN_LABELS[mod] || mod, kind: "origin" };
+  }
+  // Identity-join keys for cross-source links: handle + email_prefix only (host
+  // is the node itself; secrets are credential artifacts, not identity). Mirrors
+  // identifierKeysOf() in the shared builder.
+  function mapIdentifierKeys(f) {
+    const keys = [];
+    const meta = (f.meta && typeof f.meta === "object") ? f.meta : {};
+    // handle
+    if (f.event_type === "PII_HANDLE_PUBLIC" || f.event_type === "SELF_USERNAME") {
+      const h = mapNormalizeHandle(meta.handle != null ? meta.handle : f.data);
+      if (h) keys.push("handle:" + h);
+    } else if (meta.handle != null) {
+      const h = mapNormalizeHandle(meta.handle);
+      if (h) keys.push("handle:" + h);
+    }
+    // email_prefix — prefer a prefix already in meta, else derive from a plaintext
+    // email in data via the SAME k-anonymity SHA-1 prefix as kanon.js (5 hex).
+    let prefix = typeof meta.email_hash_prefix === "string" ? meta.email_hash_prefix : null;
+    if (!prefix && typeof f.data === "string" && f.data.includes("@")) {
+      try { prefix = sha1HexUpper(f.data.trim().toLowerCase()).slice(0, 5); } catch (e) { prefix = null; }
+    }
+    if (prefix) keys.push("email_prefix:" + prefix);
+    return Array.from(new Set(keys)).sort();
+  }
+  // Coarse band for a finding: trust report's severity_band, else map from risk.
+  function mapBandOf(f) {
+    if (typeof f.severity_band === "string" && MAP_BAND_TO_TIER[f.severity_band]) return f.severity_band;
+    return MAP_RISK_TO_BAND[f.risk] || "info";
+  }
+
+  /* Build the Exposure Map model from a produced report. Output shape matches
+   * shared/graph/build-exposure-graph.js: {center, nodes, edges, legend, meta}.
+   * infoCount = distinct findings at that source; findingRefs index back into
+   * report.findings so the detail panel renders the EXACT real finding. */
+  function buildExposureGraphClient(report, opts) {
+    opts = opts || {};
+    const selfLabel = (typeof opts.selfLabel === "string" && opts.selfLabel) || "你";
+    const center = { id: "self", label: selfLabel };
+    const findings = (report && Array.isArray(report.findings)) ? report.findings : [];
+
+    const bySource = {};      // sourceId -> aggregate
+    const keyToSources = {};  // identity key -> Set(sourceId)
+
+    findings.forEach(function (f, idx) {
+      if (!f || typeof f.event_type !== "string") return;
+      const src = mapSourceOf(f);
+      let agg = bySource[src.id];
+      if (!agg) {
+        agg = { id: src.id, host: src.host, label: src.label, kind: src.kind,
+                findingRefs: [], eventTypes: {}, worstBandRank: -1, worstBand: "info" };
+        bySource[src.id] = agg;
+      }
+      agg.findingRefs.push(idx);
+      agg.eventTypes[f.event_type] = true;
+      const band = mapBandOf(f);
+      const r = MAP_TIER_RANK[mapTierForBand(band)];
+      if (r > agg.worstBandRank) { agg.worstBandRank = r; agg.worstBand = band; }
+      mapIdentifierKeys(f).forEach(function (k) {
+        (keyToSources[k] = keyToSources[k] || {})[src.id] = true;
+      });
+    });
+
+    const nodes = Object.keys(bySource).map(function (id) {
+      const agg = bySource[id];
+      return {
+        id: agg.id, host: agg.host, label: agg.label, kind: agg.kind,
+        severityTier: mapTierForBand(agg.worstBand),
+        infoCount: agg.findingRefs.length,
+        eventTypes: Object.keys(agg.eventTypes).sort(),
+        findingRefs: agg.findingRefs.slice().sort(function (a, b) { return a - b; })
+      };
+    });
+    // Deterministic ordering: severity tier desc, then infoCount desc, then label.
+    nodes.sort(function (a, b) {
+      return (MAP_TIER_RANK[b.severityTier] - MAP_TIER_RANK[a.severityTier])
+        || (b.infoCount - a.infoCount)
+        || String(a.host || a.label).localeCompare(String(b.host || b.label))
+        || a.id.localeCompare(b.id);
+    });
+
+    const edges = nodes.map(function (n) { return { from: "self", to: n.id, kind: "exposes" }; });
+
+    // Cross-source shared-identifier edges (undirected, deduped, deterministic).
+    const seen = {};
+    const sharedEdges = [];
+    Object.keys(keyToSources).sort().forEach(function (key) {
+      const ids = Object.keys(keyToSources[key]).sort();
+      if (ids.length < 2) return;
+      const via = key.indexOf("email_prefix:") === 0 ? "email" : "handle";
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const pid = ids[i] + "|" + ids[j] + "|" + via;
+          if (seen[pid]) continue;
+          seen[pid] = true;
+          sharedEdges.push({ from: ids[i], to: ids[j], kind: "shared-identifier", via: via });
+        }
+      }
+    });
+    sharedEdges.sort(function (x, y) {
+      return x.from.localeCompare(y.from) || x.to.localeCompare(y.to) || x.via.localeCompare(y.via);
+    });
+    sharedEdges.forEach(function (e) { edges.push(e); });
+
+    const tally = { red: 0, yellow: 0, green: 0 };
+    nodes.forEach(function (n) { tally[n.severityTier] += 1; });
+
+    return {
+      center: center, nodes: nodes, edges: edges,
+      legend: { tally: tally },
+      meta: { source_count: nodes.length, finding_count: findings.length,
+              shared_identifier_links: sharedEdges.length }
+    };
+  }
+
+  /* ---- Radial SVG renderer ------------------------------------------------
+   * Calm deterministic layout. Sources sit in three severity RINGS (red inner,
+   * yellow middle, green outer). The low-risk (green) long tail beyond a cap
+   * folds into ONE "+N 低风险" node so the map never becomes a hairball.
+   * Subtle one-shot ease-in only; honors prefers-reduced-motion (static). */
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const MAP_GREEN_CAP = 4;     // show at most this many green nodes; fold the rest
+  function svgEl(tag, attrs) {
+    const e = document.createElementNS(SVGNS, tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    return e;
+  }
+  const TIER_FILL = { red: "#b3203f", yellow: "#9a6a00", green: "#0b6b00" };
+  const TIER_RING_R = { red: 115, yellow: 175, green: 232 };
+  const TIER_WORD = { red: "红色高危", yellow: "黄色中等", green: "绿色低危" };
+  function nodeRadius(infoCount) {
+    // size = how much info that source holds; clamped so it stays legible.
+    return Math.max(13, Math.min(34, 11 + infoCount * 4));
+  }
+
+  let MAP_GRAPH = null;        // last built graph model (in-memory only)
+  let MAP_REPORT = null;       // the report the map was built from
+  let MAP_SELECTED = null;     // currently selected node id
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  // Fold the green long tail into a synthetic "+N 低风险" node so the map stays
+  // readable. Returns the visible node list (real nodes + optional fold node).
+  function foldLowRiskTail(nodes) {
+    const reds = nodes.filter(function (n) { return n.severityTier === "red"; });
+    const yellows = nodes.filter(function (n) { return n.severityTier === "yellow"; });
+    const greens = nodes.filter(function (n) { return n.severityTier === "green"; });
+    if (greens.length <= MAP_GREEN_CAP) return reds.concat(yellows, greens);
+    const shown = greens.slice(0, MAP_GREEN_CAP);
+    const folded = greens.slice(MAP_GREEN_CAP);
+    const foldNode = {
+      id: "fold:lowrisk",
+      label: "+" + folded.length + " 低风险来源",
+      kind: "fold",
+      severityTier: "green",
+      infoCount: folded.reduce(function (s, n) { return s + n.infoCount; }, 0),
+      eventTypes: [],
+      findingRefs: folded.reduce(function (s, n) { return s.concat(n.findingRefs); }, []),
+      foldedFrom: folded
+    };
+    return reds.concat(yellows, shown, [foldNode]);
+  }
+
+  // Place nodes deterministically around their severity ring; spread evenly.
+  function layoutNodes(visibleNodes) {
+    const cx = 360, cy = 280;
+    const byTier = { red: [], yellow: [], green: [] };
+    visibleNodes.forEach(function (n) { byTier[n.severityTier].push(n); });
+    const placed = {};
+    ["red", "yellow", "green"].forEach(function (tier) {
+      const ring = byTier[tier];
+      const R = TIER_RING_R[tier];
+      const count = ring.length;
+      ring.forEach(function (n, i) {
+        // start at -90deg (top) and spread; offset alternate rings slightly so
+        // nodes don't line up radially across rings.
+        const offset = tier === "yellow" ? 0.5 : (tier === "green" ? 0.25 : 0);
+        const ang = (-Math.PI / 2) + ((i + offset) / Math.max(1, count)) * Math.PI * 2;
+        placed[n.id] = { x: cx + Math.cos(ang) * R, y: cy + Math.sin(ang) * R, node: n };
+      });
+    });
+    return { cx: cx, cy: cy, placed: placed };
+  }
+
+  function renderExposureMap(report) {
+    const svg = document.getElementById("exposureMapSvg");
+    const wrap = document.getElementById("exposureMapWrap");
+    if (!svg || !wrap) return;
+    MAP_REPORT = report || null;
+    MAP_SELECTED = null;
+    svg.innerHTML = "";
+
+    const prov = document.getElementById("mapProv");
+    const sub = document.getElementById("mapSub");
+
+    // No report → honest empty map (center only). Never fabricate spokes.
+    if (!report || !reportFindings(report).length) {
+      if (prov) {
+        prov.className = "map-prov empty";
+        prov.innerHTML = "尚未加载报告 · 暂无来源节点。运行一次真实自审（经第 1 步闸门、scope=self）后，这里会按来源画出你的暴露地图。";
+      }
+      renderMapCenterOnly(svg);
+      renderMapLegend({ tally: { red: 0, yellow: 0, green: 0 } });
+      resetMapDetail();
+      return;
+    }
+
+    const graph = buildExposureGraphClient(report, { selfLabel: "你" });
+    MAP_GRAPH = graph;
+
+    if (prov) {
+      prov.className = "map-prov " + (isSynthetic(report) ? "synthetic" : "live");
+      prov.innerHTML =
+        (isSynthetic(report) ? "合成 fixture · 真实 buildExposureGraph 契约产出" : "真实流水线产出") +
+        " · " + graph.meta.source_count + " 个来源 · " + graph.meta.finding_count + " 条发现 · " +
+        graph.meta.shared_identifier_links + " 条跨来源关联（同邮箱/用户名）。" +
+        "此图在你浏览器内临时构建，不上传、关闭即清除。";
+    }
+    if (sub) {
+      // keep the static explainer; nothing to change per-report
+    }
+
+    const visible = foldLowRiskTail(graph.nodes);
+    const layout = layoutNodes(visible);
+    const reduce = prefersReducedMotion();
+
+    // ---- draw ring guides (faint, purely orientational) ----
+    ["green", "yellow", "red"].forEach(function (tier) {
+      const ring = svgEl("circle", {
+        cx: layout.cx, cy: layout.cy, r: TIER_RING_R[tier],
+        fill: "none", stroke: "#d6ddd6", "stroke-width": "1",
+        "stroke-dasharray": "3 6", class: "map-ring"
+      });
+      svg.appendChild(ring);
+    });
+
+    // ---- edges first (under nodes) ----
+    const edgeLayer = svgEl("g", { class: "map-edges" });
+    svg.appendChild(edgeLayer);
+    // map id -> placed point (fold node included; folded-away ids point to fold)
+    const point = {};
+    Object.keys(layout.placed).forEach(function (id) { point[id] = layout.placed[id]; });
+    const foldNode = visible.filter(function (n) { return n.kind === "fold"; })[0];
+    if (foldNode) {
+      foldNode.foldedFrom.forEach(function (n) { point[n.id] = layout.placed["fold:lowrisk"]; });
+    }
+    // center->source
+    graph.edges.forEach(function (e) {
+      if (e.kind !== "exposes") return;
+      const p = point[e.to];
+      if (!p) return;
+      edgeLayer.appendChild(svgEl("line", {
+        x1: layout.cx, y1: layout.cy, x2: p.x, y2: p.y,
+        stroke: "#b9c4bd", "stroke-width": "1.4", class: "map-edge exposes"
+      }));
+    });
+    // cross-source shared-identifier (dashed) — the correlation story
+    graph.edges.forEach(function (e) {
+      if (e.kind !== "shared-identifier") return;
+      const a = point[e.from], b = point[e.to];
+      if (!a || !b) return;
+      const line = svgEl("line", {
+        x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+        stroke: "#ff4cb2", "stroke-width": "1.6", "stroke-dasharray": "5 4",
+        class: "map-edge shared", opacity: "0.85"
+      });
+      const title = svgEl("title");
+      title.textContent = "共享同一" + (e.via === "email" ? "邮箱" : "用户名") + " → 可被关联";
+      line.appendChild(title);
+      edgeLayer.appendChild(line);
+    });
+
+    // ---- center node ----
+    const centerG = svgEl("g", { class: "map-center" });
+    centerG.appendChild(svgEl("circle", {
+      cx: layout.cx, cy: layout.cy, r: 30, fill: "#1a1a17", stroke: "#0b6b00", "stroke-width": "2.5"
+    }));
+    const ct = svgEl("text", { x: layout.cx, y: layout.cy + 5, "text-anchor": "middle", class: "map-center-text", fill: "#fff" });
+    ct.textContent = "你";
+    centerG.appendChild(ct);
+    const ctTitle = svgEl("title");
+    ctTitle.textContent = "你 — 本次自审的对象（中心）";
+    centerG.appendChild(ctTitle);
+    svg.appendChild(centerG);
+
+    // ---- source nodes (keyboard-focusable) ----
+    const nodeLayer = svgEl("g", { class: "map-nodes" });
+    svg.appendChild(nodeLayer);
+    visible.forEach(function (n, i) {
+      const p = layout.placed[n.id];
+      if (!p) return;
+      const r = nodeRadius(n.infoCount);
+      const g = svgEl("g", {
+        class: "map-node tier-" + n.severityTier + (n.kind === "fold" ? " is-fold" : ""),
+        tabindex: "0", role: "button",
+        "data-node": n.id,
+        transform: "translate(" + p.x.toFixed(1) + "," + p.y.toFixed(1) + ")"
+      });
+      // aria-label per the brief: "source example.com, 红色高危, 3 项暴露"
+      const aria = n.kind === "fold"
+        ? ("折叠：" + n.label + "，绿色低危，合计 " + n.infoCount + " 项暴露，按 Enter 展开明细")
+        : ("来源 " + n.label + "，" + TIER_WORD[n.severityTier] + "，" + n.infoCount + " 项暴露");
+      g.setAttribute("aria-label", aria);
+
+      const circle = svgEl("circle", {
+        r: String(r), fill: TIER_FILL[n.severityTier],
+        stroke: "#ffffff", "stroke-width": "2", class: "map-node-circle"
+      });
+      g.appendChild(circle);
+      // count badge inside the node
+      const cnt = svgEl("text", { y: "5", "text-anchor": "middle", class: "map-node-count", fill: "#fff" });
+      cnt.textContent = n.kind === "fold" ? ("+" + (n.foldedFrom ? n.foldedFrom.length : n.infoCount)) : String(n.infoCount);
+      g.appendChild(cnt);
+      // label below the node
+      const label = svgEl("text", { y: String(r + 14), "text-anchor": "middle", class: "map-node-label" });
+      label.textContent = n.label.length > 22 ? n.label.slice(0, 21) + "…" : n.label;
+      g.appendChild(label);
+
+      const title = svgEl("title");
+      title.textContent = aria;
+      g.appendChild(title);
+
+      const onActivate = function () { selectMapNode(n.id); };
+      g.addEventListener("click", onActivate);
+      g.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onActivate(); }
+      });
+      nodeLayer.appendChild(g);
+
+      // subtle one-shot ease-in: nodes settle from center into their ring.
+      if (!reduce) {
+        g.style.transformBox = "fill-box";
+        g.style.opacity = "0";
+        g.style.transform = "translate(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px) scale(0.6)";
+        g.style.transition = "opacity .45s ease, transform .5s cubic-bezier(.22,.61,.36,1)";
+        // stagger gently by index for a calm settle, then leave it static.
+        window.setTimeout(function () {
+          g.style.opacity = "1";
+          g.style.transform = "translate(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px) scale(1)";
+        }, 60 + i * 40);
+      }
+    });
+
+    renderMapLegend(graph.legend);
+    resetMapDetail();
+  }
+
+  function renderMapCenterOnly(svg) {
+    const cx = 360, cy = 280;
+    const g = svgEl("g", { class: "map-center" });
+    g.appendChild(svgEl("circle", { cx: cx, cy: cy, r: 30, fill: "#1a1a17", stroke: "#0b6b00", "stroke-width": "2.5" }));
+    const t = svgEl("text", { x: cx, y: cy + 5, "text-anchor": "middle", class: "map-center-text", fill: "#fff" });
+    t.textContent = "你";
+    g.appendChild(t);
+    svg.appendChild(g);
+  }
+
+  function renderMapLegend(legend) {
+    const wrap = document.getElementById("mapLegend");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    const tally = (legend && legend.tally) || { red: 0, yellow: 0, green: 0 };
+    [
+      ["red", "红 · 敏感暴露（泄露级，或邮箱/电话/地址）", tally.red],
+      ["yellow", "黄 · 中等暴露", tally.yellow],
+      ["green", "绿 · 仅低风险/公开琐碎", tally.green]
+    ].forEach(function (row) {
+      const item = el("span", "ml-item");
+      item.appendChild(el("span", "ml-dot " + row[0]));
+      item.appendChild(el("span", null, esc(row[1]) + (row[2] ? "（" + row[2] + "）" : "")));
+      wrap.appendChild(item);
+    });
+    const size = el("span", "ml-item ml-meta");
+    size.appendChild(el("span", null, "节点越大＝该来源掌握你越多信息"));
+    wrap.appendChild(size);
+    const dash = el("span", "ml-item ml-meta");
+    dash.appendChild(el("span", "ml-dash"));
+    dash.appendChild(el("span", null, "虚线＝两来源共享同一标识，可被关联"));
+    wrap.appendChild(dash);
+  }
+
+  function resetMapDetail() {
+    const detail = document.getElementById("mapDetail");
+    if (!detail) return;
+    detail.innerHTML = "";
+    const empty = el("p", "map-detail-empty");
+    empty.id = "mapDetailEmpty";
+    empty.innerHTML = "点击（或用 Tab 聚焦后按 Enter）任意来源节点，查看它对你的<b>具体暴露发现</b>、为什么重要、以及建议处置。";
+    detail.appendChild(empty);
+  }
+
+  // Click/Enter a node → render that source's EXACT findings (reusing the same
+  // real-findings vocabulary) + why-it-matters + suggested action in the panel.
+  function selectMapNode(nodeId) {
+    MAP_SELECTED = nodeId;
+    document.querySelectorAll(".map-node.selected").forEach(function (x) { x.classList.remove("selected"); });
+    const g = document.querySelector('.map-node[data-node="' + cssEsc(nodeId) + '"]');
+    if (g) g.classList.add("selected");
+
+    const detail = document.getElementById("mapDetail");
+    if (!detail || !MAP_GRAPH || !MAP_REPORT) return;
+
+    // resolve the node — it may be a folded synthetic node
+    let node = MAP_GRAPH.nodes.filter(function (n) { return n.id === nodeId; })[0];
+    let foldedFrom = null;
+    if (!node && nodeId === "fold:lowrisk") {
+      const visible = foldLowRiskTail(MAP_GRAPH.nodes);
+      const f = visible.filter(function (n) { return n.kind === "fold"; })[0];
+      if (f) { node = f; foldedFrom = f.foldedFrom; }
+    }
+    if (!node) { resetMapDetail(); return; }
+
+    const findings = reportFindings(MAP_REPORT);
+    detail.innerHTML = "";
+
+    const head = el("div", "md-head");
+    head.appendChild(el("span", "md-dot " + node.severityTier));
+    const ht = el("div");
+    ht.appendChild(el("div", "md-title", esc(node.label)));
+    ht.appendChild(el("div", "md-sub", esc(TIER_WORD[node.severityTier] + " · " + node.infoCount + " 项暴露")));
+    head.appendChild(ht);
+    detail.appendChild(head);
+
+    if (foldedFrom) {
+      detail.appendChild(el("p", "md-fold-note",
+        "这是被折叠的 " + foldedFrom.length + " 个低风险来源的合并视图。下面按来源列出它们的具体发现。"));
+      foldedFrom.forEach(function (sub) {
+        detail.appendChild(el("div", "md-fold-src", esc(sub.label)));
+        sub.findingRefs.forEach(function (ref) {
+          const f = findings[ref];
+          if (f) detail.appendChild(mapFindingCard(f));
+        });
+      });
+    } else {
+      // cross-source correlation note, if this node shares an identifier
+      const links = (MAP_GRAPH.edges || []).filter(function (e) {
+        return e.kind === "shared-identifier" && (e.from === node.id || e.to === node.id);
+      });
+      if (links.length) {
+        const other = links.map(function (e) {
+          const oid = e.from === node.id ? e.to : e.from;
+          const on = MAP_GRAPH.nodes.filter(function (n) { return n.id === oid; })[0];
+          return (on ? on.label : oid) + "（同" + (e.via === "email" ? "邮箱" : "用户名") + "）";
+        });
+        const corr = el("p", "md-corr");
+        corr.innerHTML = "⚲ <b>关联：</b>此来源与 " + esc(Array.from(new Set(other)).join("、")) +
+          " 共享同一标识——第三方可据此把你的多个公开痕迹串成一份画像。";
+        detail.appendChild(corr);
+      }
+      node.findingRefs.forEach(function (ref) {
+        const f = findings[ref];
+        if (f) detail.appendChild(mapFindingCard(f));
+      });
+    }
+  }
+
+  // One finding card for the detail panel. Reuses the SAME real-findings copy
+  // (EVENT_META name/why/fix) + risk/visibility badges as renderRealFindings,
+  // plus the portable STIX evidence block, so the panel and the list agree.
+  function mapFindingCard(f) {
+    const meta = EVENT_META[f.event_type] || {};
+    const item = el("div", "finding-item real md-finding");
+    const row = el("div", "fi-row");
+    row.appendChild(el("span", "fi-name", esc(meta.name || f.event_type)));
+    const risk = f.risk || meta.sev || "low";
+    row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + "暴露")));
+    const vis = f.visibility || meta.vis;
+    if (vis) row.appendChild(el("span", "vis-badge", esc(VIS_LABEL[vis] || vis)));
+    row.appendChild(el("span", "event-chip", esc(f.event_type)));
+    item.appendChild(row);
+
+    const facts = el("p", "fi-facts");
+    const conf = (f.confidence != null) ? "置信度 " + f.confidence : "";
+    const urlTxt = f.source_url ? f.source_url : "（无公开 URL — 如 k-匿名泄露比对）";
+    facts.innerHTML = "<b>来源：</b>" + esc(urlTxt) + (conf ? " · " + esc(conf) : "") +
+      (f.source_module ? " · " + esc(f.source_module) : "");
+    item.appendChild(facts);
+
+    if (meta.why) { const w = el("p", "fi-why"); w.innerHTML = "<b>为什么重要：</b>" + esc(meta.why); item.appendChild(w); }
+    if (meta.fix) item.appendChild(el("p", "fi-fix", "建议处置：" + esc(meta.fix)));
+    item.appendChild(stixEvidenceBlockReal(f, MAP_REPORT));
+    return item;
+  }
+
+  function cssEsc(s) {
+    if (window.CSS && CSS.escape) return CSS.escape(s);
+    return String(s).replace(/[^a-zA-Z0-9_-]/g, function (c) { return "\\" + c; });
+  }
+
+  /* ---- map / list view toggle. The grouped findings LIST is the accessible
+   * FLOOR; the map is an enhancement. Screen-reader / keyboard users can always
+   * use the list. We never hide the list from assistive tech destructively —
+   * the toggle just collapses the visual map vs the list section. */
+  function wireViewToggle() {
+    const mapBtn = document.getElementById("viewMapBtn");
+    const listBtn = document.getElementById("viewListBtn");
+    const mapWrap = document.getElementById("exposureMapWrap");
+    const list = document.getElementById("findingsGroups");
+    if (!mapBtn || !listBtn || !mapWrap || !list) return;
+
+    function show(which) {
+      const isMap = which === "map";
+      mapBtn.classList.toggle("active", isMap);
+      listBtn.classList.toggle("active", !isMap);
+      mapBtn.setAttribute("aria-selected", String(isMap));
+      listBtn.setAttribute("aria-selected", String(!isMap));
+      // The map stage hides when viewing the list; the head+toggle stay visible.
+      // The grouped-findings LIST is ALWAYS present in the DOM (the accessible
+      // floor for screen-reader / keyboard users) — we only collapse the map's
+      // visual stage, never remove the list.
+      mapWrap.classList.toggle("show-list", !isMap);
+      // Visually de-emphasize the map stage when in list mode.
+      const stage = mapWrap.querySelector(".map-stage");
+      const legend = document.getElementById("mapLegend");
+      if (stage) stage.style.display = isMap ? "" : "none";
+      if (legend) legend.style.display = isMap ? "" : "none";
+      if (!isMap) { list.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "nearest" }); }
+    }
+    mapBtn.addEventListener("click", function () { show("map"); });
+    listBtn.addEventListener("click", function () { show("list"); });
+    show("map");
+  }
+
+  /* Map data-source controls. Loading the synthetic correlation demo or the
+   * example report is a low-sensitivity TEMPLATE map (tier 'none' — no sign-in).
+   * "Build full correlation graph" is the SENSITIVE action (a real PII pull +
+   * correlate) and must pass the identity gate; with no real verified identity it
+   * cannot proceed and we honestly say so — never a fabricated success. */
+  function loadGraphDemo() {
+    if (window.__EX_GRAPH_DEMO__) { applyGraphDemo(window.__EX_GRAPH_DEMO__); return; }
+    const s = document.createElement("script");
+    s.src = "data/example-graph-demo.js";
+    s.onload = function () { if (window.__EX_GRAPH_DEMO__) applyGraphDemo(window.__EX_GRAPH_DEMO__); };
+    s.onerror = function () {
+      const prov = document.getElementById("mapProv");
+      if (prov) { prov.className = "map-prov empty"; prov.textContent = "关联演示 fixture 未能加载（data/example-graph-demo.js 缺失）。"; }
+    };
+    document.head.appendChild(s);
+  }
+  function applyGraphDemo(demo) {
+    // Render the map from the synthetic demo without disturbing the loaded report
+    // grade/list — the demo is map-only and clearly labelled synthetic.
+    renderExposureMap(demo);
+    const stage = document.querySelector("#exposureMapWrap .map-stage");
+    if (stage) stage.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "nearest" });
+  }
+
+  function wireMapControls() {
+    const demoBtn = document.getElementById("loadGraphDemoBtn");
+    const exBtn = document.getElementById("loadExampleMapBtn");
+    const fullBtn = document.getElementById("buildFullGraphBtn");
+    if (demoBtn) demoBtn.addEventListener("click", loadGraphDemo);
+    if (exBtn) exBtn.addEventListener("click", function () {
+      if (LOADED_REPORT) renderExposureMap(LOADED_REPORT);
+      else renderExposureMap(null);
+    });
+    if (fullBtn) fullBtn.addEventListener("click", function () {
+      // SENSITIVE: build_correlation_graph requires sign_in (verification-tiers.js).
+      requireVerification("build_correlation_graph", function () {
+        // Only reached with a REAL verified identity (never fabricated). With live
+        // OAuth NOT-YET-WIRED, this branch does not run; the gate explains why.
+      });
+    });
+  }
+
+  /* =========================================================================
+   * IDENTITY GATE UX — tiered verification (shared/identity/verification-tiers.js).
+   * Sensitive actions show a REAL one-click-sign-in gate, clearly labelled
+   * "演示：真实 Google/GitHub 登录为最后接入步骤". We NEVER fabricate a signed-in
+   * success: the OAuth buttons honestly report not-yet-wired. Low-sensitivity
+   * actions (template map over the example fixture, k-anon) require no gate.
+   * =======================================================================*/
+
+  // Client mirror of ACTION_POLICY tiers (policy only; no OAuth, no token).
+  const VERIFICATION_POLICY = {
+    public_search: { tier: "none", sensitive: false },
+    kanon_breach_check: { tier: "none", sensitive: false },
+    pull_pii: { tier: "sign_in", sensitive: true,
+      rationale: "把你的 PII 汇集起来属于高敏操作。需经 OAuth 2.0 PKCE 验证的邮箱/用户名，证明被汇集的 PII 确实是登录者本人，防止被用于第三方。" },
+    build_correlation_graph: { tier: "sign_in", sensitive: true,
+      rationale: "跨来源关联会生成一份预先组装的画像——本产品最敏感的产物。任何关联发生前，需用一键 OAuth 登录证明你对这些标识的所有权。" },
+    confirm_broker_listing: { tier: "sign_in", sensitive: true,
+      rationale: "把某条数据中介挂牌确认为你本人，会把真实世界记录绑定到对象上；须经验证身份，避免替别人确认挂牌。" },
+    enable_monitoring: { tier: "sign_in", sensitive: true,
+      rationale: "持续监控是对某对象足迹的长期能力，必须绑定已验证账号，确保只监控已验证的本人。" }
+  };
+  // No real verified identity is ever fabricated. Until live OAuth is wired this
+  // stays null, so sensitive actions cannot proceed past the gate.
+  let VERIFIED_IDENTITY = null;
+
+  function requiredVerificationClient(action) {
+    const p = VERIFICATION_POLICY[action];
+    return p ? p.tier : "sign_in"; // unknown → fail closed
+  }
+  function isVerificationSatisfiedClient(action) {
+    if (requiredVerificationClient(action) === "none") return true;
+    const id = VERIFIED_IDENTITY;
+    return !!(id && id.verified === true &&
+      ((typeof id.email === "string" && id.email.length) || (typeof id.handle === "string" && id.handle.length)));
+  }
+
+  // Open the gate for a sensitive action. onPass runs only if a REAL verified
+  // identity is present (never fabricated). Returns true if the action may
+  // proceed immediately (tier 'none' or already verified).
+  function requireVerification(action, onPass) {
+    if (isVerificationSatisfiedClient(action)) { if (onPass) onPass(); return true; }
+    const modal = document.getElementById("identityGate");
+    const why = document.getElementById("identityGateWhy");
+    if (!modal) return false;
+    const p = VERIFICATION_POLICY[action] || { rationale: "未识别的操作——按 fail-closed 需要登录验证。" };
+    if (why) why.textContent = p.rationale || "此操作需要验证身份。";
+    modal.removeAttribute("hidden");
+    modal.dataset.pendingAction = action;
+    // focus the first action for keyboard users
+    const g = document.getElementById("oauthGoogle");
+    if (g) g.focus();
+    return false;
+  }
+
+  function wireIdentityGate() {
+    const modal = document.getElementById("identityGate");
+    if (!modal) return;
+    const close = function () { modal.setAttribute("hidden", ""); };
+    const closeBtn = document.getElementById("identityGateClose");
+    const backdrop = document.getElementById("identityGateBackdrop");
+    if (closeBtn) closeBtn.addEventListener("click", close);
+    if (backdrop) backdrop.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !modal.hasAttribute("hidden")) close();
+    });
+    // OAuth buttons: HONESTLY report not-yet-wired. NEVER set VERIFIED_IDENTITY.
+    ["oauthGoogle", "oauthGithub"].forEach(function (id) {
+      const b = document.getElementById(id);
+      if (!b) return;
+      b.addEventListener("click", function () {
+        const note = document.getElementById("identityGateNote");
+        if (note) {
+          note.innerHTML = "<b>未接入：</b>真实 " + (id === "oauthGoogle" ? "Google" : "GitHub") +
+            " OAuth 2.0 PKCE 登录是最后一步接入（与 Apify 账号同样最后接），本演示<b>不会伪造</b>登录成功，因此该敏感操作暂不能继续。" +
+            "策略来源：<code>shared/identity/verification-tiers.js</code>。";
+          note.classList.add("flash");
+        }
+      });
+    });
+  }
+
   function renderClusterCard() {
     const body = document.getElementById("clusterBody");
     const keys = document.getElementById("clusterKeys");
@@ -1783,6 +2482,7 @@
     if (vm) renderExposureGrade(vm);
     // re-drive the whole report view from the REAL produced report
     renderProvenance(report);
+    renderExposureMap(report);   // the #1 deliverable — radial exposure map
     renderFindings();
     renderEvidenceTable();
     renderSuggestedActions();
@@ -1812,6 +2512,7 @@
     renderExposureGrade(null);   // honest "no grade yet" until a real report loads
     renderProvenance(null);      // hidden until a report loads
     renderCoverage();
+    renderExposureMap(null);     // honest center-only map until a real report loads
     renderFindings();            // template catalog until a real report loads
     renderClusterCard();
     renderEvidenceTable();       // evidence-index schema until a real report loads
@@ -1824,6 +2525,9 @@
     wireApify();
     wireKanon();
     wireNavAndGate();
+    wireViewToggle();
+    wireMapControls();
+    wireIdentityGate();
     updateReportForScope(null);
   }
 

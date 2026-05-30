@@ -43,6 +43,39 @@
       "docs": "docs/apify/ingest.md",
       "deployed": false
     },
+    "exposure-map": {
+      "path": "integrations/exposure-map",
+      "capability": "EXPOSURE MAP (Part 2) — the #1 deliverable's Apify-fed, BROWSER-ONLY self-exposure graph",
+      "summary": "Turns the REAL Apify self-audit ingest output (apify/website-content-crawler + apify/rag-web-browser, reused via integrations/ingest) into the radial EXPOSURE MAP data: a center 'you' node + one source node per host that exposes info about you. Node COLOUR tier (green/yellow/red) is derived from the canonical shared/enrich/severity.js band (red=critical|high, yellow=medium, green=low|info) — NOT a new scoring axis; a source node takes its WORST finding's tier. Node SIZE = distinct finding count at that source. EDGES: center->each source ('exposes'), PLUS cross-source 'correlates' edges when two DIFFERENT sources share the SAME identifier (email-hash-prefix / handle / secret fingerprint) via shared/enrich/cluster-keys.js — the Maltego/SpiderFoot 'same person' picture; the edge records the identifier KIND, NEVER the value (no plaintext PII). buildExposureGraph is dual-loadable (Node require + browser window.MirrorTrace.buildExposureGraph, file://-safe, no bundler/CDN) and performs ZERO I/O + ZERO network. BROWSER-ONLY, ZERO SERVER STORAGE (locked privacy decision): planExposureFeed returns an apify_run_request the BROWSER fires with the USER'S OWN token (run-sync-get-dataset-items, token redacted), so dataset rows land in the browser; rowsToGraph maps them to the graph IN THE BROWSER and writes nothing — our backend stores NO user exposure data, no central honeypot. IDENTITY TIERING (locked): pulling+correlating PII into the dossier/graph is the SENSITIVE tier and requires a verified OAuth (Google/GitHub) email/handle; absent => outcome 'requires_signin' (live_oauth_wired:false) — gate UX only, NO fake sign-in, NO run started. SCOPE-GATED: every feed routes through buildIngestPlan -> shared/scope.js (read-only) FIRST; a private-person/stalking subject is REFUSED before any Apify run is planned. NO-FAKE-DATA: only transforms REAL rows; empty events => honest empty graph (center only).",
+      "entrypoints": {
+        "graph": "integrations/exposure-map/exposure-graph.js",
+        "feed": "integrations/exposure-map/feed-policy.js",
+        "tests": "integrations/exposure-map/_selftest.js"
+      },
+      "config": {
+        "exposure_map": "integrations/exposure-map/exposure-map.config.json"
+      },
+      "reuses": {
+        "ingest": "integrations/ingest/ingest-policy.js (Apify WCC+RAG plan + REAL row->module_event mapping + STIX)",
+        "severity": "shared/enrich/severity.js (band -> node colour tier)",
+        "correlation": "shared/enrich/cluster-keys.js (shared identifier -> cross-source edges)",
+        "scope_gate": "shared/scope.js (read-only; the red line)",
+        "standby": "integrations/standby ('run my audit now' real-time entry)"
+      },
+      "data_flow": {
+        "model": "browser_only_zero_server_storage",
+        "apify_run_fired_by": "browser (user's own token)",
+        "client_storage_forbidden": ["localStorage_for_findings", "server_POST_of_findings"],
+        "purge": "on_tab_close"
+      },
+      "identity_verification": {
+        "sensitive_requires_oauth": ["pull_and_correlate_pii_into_graph"],
+        "live_oauth_wired": false,
+        "flow": "oauth2_pkce_public_client"
+      },
+      "docs": "docs/apify/exposure-map.md",
+      "deployed": false
+    },
     "standby": {
       "path": "integrations/standby",
       "capability": "Apify Actor Standby (real-time HTTP API) + Metamorph actor chain",
@@ -231,9 +264,28 @@
         "configurator_notes": "mcp/configurator-notes.md"
       },
       "tools": {
+        "compliance_docs": "read-only descriptor: allowed scopes, red lines, browser-only data flow, identity-verification tiering, and the denylisted (physically absent) capabilities; produces NO footprint data and reaches no planner",
         "audit_scope_check": "pre-flight: returns the canonical scope-gate decision only (never footprint data); rejects private-person tracking + laundered stalking prompts",
         "plan_broker_optout": "SELF-ONLY data-broker opt-out plan (DeleteMe/Aura pattern) over user-confirmed listings; refused for public_figure/brand/other; reuses buildBrokerOptOutPlan",
         "build_takedown_letter": "GDPR Art.17 RTBF / CCPA-delete erasure letters (template) + STIX 2.1 evidence bundle from the user's OWN findings; reuses buildTakedownPlan + toBundle"
+      },
+      "whitelist_is_the_red_line": {
+        "summary": "The whitelist IS the red line at the protocol layer: prohibited capabilities are ABSENT from tools/list by construction, so an agent has no tool to call. assertWhitelistClean() runs at module load and THROWS (fail-closed) if a denylisted tool is ever added; mcp/server_selftest.js proves a private-scraping tool is not callable.",
+        "denylisted_capabilities_absent": [
+          "instagram-followers-scraper",
+          "instagram-private-profile-scraper",
+          "facebook-friends-scraper",
+          "tiktok-follower-scraper",
+          "people-search",
+          "person-locator",
+          "reverse-phone-lookup",
+          "romantic-interest-finder",
+          "live-location-tracker",
+          "private-social-scraper",
+          "stalkerware"
+        ],
+        "operator_helper": "isDenylistedActor(name) — run every candidate before passing it to the real Apify MCP --actors whitelist",
+        "docs": "docs/apify/mcp-whitelist-redline.md"
       },
       "reuses": {
         "scope_gate": "shared/scope.js (validateScope, read-only — front-door of every tool)",

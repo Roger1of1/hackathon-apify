@@ -96,6 +96,72 @@
         <p class="lead">报告按类别列出第三方能轻易发现关于你的东西——借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审。<strong>未加载报告时</strong>这里是<strong>检查项目录（模板）</strong>，说明每类「会查什么 / 为什么重要」；<strong>加载真实产出报告后</strong>，同样的类别会被它的<strong>真实检测器发现</strong>驱动（带来源 URL、置信度、可移植 STIX 证据）。每条数据都标注它来自合成 fixture 还是真实流水线产出，绝不编造。</p>
       </div>
 
+      <!-- ===== PRIVACY GUARANTEE — browser-only, ephemeral, zero server storage =====
+           Locked decision: a user's exposure report/graph lives ONLY in their
+           browser, purged on close; our backend stores NO user exposure data.
+           Surfaced plainly next to the report so it's unmistakable. -->
+      <div class="privacy-guarantee" id="privacyGuarantee" role="note" aria-label="隐私保证">
+        <span class="pg-mark" aria-hidden="true">⛬</span>
+        <p><b>此报告只存在于你的浏览器</b>，关闭标签页即清除——我们的服务器<b>不保存</b>你的任何暴露数据或关联图谱。
+        不写入 localStorage、不上传任何发现，绝不成为「第二个数据泄露站」。
+        代码：<code>shared/privacy/storage-policy.js</code>（仅允许 memory / sessionStorage，server 为 FORBIDDEN）。</p>
+      </div>
+
+      <!-- ===== EXPOSURE MAP — the #1 deliverable (Maltego/SpiderFoot link-graph) =====
+           A calm, deterministic RADIAL graph: center = "you", source nodes placed
+           in severity RINGS (red inner → yellow → green). Node color = severity
+           tier, node size = how much that source holds. Edges: center→source, plus
+           dashed cross-source edges where two sources share the SAME identifier.
+           Built dependency-free in-browser from the loaded report via the
+           buildExposureGraph contract (shared/graph). A "切换查看" toggle keeps the
+           plain grouped-findings LIST as the accessible floor. -->
+      <div class="map-wrap" id="exposureMapWrap">
+        <div class="map-head">
+          <div class="map-head-text">
+            <h3>暴露地图 · Exposure Map</h3>
+            <p class="map-sub" id="mapSub">中心是<b>你</b>，四周每个节点是一个<b>暴露你信息的来源</b>。颜色＝敏感度（红＝高危，黄＝中，绿＝低），大小＝该来源掌握你多少信息；虚线＝两个来源共享同一标识（同邮箱/用户名），可被关联。</p>
+          </div>
+          <div class="view-toggle" role="tablist" aria-label="切换查看：地图或列表">
+            <button id="viewMapBtn" class="vt-btn active" role="tab" aria-selected="true" aria-controls="exposureMapWrap">地图</button>
+            <button id="viewListBtn" class="vt-btn" role="tab" aria-selected="false" aria-controls="findingsGroups">列表</button>
+          </div>
+        </div>
+
+        <!-- map data-source controls. The correlation-demo is a low-sensitivity
+             TEMPLATE map over a clearly-labelled synthetic fixture (tier 'none',
+             no sign-in). "构建完整关联图谱" is the SENSITIVE action (real PII pull
+             + correlate) and triggers the identity gate. -->
+        <div class="map-controls">
+          <button id="loadGraphDemoBtn" class="btn btn-ghost btn-tiny" type="button">查看关联示例（合成 fixture，无需登录）</button>
+          <button id="loadExampleMapBtn" class="btn btn-ghost btn-tiny" type="button">用示例报告</button>
+          <button id="buildFullGraphBtn" class="btn btn-ghost btn-tiny" type="button">构建完整关联图谱（真实拉取 · 需登录）</button>
+        </div>
+
+        <!-- provenance / source-of-truth flag for the map data -->
+        <div class="map-prov" id="mapProv"></div>
+
+        <div class="map-stage">
+          <!-- the SVG radial graph; populated in JS. Keyboard-focusable nodes. -->
+          <div class="map-svg-wrap">
+            <svg id="exposureMapSvg" class="map-svg" viewBox="0 0 720 600" role="group"
+                 aria-label="暴露地图：以你为中心的来源关联图" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+
+          <!-- detail panel: filled when a node is clicked / Entered -->
+          <aside class="map-detail" id="mapDetail" aria-live="polite">
+            <p class="map-detail-empty" id="mapDetailEmpty">点击（或用 Tab 聚焦后按 Enter）任意来源节点，查看它对你的<b>具体暴露发现</b>、为什么重要、以及建议处置。</p>
+          </aside>
+        </div>
+
+        <!-- self-explaining legend so the map needs no external doc -->
+        <div class="map-legend" id="mapLegend" aria-hidden="false"></div>
+
+        <p class="map-foot">
+          借鉴：Maltego 实体-链路图（中心实体 + 辐射来源 + 点选展开）· SpiderFoot 关联引擎（共享标识＝关联边，复用 <code>shared/enrich/cluster-keys.js</code>）· The Markup Blacklight（敏感度一眼可读）。
+          模型：<code>shared/graph/build-exposure-graph.js</code>（与本图同契约）。
+        </p>
+      </div>
+
       <!-- ===== PLAIN HERO GRADE (Mozilla Observatory / SecurityHeaders A–F) =====
            A single, plain letter grade for "how exposed is this self subject".
            NO gauge, dial, spinner, or animation — just the letter + one plain line,
@@ -302,6 +368,32 @@
     <p>MirrorTrace 合规版 · 把窥探的冲动反转成自我保护与戒断。</p>
     <p class="muted">合规红线写进代码：scope 枚举 + prohibited 模式拒绝 + 工具层白名单。参考架构：SpiderFoot（OSINT 模块 + 关联引擎）· The Markup Blacklight（隐私检查器）。</p>
   </footer>
+
+  <!-- ===== IDENTITY GATE (tiered verification) =====
+       Sensitive actions (build the full correlation graph from a real pull,
+       confirm a broker listing) require ONE-CLICK OAuth sign-in per
+       shared/identity/verification-tiers.js. This is the gate UX only — live
+       OAuth is the LAST wiring step and is clearly labelled NOT-YET-WIRED. We
+       NEVER fabricate a successful sign-in. Low-sensitivity views (the template
+       map over the example fixture, k-anon) need no gate. -->
+  <div class="gate-modal" id="identityGate" hidden role="dialog" aria-modal="true" aria-labelledby="identityGateTitle">
+    <div class="gate-modal-backdrop" id="identityGateBackdrop"></div>
+    <div class="gate-modal-card" role="document">
+      <span class="gate-modal-flag">演示：真实 Google / GitHub 登录为最后接入步骤（未接入）</span>
+      <h3 id="identityGateTitle">敏感操作需要一键登录验证</h3>
+      <p class="gate-modal-why" id="identityGateWhy"></p>
+      <div class="gate-modal-actions">
+        <button class="btn btn-primary" id="oauthGoogle" type="button">用 Google 登录（演示，未接入）</button>
+        <button class="btn btn-ghost" id="oauthGithub" type="button">用 GitHub 登录（演示，未接入）</button>
+      </div>
+      <p class="gate-modal-note" id="identityGateNote">
+        采用 OAuth 2.0 PKCE 公共客户端流（RFC 7636）：浏览器内完成，无服务端密钥、无服务器保存你的令牌或图谱。
+        登录只用于证明被关联的邮箱/用户名<b>确实是你本人</b>，防止此工具被用来查别人。
+        本演示<b>不会</b>伪造登录成功——真实凭证接入是最后一步。
+      </p>
+      <button class="btn btn-ghost btn-tiny gate-modal-close" id="identityGateClose" type="button">取消</button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

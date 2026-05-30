@@ -16,7 +16,7 @@
     "subject_label": {
       "title": "Your name (for the erasure letter)",
       "type": "string",
-      "description": "The name to put on the GDPR/CCPA erasure request. If omitted, the letter shows a private personplicit [[ FILL IN ]] placeholder — never a fabricated name.",
+      "description": "The name to put on the GDPR/CCPA erasure request. If omitted, the letter shows an explicit [[ FILL IN ]] placeholder — never a fabricated name.",
       "editor": "textfield"
     },
     "authorization_evidence_url": {

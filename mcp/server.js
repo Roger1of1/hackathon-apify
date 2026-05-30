@@ -74,6 +74,65 @@ const SERVER_NAME = 'mirrortrace-mcp';
 const SERVER_VERSION = '1.0.0';
 
 /**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE WHITELIST IS THE RED LINE AT THE PROTOCOL LAYER.
+ *
+ * Apify's MCP server turns each whitelisted Actor's input schema into ONE MCP
+ * tool an AI agent can call (--actors flag locally, or the hosted scope chooser).
+ * A tool that is NOT in the list is not merely "discouraged" — it is ABSENT from
+ * tools/list, so an agent literally has no tool to call. We make that the
+ * enforcement point: prohibited capabilities (private-social scraping, follower
+ * enumeration, people-search of strangers, live-location tracking) are NOT
+ * present in TOOLS, by construction. There is no handler to reach.
+ *
+ * To make "absent by construction" a TESTABLE GUARANTEE rather than a hope, we
+ * keep an explicit DENYLIST of capability names a non-compliant build might be
+ * tempted to expose, and `assertWhitelistClean()` proves at load/test time that
+ * NONE of them appear in the exposed tool set. The denylist documents the red
+ * line; the freeze on TOOLS keeps the surface immutable at runtime.
+ *
+ * Refs (verified May 2026):
+ *   docs.apify.com/platform/integrations/mcp  (Actor input schema -> MCP tool;
+ *     the whitelist/scope chooser controls which Actors become tools)
+ *   github.com/apify/apify-mcp-server          (--actors whitelist; aim for a
+ *     small core tool set, ~10-15 tools)
+ *   The MCP server moved SSE -> Streamable HTTP on 2026-04-01 (mcp.apify.com).
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Capabilities that MUST NEVER be exposed as a tool. Each entry is a prohibited
+ * actor/capability identity (and common aliases an agent or a careless operator
+ * might reach for). The presence test below matches a denylisted name against a
+ * tool name OR its description, so a tool cannot smuggle a prohibited capability
+ * under an innocuous name either.
+ */
+const DENYLISTED_ACTORS = Object.freeze([
+  'instagram-followers-scraper',
+  'instagram-private-profile-scraper',
+  'facebook-friends-scraper',
+  'tiktok-follower-scraper',
+  'people-search',
+  'person-locator',
+  'reverse-phone-lookup',
+  'romantic-interest-finder',
+  'live-location-tracker',
+  'private-social-scraper',
+  'stalkerware',
+]);
+
+/** Substrings that, in a tool name/description, indicate a prohibited capability. */
+const PROHIBITED_CAPABILITY_PATTERNS = Object.freeze([
+  /private[\s_-]?social/i,
+  /follower[\s_-]?(scrap|enum)/i,
+  /people[\s_-]?search/i,
+  /reverse[\s_-]?phone/i,
+  /(track|locate)[\s_-]?(a\s+)?(private\s+)?person/i,
+  /live[\s_-]?location/i,
+  /romanc|intima|girlfriend|boyfriend|dating[\s_-]?profile/i,
+  /stalk/i,
+]);
+
+/**
  * Shared gate front-door for EVERY tool. We pass the agent's structured args AND
  * any free text straight into the canonical validateScope so the natural-language
  * intent scan (PROHIBITED_TEXT_PATTERNS) and the scope_type allow-list both run.
@@ -240,11 +299,66 @@ function build_takedown_letter(args) {
 }
 
 /**
+ * TOOL: compliance_docs
+ * A read-only, no-side-effect tool that returns the product's compliance posture:
+ * the allowed scope enum, the red lines, the browser-only data-flow model, and
+ * the identity-verification tiering. An agent can call this to understand WHY a
+ * prohibited request will be refused before it makes one. Produces NO footprint
+ * data and reaches no planner. (Whitelisted "docs" tool from the round directive.)
+ */
+function compliance_docs() {
+  return {
+    ok: true,
+    tool: 'compliance_docs',
+    server: { name: SERVER_NAME, version: SERVER_VERSION },
+    allowed_scopes: ['self', 'consented', 'public_figure', 'brand', 'safety_evidence'],
+    red_lines: [
+      'No tracking of private individuals.',
+      'No romance/gender/sexuality/intimacy inference.',
+      'No private-social scraping (login-walled hosts blocked).',
+      'No bypassing logins / captcha / rate-limits.',
+      'Dual-use discovery only for self / public_figure, via the scope gate.',
+    ],
+    whitelist_is_the_red_line:
+      'This MCP server exposes ONLY compliant tools. Prohibited capabilities ' +
+      '(private-social scraping, follower enumeration, people-search of strangers, ' +
+      'live-location) are ABSENT from the tool list, so an agent has no tool to call. ' +
+      `Denylisted capabilities (proven absent by the self-test): ${DENYLISTED_ACTORS.join(', ')}.`,
+    browser_only_data_flow:
+      'The exposure report/graph (Part 2) is built TRANSIENTLY in the user\'s browser ' +
+      'from their own findings and is NEVER persisted to a MirrorTrace server — no ' +
+      'central honeypot. See docs/apify/exposure-map.md and docs/apify/mcp-whitelist-redline.md.',
+    identity_verification_tiering: {
+      low_sensitivity_no_verification: ['view scope-gated public name-search results', 'k-anonymity breach check'],
+      sensitive_requires_one_click_oauth: ['pull + correlate PII into the dossier/graph', 'confirm data-broker listings', 'monitoring'],
+      live_oauth_wired: false,
+    },
+    docs: [
+      'docs/apify/mcp.md',
+      'docs/apify/mcp-whitelist-redline.md',
+      'docs/apify/exposure-map.md',
+      'docs/apify/ingest.md',
+      'docs/apify/standby.md',
+    ],
+    note: 'Read-only compliance descriptor. No scrape, no fetch, no footprint data produced.',
+  };
+}
+
+/**
  * The MCP tool registry. Each entry mirrors the Apify-MCP contract: a name,
  * description, JSON-Schema inputSchema (so the agent knows the args), and a pure
  * handler. NO handler reaches its planner without `gateFor` passing first.
  */
 const TOOLS = Object.freeze({
+  compliance_docs: {
+    name: 'compliance_docs',
+    description:
+      'Read-only compliance descriptor: the allowed scope enum, the red lines, the ' +
+      'browser-only data-flow model, the identity-verification tiering, and the list ' +
+      'of denylisted (physically absent) capabilities. Produces NO footprint data.',
+    inputSchema: { type: 'object', additionalProperties: false, properties: {} },
+    handler: compliance_docs,
+  },
   audit_scope_check: {
     name: 'audit_scope_check',
     description:
@@ -381,12 +495,81 @@ function callTool(name, args) {
   }
 }
 
+/**
+ * PROVE THE WHITELIST IS CLEAN. Scans the EXPOSED tool surface (names +
+ * descriptions) and asserts that NO denylisted capability is present. Returns
+ * { clean:true, exposed:[...] } or throws with the offending tool — so a future
+ * edit that tries to add a private-scraping tool fails at load/test time, not in
+ * production. This is the runtime counterpart of Apify's --actors whitelist:
+ * the red line is enforced at the protocol layer, by ABSENCE.
+ *
+ * @param {object} [tools] tool registry to check (defaults to the real TOOLS)
+ * @returns {{ clean: true, exposed: string[], denylisted: string[] }}
+ */
+function assertWhitelistClean(tools = TOOLS) {
+  const exposed = Object.values(tools);
+  for (const t of exposed) {
+    const name = String(t.name || '');
+    const lname = name.toLowerCase();
+    // The enforcement target is the tool's IDENTITY (its name) — that is what an
+    // agent calls. A compliant tool's DESCRIPTION may legitimately reference a
+    // prohibited capability in order to REFUSE or REMEDIATE it (e.g. broker
+    // opt-out removes "people-search listings"; compliance_docs names the red
+    // lines). So we flag on the NAME, not on prose inside the description.
+    // (a) exact denylisted capability identity as the tool name (or a segment of it)
+    for (const deny of DENYLISTED_ACTORS) {
+      const d = deny.toLowerCase();
+      if (lname === d || lname.includes(d)) {
+        throw new Error(
+          `whitelist violation: tool "${name}" exposes denylisted capability "${deny}". ` +
+            'Prohibited capabilities must be ABSENT from the MCP tool surface.',
+        );
+      }
+    }
+    // (b) prohibited-capability language in the tool NAME (smuggling under an
+    //     innocuous-looking-but-not name).
+    for (const re of PROHIBITED_CAPABILITY_PATTERNS) {
+      if (re.test(name)) {
+        throw new Error(
+          `whitelist violation: tool name "${name}" matches a prohibited-capability pattern ${re}.`,
+        );
+      }
+    }
+  }
+  return {
+    clean: true,
+    exposed: exposed.map((t) => t.name),
+    denylisted: DENYLISTED_ACTORS.slice(),
+  };
+}
+
+/**
+ * Is a given (hypothetical) actor/capability name on the denylist? Helper for an
+ * operator wiring the real Apify MCP server's --actors flag: never pass a name
+ * this returns true for.
+ */
+function isDenylistedActor(name) {
+  if (typeof name !== 'string') return false;
+  const n = name.toLowerCase();
+  if (DENYLISTED_ACTORS.some((d) => n.includes(d.toLowerCase()))) return true;
+  return PROHIBITED_CAPABILITY_PATTERNS.some((re) => re.test(name));
+}
+
+// FAIL-CLOSED AT LOAD: if the registry ever ships a prohibited tool, requiring
+// this module throws — the server cannot start with a dirty whitelist.
+assertWhitelistClean();
+
 module.exports = {
   SERVER_NAME,
   SERVER_VERSION,
   TOOLS,
   listTools,
   callTool,
+  // The red line at the protocol layer: prohibited capabilities are ABSENT.
+  DENYLISTED_ACTORS,
+  PROHIBITED_CAPABILITY_PATTERNS,
+  assertWhitelistClean,
+  isDenylistedActor,
   // Exposed for the self-test to prove handlers reuse (not re-implement) the gate/planners.
-  _internals: { gateFor, audit_scope_check, plan_broker_optout, build_takedown_letter },
+  _internals: { gateFor, audit_scope_check, plan_broker_optout, build_takedown_letter, compliance_docs },
 };

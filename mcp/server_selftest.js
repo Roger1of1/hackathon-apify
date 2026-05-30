@@ -58,13 +58,16 @@ function t(name, fn) {
   }
 }
 
-const TOOL_NAMES = ['audit_scope_check', 'plan_broker_optout', 'build_takedown_letter'];
+// The gated planner tools that route subjects through validateScope.
+const GATED_TOOL_NAMES = ['audit_scope_check', 'plan_broker_optout', 'build_takedown_letter'];
+// The full exposed surface also includes the read-only compliance_docs tool.
+const ALL_TOOL_NAMES = ['compliance_docs', ...GATED_TOOL_NAMES];
 
 // ── tools/list contract ──────────────────────────────────────────────────────
-t('listTools() exposes exactly the three gated tools with inputSchema', () => {
+t('listTools() exposes exactly the whitelisted compliant tools with inputSchema', () => {
   const tools = listTools();
   const names = tools.map((x) => x.name).sort();
-  assert.deepStrictEqual(names, [...TOOL_NAMES].sort());
+  assert.deepStrictEqual(names, [...ALL_TOOL_NAMES].sort());
   for (const tdef of tools) {
     assert.ok(tdef.description && typeof tdef.description === 'string', `${tdef.name} has a description`);
     assert.strictEqual(tdef.inputSchema.type, 'object', `${tdef.name} declares an object inputSchema`);
@@ -78,8 +81,55 @@ t('callTool() on an unknown tool fails closed', () => {
   assert.match(r.refused_by, /callTool/);
 });
 
+// ── THE WHITELIST IS THE RED LINE: prohibited capabilities are PHYSICALLY ABSENT
+t('NO denylisted private-scraping capability is present in the tool surface', () => {
+  const { listTools: lt, DENYLISTED_ACTORS, assertWhitelistClean, isDenylistedActor } = server;
+  const exposedNames = lt().map((x) => x.name);
+  // None of the exposed tool names is itself a denylisted capability.
+  for (const name of exposedNames) {
+    assert.ok(!DENYLISTED_ACTORS.includes(name), `exposed tool "${name}" must not be a denylisted capability`);
+  }
+  // The representative private-scraping actor is not callable: there is no tool.
+  const probe = callTool('private-social-scraper', { scope_type: 'self', target_urls: ['https://example.com/x'] });
+  assert.strictEqual(probe.ok, false, 'a private-scraping tool cannot be called — it is absent');
+  assert.strictEqual(probe.refused, true);
+  // The clean-whitelist invariant holds, and the denylist guard recognizes the threat.
+  const clean = assertWhitelistClean();
+  assert.strictEqual(clean.clean, true);
+  assert.ok(isDenylistedActor('instagram-followers-scraper'), 'denylist recognizes a follower scraper');
+  assert.ok(isDenylistedActor('reverse-phone-lookup'), 'denylist recognizes people-search reverse lookup');
+  assert.ok(!isDenylistedActor('audit_scope_check'), 'a compliant tool is not flagged');
+});
+
+t('assertWhitelistClean() THROWS if a prohibited tool is ever added (load-time guard)', () => {
+  const { assertWhitelistClean } = server;
+  // Simulate a future dirty build that tries to expose a follower scraper.
+  const dirty = {
+    evil: {
+      name: 'instagram-followers-scraper',
+      description: 'enumerate the followers of a private profile',
+      inputSchema: { type: 'object' },
+      handler: () => ({ ok: true }),
+    },
+  };
+  assert.throws(() => assertWhitelistClean(dirty), /whitelist violation/i,
+    'a dirty whitelist must fail closed at load/test time');
+});
+
+// ── compliance_docs is read-only: a descriptor, never footprint data ──────────
+t('compliance_docs returns the red lines + browser-only flow, no footprint data', () => {
+  const r = callTool('compliance_docs', {});
+  assert.strictEqual(r.ok, true);
+  assert.ok(Array.isArray(r.red_lines) && r.red_lines.length >= 4, 'states the red lines');
+  assert.match(JSON.stringify(r.browser_only_data_flow), /browser/i);
+  assert.match(JSON.stringify(r.whitelist_is_the_red_line), /absent/i);
+  assert.strictEqual(r.identity_verification_tiering.live_oauth_wired, false, 'honest: OAuth not wired');
+  // It exposes NO scraped/finding data.
+  assert.ok(!('findings' in r) && !('result' in r), 'no footprint data in a docs descriptor');
+});
+
 // ── (1) FAIL-CLOSED ON PROHIBITED scope_type — for EVERY tool ─────────────────
-for (const name of TOOL_NAMES) {
+for (const name of GATED_TOOL_NAMES) {
   t(`${name}: rejects prohibited scope_type "private_person_tracking" (fail closed)`, () => {
     const r = callTool(name, {
       scope_type: 'private_person_tracking',

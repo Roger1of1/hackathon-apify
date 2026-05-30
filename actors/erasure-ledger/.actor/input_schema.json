@@ -56,7 +56,7 @@
     "subject_name": {
       "title": "Your name (for the letters)",
       "type": "string",
-      "description": "Optional. Passed through to the reused takedown planner. Left blank, it becomes a private personplicit placeholder — never fabricated.",
+      "description": "Optional. Passed through to the reused takedown planner. Left blank, it becomes an explicit placeholder — never fabricated.",
       "editor": "textfield"
     },
     "case_id": {

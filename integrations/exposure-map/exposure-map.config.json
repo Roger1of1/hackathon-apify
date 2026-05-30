@@ -1,0 +1,47 @@
+{
+  "_comment": "Config for the EXPOSURE MAP feed (Part 2). This binds the Apify self-audit ingest (apify/website-content-crawler + apify/rag-web-browser, see integrations/ingest) to the in-browser exposure graph. NO credentials, NO actorIds here — the feed REUSES integrations/ingest's actors + caps. This file only declares the BROWSER-ONLY data-flow contract and the Standby 'run my audit now' real-time entry. Nothing here performs a fetch or stores findings.",
+
+  "data_flow": {
+    "model": "browser_only_zero_server_storage",
+    "summary": "The exposure graph is built TRANSIENTLY in the user's browser from their OWN findings and is NEVER persisted to a MirrorTrace server. Our backend stores NO user exposure data — there is no central honeypot/dossier store.",
+    "client_storage_allowed": ["in_memory", "sessionStorage"],
+    "client_storage_forbidden": ["localStorage_for_findings", "any_server_POST_of_findings"],
+    "purge": "on_tab_close",
+    "ref_docs": "docs/apify/exposure-map.md"
+  },
+
+  "realtime_entry": {
+    "capability": "apify_actor_standby",
+    "summary": "The 'run my audit now' button hits the SAME Standby policy-gate endpoint (integrations/standby) which gates ONE subject and metamorphs into the audit pipeline. The pipeline's dataset rows are returned to the USER (run-sync-get-dataset-items) and mapped to graph nodes IN THE BROWSER — never written to a MirrorTrace store.",
+    "endpoint": "POST /inspect (integrations/standby/server.js)",
+    "ref_docs": "docs/apify/standby.md"
+  },
+
+  "reuses": {
+    "ingest": "integrations/ingest/ingest-policy.js (Apify WCC + RAG plan + row->event mapping)",
+    "severity": "shared/enrich/severity.js (band -> node colour tier)",
+    "correlation": "shared/enrich/cluster-keys.js (shared identifier -> cross-source edges)",
+    "scope_gate": "shared/scope.js (read-only; the red line)"
+  },
+
+  "tier_mapping": {
+    "_note": "Node colour tier is derived from the canonical severity band — NOT a new scoring axis.",
+    "red": ["critical", "high"],
+    "yellow": ["medium"],
+    "green": ["low", "info"]
+  },
+
+  "sensitivity_tier": {
+    "_note": "Identity-verification tiering for the feed (locked decision). Low-sensitivity = no verification; SENSITIVE = one-click OAuth (live OAuth NOT yet wired — gate UX only).",
+    "low_sensitivity_no_verification": [
+      "view_public_name_search_results_scope_gated",
+      "k_anonymity_breach_check"
+    ],
+    "sensitive_requires_oauth_signin": [
+      "pull_and_correlate_pii_into_exposure_graph",
+      "confirm_data_broker_listings",
+      "enable_monitoring"
+    ],
+    "oauth_status": "not_yet_wired"
+  }
+}
