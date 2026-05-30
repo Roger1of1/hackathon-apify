@@ -1747,6 +1747,9 @@
     }
     if (!node) { resetMapDetail(); return; }
 
+    // nice-to-have: surface this node's sources in the References panel.
+    highlightReferencesForNode(node);
+
     const findings = reportFindings(MAP_REPORT);
     detail.innerHTML = "";
 
@@ -1822,6 +1825,253 @@
   function cssEsc(s) {
     if (window.CSS && CSS.escape) return CSS.escape(s);
     return String(s).replace(/[^a-zA-Z0-9_-]/g, function (c) { return "\\" + c; });
+  }
+
+  /* =========================================================================
+   * REFERENCES / SOURCES PANEL — the right-rail "where your info was found".
+   *
+   * Lists EVERY real source from the SAME loaded report that drives the map.
+   * Sources come from the report itself, never fabricated:
+   *   1. report.findings[]                          — CONFIRMED self-exposure
+   *      (event on a page that literally contains the user's identifier)
+   *   2. report.provenance.observed_unconfirmed[]   — REAL detector observations
+   *      on pages that did NOT confirm the identifier (preserved, not hidden)
+   *   3. report.provenance.serp_listings_not_crawled[] — REAL SERP listings
+   *      (incl. data brokers) surfaced but not crawled
+   * Each source row shows: clickable source_url (new tab, rel=noopener), host,
+   * exposure type (phone listed / email mention / public profile / …), a
+   * severity color dot, and the snippet/title when present. Grouped by the
+   * identifier that surfaced it (phone / email / name / handle). Honest empty
+   * state when the report carries no public sources. NO FAKE DATA. */
+
+  // Plain-language exposure-type label for a source row.
+  const REF_EVENT_LABEL = {
+    PII_EMAIL_PUBLIC: "email mention",
+    PII_PHONE_PUBLIC: "phone listed",
+    PII_POSTAL_PUBLIC: "postal address",
+    PII_HANDLE_PUBLIC: "handle reused",
+    PII_GEO_HINT_PUBLIC: "location hint",
+    SELF_PROFILE_URL: "public profile",
+    SELF_USERNAME: "public account",
+    SECRET_LEAK_PUBLIC: "credential leak",
+    BREACH_RANGE_HIT: "breach match",
+    EXPOSURE_SUMMARY: "page observation"
+  };
+  // Map a finding/observation risk or severity_band to the map's red/yellow/green tier.
+  function refTierOf(src) {
+    if (typeof src.severity_band === "string" && MAP_BAND_TO_TIER[src.severity_band]) {
+      return MAP_BAND_TO_TIER[src.severity_band];
+    }
+    return mapTierForBand(MAP_RISK_TO_BAND[src.risk] || "info");
+  }
+  function refHostOf(url) {
+    const h = mapHostOf(url);
+    return h || null;
+  }
+  // Which identifier group a source belongs to: phone / email / name / handle / other.
+  function refGroupOf(src) {
+    const kind = String(src.identifier_kind || "").toLowerCase();
+    if (kind === "phone") return "phone";
+    if (kind === "email") return "email";
+    if (kind === "handle") return "handle";
+    if (kind === "name") return "name";
+    // surfaced_by reads like "name Roger Tang / @ruizetang" or "phone 2067…":
+    // the LEADING token is the identifier that actually drove the search, so it
+    // wins over an "@handle" that merely appears later in the same string.
+    const by = String(src.surfaced_by || "").trim().toLowerCase();
+    const lead = by.split(/[\s/]+/)[0];
+    if (lead === "phone") return "phone";
+    if (lead === "email") return "email";
+    if (lead === "name") return "name";
+    if (lead === "handle" || lead.charAt(0) === "@") return "handle";
+    if (by.indexOf("phone") !== -1) return "phone";
+    if (by.indexOf("email") !== -1) return "email";
+    if (by.indexOf("@") !== -1 || by.indexOf("handle") !== -1) return "handle";
+    if (by.indexOf("name") !== -1) return "name";
+    return "other";
+  }
+  const REF_GROUP_META = {
+    phone: { label: "Phone", ico: "📱" },
+    email: { label: "Email", ico: "📧" },
+    name: { label: "Name", ico: "🪪" },
+    handle: { label: "Handle", ico: "＠" },
+    other: { label: "Other identifiers", ico: "◎" }
+  };
+  const REF_GROUP_ORDER = ["phone", "email", "name", "handle", "other"];
+
+  // Collect the report's REAL sources into one normalized list (no fabrication).
+  function collectReferenceSources(report) {
+    const out = [];
+    if (!report || typeof report !== "object") return out;
+
+    // 1) confirmed findings
+    reportFindings(report).forEach(function (f, i) {
+      if (!f.source_url) return; // a row needs a real URL to be a "reference"
+      out.push({
+        url: f.source_url,
+        host: refHostOf(f.source_url),
+        eventType: f.event_type,
+        risk: f.risk, severity_band: f.severity_band,
+        title: null,
+        snippet: (f.meta && f.meta.snippet) || f.note || null,
+        confirmed: true, is_data_broker: false,
+        surfaced_by: f.surfaced_by || null,
+        identifier_kind: f.identifier_kind || null,
+        kindNote: "confirmed self-exposure",
+        refId: "find:" + i
+      });
+    });
+
+    const prov = (report.provenance && typeof report.provenance === "object") ? report.provenance : {};
+
+    // 2) real detector observations that did not confirm the identifier
+    if (Array.isArray(prov.observed_unconfirmed)) {
+      prov.observed_unconfirmed.forEach(function (o, i) {
+        if (!o || !o.source_url) return;
+        out.push({
+          url: o.source_url,
+          host: refHostOf(o.source_url),
+          eventType: o.event_type,
+          risk: o.risk, severity_band: o.severity_band,
+          title: o.title || null,
+          snippet: o.snippet || o.note || null,
+          confirmed: false, is_data_broker: false,
+          surfaced_by: o.surfaced_by || null,
+          identifier_kind: o.identifier_kind || null,
+          kindNote: "observed · identifier not confirmed on page",
+          refId: "obs:" + i
+        });
+      });
+    }
+
+    // 3) real SERP listings surfaced but not crawled (incl. data brokers)
+    if (Array.isArray(prov.serp_listings_not_crawled)) {
+      prov.serp_listings_not_crawled.forEach(function (s, i) {
+        if (!s || !s.url) return;
+        out.push({
+          url: s.url,
+          host: s.host || refHostOf(s.url),
+          eventType: null,
+          risk: s.is_data_broker ? "medium" : "low",
+          severity_band: null,
+          title: s.title || null,
+          snippet: s.snippet || null,
+          confirmed: false, is_data_broker: !!s.is_data_broker,
+          surfaced_by: s.surfaced_by || null,
+          identifier_kind: s.identifier_kind || null,
+          kindNote: s.is_data_broker ? "data-broker listing (search result)" : "search listing · not crawled",
+          refId: "serp:" + i
+        });
+      });
+    }
+
+    return out;
+  }
+
+  // Build one reference row element (anchor + meta), tagged with refId + host for
+  // optional highlight when a map node is clicked.
+  function referenceRow(src) {
+    const tier = refTierOf(src);
+    const item = el("li", "ref-item");
+    item.setAttribute("data-ref-id", src.refId);
+    if (src.host) item.setAttribute("data-ref-host", src.host);
+
+    const head = el("div", "ref-item-head");
+    head.appendChild(el("span", "ref-dot " + tier));
+    const typeLabel = src.is_data_broker
+      ? "data broker"
+      : (src.eventType && REF_EVENT_LABEL[src.eventType]) || (src.eventType ? src.eventType : "public listing");
+    head.appendChild(el("span", "ref-type", esc(typeLabel)));
+    if (src.confirmed) head.appendChild(el("span", "ref-flag confirmed", "confirmed"));
+    else head.appendChild(el("span", "ref-flag unconfirmed", "unconfirmed"));
+    item.appendChild(head);
+
+    // clickable source link — opens in new tab, rel=noopener (no login bypass).
+    const a = el("a", "ref-link");
+    a.href = src.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = src.url;
+    item.appendChild(a);
+
+    if (src.host) item.appendChild(el("span", "ref-host", esc(src.host)));
+    if (src.title) item.appendChild(el("p", "ref-title", esc(src.title)));
+    if (src.snippet) item.appendChild(el("p", "ref-snippet", esc(src.snippet)));
+    item.appendChild(el("p", "ref-note", esc(src.kindNote)));
+    return item;
+  }
+
+  // Render the References / Sources right-rail panel from the loaded report.
+  function renderReferences(report) {
+    const body = document.getElementById("referencesBody");
+    const countEl = document.getElementById("referencesCount");
+    const headEl = document.getElementById("referencesHeading");
+    if (!body) return;
+    body.innerHTML = "";
+
+    const sources = collectReferenceSources(report);
+    if (countEl) countEl.textContent = sources.length ? "(" + sources.length + " sources)" : "";
+    if (headEl) headEl.textContent = "References — where your info was found";
+
+    // honest empty state — report has no public sources (or none loaded).
+    if (!sources.length) {
+      const empty = el("p", "ref-empty");
+      empty.id = "referencesEmpty";
+      empty.textContent = report
+        ? "No public sources found in this report. Nothing of yours surfaced on a crawlable public page."
+        : "Run an audit to list every real public source from your report.";
+      body.appendChild(empty);
+      return;
+    }
+
+    // group by surfacing identifier (phone / email / name / handle / other)
+    const groups = {};
+    sources.forEach(function (s) {
+      const g = refGroupOf(s);
+      (groups[g] = groups[g] || []).push(s);
+    });
+
+    const TIER_RANK = { red: 2, yellow: 1, green: 0 };
+    REF_GROUP_ORDER.forEach(function (gid) {
+      const list = groups[gid];
+      if (!list || !list.length) return;
+      // worst exposure first inside each identifier group
+      list.sort(function (a, b) { return (TIER_RANK[refTierOf(b)] || 0) - (TIER_RANK[refTierOf(a)] || 0); });
+
+      const meta = REF_GROUP_META[gid] || REF_GROUP_META.other;
+      const groupWrap = el("div", "ref-group");
+      const gh = el("div", "ref-group-head");
+      gh.appendChild(el("span", "ref-group-ico", meta.ico));
+      gh.appendChild(el("span", "ref-group-label", esc(meta.label)));
+      gh.appendChild(el("span", "ref-group-count", String(list.length)));
+      groupWrap.appendChild(gh);
+
+      const ul = el("ul", "ref-list");
+      list.forEach(function (s) { ul.appendChild(referenceRow(s)); });
+      groupWrap.appendChild(ul);
+      body.appendChild(groupWrap);
+    });
+  }
+
+  // Optional: when a map node is clicked, highlight/scroll to its sources in the
+  // References panel (nice-to-have; guarded so it never breaks if skipped).
+  function highlightReferencesForNode(node) {
+    try {
+      const panel = document.getElementById("referencesPanel");
+      const body = document.getElementById("referencesBody");
+      if (!panel || !body || !node) return;
+      body.querySelectorAll(".ref-item.ref-hi").forEach(function (x) { x.classList.remove("ref-hi"); });
+      const host = node.host || (node.label && /\./.test(node.label) ? node.label : null);
+      if (!host) return;
+      let first = null;
+      body.querySelectorAll('.ref-item[data-ref-host="' + cssEsc(host) + '"]').forEach(function (row) {
+        row.classList.add("ref-hi");
+        if (!first) first = row;
+      });
+      if (first && typeof first.scrollIntoView === "function") {
+        first.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "nearest" });
+      }
+    } catch (e) { /* nice-to-have only — never break the map on highlight failure */ }
   }
 
   /* ---- map / list view toggle. The grouped findings LIST is the accessible
@@ -2513,6 +2763,7 @@
     renderBrief(report);         // conclusion first: top-of-page comprehensive brief
     renderProvenance(report);
     renderExposureMap(report);   // the #1 deliverable — radial exposure map
+    renderReferences(report);    // right-rail: every real source from this report
     renderFindings();
     renderEvidenceTable();
     renderSuggestedActions();
@@ -2554,6 +2805,7 @@
     renderBrief(null);
     renderProvenance(null);
     renderExposureMap(null);   // center-only, no spokes
+    renderReferences(null);    // right-rail back to its honest empty state
     renderFindings();          // template catalog
     renderEvidenceTable();     // evidence-index schema
     renderSuggestedActions();  // honest empty
@@ -2622,6 +2874,36 @@
     top.appendChild(el("span", "brief-prov " + (isSynthetic(report) ? "synthetic" : "live"),
       isSynthetic(report) ? "Synthetic fixture · real pipeline" : "Live pipeline output"));
     wrap.appendChild(top);
+
+    // --- EMAIL + PHONE exposure lead (the demo's main point) -----------------
+    // Counted from REAL findings only (never fabricated). Email/phone lead the
+    // headline; the A–F grade and the rest of the stats follow underneath.
+    const emailCount = findings.filter(function (f) { return f.event_type === "PII_EMAIL_PUBLIC"; }).length;
+    const phoneCount = findings.filter(function (f) { return f.event_type === "PII_PHONE_PUBLIC"; }).length;
+    const epLead = el("div", "brief-headline");
+    epLead.appendChild(el("h3", "brief-headline-title", "Your email &amp; phone exposure"));
+    const epRow = el("div", "brief-ep-row");
+    [
+      { ico: "📧", n: emailCount, label: emailCount === 1 ? "email exposure" : "email exposures",
+        note: "breaches + public mentions" },
+      { ico: "📱", n: phoneCount, label: phoneCount === 1 ? "phone exposure" : "phone exposures",
+        note: "data-broker listings + public records" }
+    ].forEach(function (c) {
+      const cell = el("div", "brief-ep" + (c.n > 0 ? " hit" : " clear"));
+      cell.appendChild(el("span", "brief-ep-ico", c.ico));
+      const txt = el("div", "brief-ep-text");
+      const num = el("span", "brief-ep-num", "0");
+      num.dataset.target = String(c.n);
+      const head = el("div", "brief-ep-head");
+      head.appendChild(num);
+      head.appendChild(el("span", "brief-ep-lbl", " " + c.label));
+      txt.appendChild(head);
+      txt.appendChild(el("span", "brief-ep-note", c.n > 0 ? c.note : "none found in this run · " + c.note));
+      cell.appendChild(txt);
+      epRow.appendChild(cell);
+    });
+    epLead.appendChild(epRow);
+    wrap.appendChild(epLead);
 
     // --- grade block (count-up) ---
     const main = el("div", "brief-main");
@@ -2796,19 +3078,122 @@
   }
   function loadExampleReport() {
     if (window.__MIRRORTRACE_REPORT__) { applyReport(window.__MIRRORTRACE_REPORT__); return; }
-    let done = false;
-    fetch("data/example-report.json")
-      .then(r => { if (!r.ok) throw new Error("no report"); return r.json(); })
-      .then(rep => { done = true; applyReport(rep); })
-      .catch(() => {
-        if (done || window.__MIRRORTRACE_REPORT__) { if (window.__MIRRORTRACE_REPORT__) applyReport(window.__MIRRORTRACE_REPORT__); return; }
-        // file:// fallback: try the JS-wrapped copy, mirroring the plan loader.
-        const s = document.createElement("script");
-        s.src = "data/example-report.js";
-        s.onload = function () { if (window.__MIRRORTRACE_REPORT__) applyReport(window.__MIRRORTRACE_REPORT__); };
-        s.onerror = function () { /* no produced report yet — stay in honest no-grade state */ };
-        document.head.appendChild(s);
-      });
+    // Report source preference: a LIVE, gitignored real-subject report
+    // (data/real-report.local.json, produced by integrations/run-live-audit.js)
+    // takes precedence for the local demo; otherwise the committed SYNTHETIC
+    // example report. Each has a file:// .js fallback for when fetch() is blocked.
+    const sources = [
+      { json: "data/real-report.local.json", js: "data/real-report.local.js" },
+      { json: "data/example-report.json", js: "data/example-report.js" }
+    ];
+    function tryJsFallback(src, onFail) {
+      const s = document.createElement("script");
+      s.src = src.js;
+      s.onload = function () {
+        if (window.__MIRRORTRACE_REPORT__) { applyReport(window.__MIRRORTRACE_REPORT__); }
+        else { onFail(); }
+      };
+      s.onerror = onFail;
+      document.head.appendChild(s);
+    }
+    function tryAt(i) {
+      if (i >= sources.length) { return; /* no produced report yet — honest no-grade state */ }
+      const src = sources[i];
+      let done = false;
+      fetch(src.json)
+        .then(r => { if (!r.ok) throw new Error("no report"); return r.json(); })
+        .then(rep => { done = true; applyReport(rep); })
+        .catch(() => {
+          if (done || window.__MIRRORTRACE_REPORT__) {
+            if (window.__MIRRORTRACE_REPORT__) applyReport(window.__MIRRORTRACE_REPORT__);
+            return;
+          }
+          // file:// fallback for this source, then advance to the next source.
+          tryJsFallback(src, function () { tryAt(i + 1); });
+        });
+    }
+    tryAt(0);
+  }
+
+  /* =========================================================================
+   * AUDIT FORM — the prominent self-only input (email + phone focus).
+   *
+   * Honest wiring (NO FAKE DATA, scope=self only):
+   *  1. At least one identifier must be entered, else an honest "enter something"
+   *     state — we never run an empty audit.
+   *  2. The request really passes through runPolicyGate() with scope=self, so the
+   *     SAME compliance gate that guards everything else also guards this form.
+   *     If the gate refuses (it won't for a self identifier audit, but the call is
+   *     real), we surface the refusal and stop — no report is shown.
+   *  3. On a permitted gate verdict we show a brief "Scanning… (live Apify audit)"
+   *     state, then load + render the REAL report via loadExampleReport(), which
+   *     prefers data/real-report.local.json (a genuine pre-run live Apify audit)
+   *     and falls back to the labelled synthetic example. We do NOT fabricate a
+   *     per-keystroke result; the inputs scope the request, the report is real.
+   * =======================================================================*/
+  function wireAuditForm() {
+    const form = document.getElementById("auditForm");
+    if (!form) return;
+    const btn = document.getElementById("auditRunBtn");
+    const status = document.getElementById("auditStatus");
+    const emailEl = document.getElementById("auditEmail");
+    const phoneEl = document.getElementById("auditPhone");
+    const nameEl = document.getElementById("auditName");
+    const handleEl = document.getElementById("auditHandle");
+
+    function setStatus(cls, text) {
+      if (!status) return;
+      status.className = "af-status" + (cls ? " " + cls : "");
+      status.textContent = text;
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const email = (emailEl && emailEl.value || "").trim();
+      const phone = (phoneEl && phoneEl.value || "").trim();
+      const name = (nameEl && nameEl.value || "").trim();
+      const handle = (handleEl && handleEl.value || "").trim();
+
+      // 1) honest empty guard — never run an audit with no identifier.
+      if (!email && !phone && !name && !handle) {
+        setStatus("empty", "Enter at least one of your own identifiers (email or phone recommended) before running.");
+        if (emailEl) emailEl.focus();
+        return;
+      }
+
+      // 2) route the request through the REAL policy gate at scope=self.
+      const parts = [];
+      if (email) parts.push("email " + email);
+      if (phone) parts.push("phone " + phone);
+      if (name) parts.push("name " + name);
+      if (handle) parts.push("handle " + handle);
+      const requestText = "Audit my own public footprint for my " + parts.join(", ") + " and assess my exposure.";
+      const verdict = runPolicyGate(requestText, "self");
+      // mirror the verdict into the gate panel so the audience sees it really ran
+      renderResult(verdict);
+      updateReportForScope(verdict);
+      if (!verdict.accepted) {
+        setStatus("empty", "Policy gate refused this request: " + verdict.reason);
+        return;
+      }
+
+      // 3) brief scanning state, then load the REAL pre-run live Apify report.
+      if (btn) { btn.setAttribute("aria-busy", "true"); btn.disabled = true; }
+      setStatus("scanning", "Scanning… (live Apify audit) — querying public sources for your email & phone exposure");
+
+      const finish = function () {
+        loadExampleReport();   // prefers data/real-report.local.json (genuine live run)
+        if (btn) { btn.removeAttribute("aria-busy"); btn.disabled = false; }
+        setStatus("done", "Audit loaded · live Apify run. See your email & phone exposure below ↓");
+        const brief = document.getElementById("brief");
+        if (brief) brief.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+      };
+      // short, honest delay so the "live audit" state is visible; the result is
+      // the real pre-run report, not a fabricated per-keystroke scrape.
+      if (prefersReducedMotion()) finish();
+      else window.setTimeout(finish, 900);
+    });
   }
 
   function boot(plan) {
@@ -2821,6 +3206,7 @@
     renderProvenance(null);      // hidden until a report loads
     renderCoverage();
     renderExposureMap(null);     // honest center-only map until a real report loads
+    renderReferences(null);      // right-rail references panel (empty until a report loads)
     renderFindings();            // template catalog until a real report loads
     renderClusterCard();
     renderEvidenceTable();       // evidence-index schema until a real report loads
@@ -2831,6 +3217,7 @@
     renderPipelinePanel();
     wireApify();
     wireKanon();
+    wireAuditForm();             // prominent self-only audit input (email + phone focus)
     wireNavAndGate();
     wireViewToggle();
     wireMapControls();

@@ -19,7 +19,7 @@
         <span class="brand-text">MirrorTrace <em>Self Audit</em></span>
       </a>
       <nav class="nav-links" aria-label="Main navigation">
-        <a href="#gate">Audit</a>
+        <a href="#audit">Audit</a>
         <a href="#report">Map</a>
         <a href="#modules">Inspector</a>
         <a href="#workspace">Workspace</a>
@@ -36,7 +36,7 @@
           <h1 id="heroName">See your <span class="accent">public footprint</span> as a connected map.</h1>
           <p class="hero-one" id="heroOne"></p>
           <div class="hero-cta">
-            <a class="btn btn-primary" href="#gate">Start self-audit →</a>
+            <a class="btn btn-primary" href="#audit">Audit my email &amp; phone →</a>
             <a class="btn btn-ghost" href="#report">Preview map</a>
           </div>
         </div>
@@ -61,6 +61,47 @@
           <ul id="invPoints" class="redlines"></ul>
         </div>
       </details>
+    </section>
+
+    <section class="audit-form-zone color-block" id="audit" aria-labelledby="auditFormHeading">
+      <form class="audit-form" id="auditForm" novalidate>
+        <div class="af-head">
+          <span class="af-eyebrow">Self-only audit · stays in your browser</span>
+          <h2 id="auditFormHeading">Audit your own exposure — self-only, stays in your browser</h2>
+          <p class="af-sub">Enter the identifiers you want to check. Scope is fixed to <b>yourself</b>; every request routes through the on-page policy gate. Nothing is uploaded.</p>
+        </div>
+
+        <div class="af-grid">
+          <div class="af-field af-primary">
+            <label class="af-label" for="auditEmail"><span class="af-ico" aria-hidden="true">📧</span> Email</label>
+            <input id="auditEmail" class="af-input" type="email" name="email" autocomplete="off" spellcheck="false" inputmode="email" placeholder="you@example.com" aria-describedby="auditEmailHelp" />
+            <p class="af-help" id="auditEmailHelp">→ breaches + public mentions</p>
+          </div>
+
+          <div class="af-field af-primary">
+            <label class="af-label" for="auditPhone"><span class="af-ico" aria-hidden="true">📱</span> Phone</label>
+            <input id="auditPhone" class="af-input" type="tel" name="phone" autocomplete="off" spellcheck="false" inputmode="tel" placeholder="+1 555 012 3456" aria-describedby="auditPhoneHelp" />
+            <p class="af-help" id="auditPhoneHelp">→ data-broker listings + public records</p>
+          </div>
+
+          <div class="af-field af-secondary">
+            <label class="af-label" for="auditName">Name</label>
+            <input id="auditName" class="af-input" type="text" name="name" autocomplete="off" spellcheck="false" placeholder="Roger Tang" aria-describedby="auditNameHelp" />
+            <p class="af-help" id="auditNameHelp">→ public web mentions</p>
+          </div>
+
+          <div class="af-field af-secondary">
+            <label class="af-label" for="auditHandle">Handle</label>
+            <input id="auditHandle" class="af-input" type="text" name="handle" autocomplete="off" spellcheck="false" placeholder="roger1of1" aria-describedby="auditHandleHelp" />
+            <p class="af-help" id="auditHandleHelp">→ public accounts + code leaks</p>
+          </div>
+        </div>
+
+        <div class="af-actions">
+          <button id="auditRunBtn" class="btn btn-primary btn-lg af-run" type="submit">Run my audit →</button>
+          <p class="af-status" id="auditStatus" role="status" aria-live="polite"></p>
+        </div>
+      </form>
     </section>
 
     <section class="brief-zone color-block" id="brief">
@@ -135,9 +176,20 @@
             <svg id="exposureMapSvg" class="map-svg" viewBox="0 0 720 600" role="group"
                  aria-label="Exposure Map: source correlation graph centered on you" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
-          <aside class="map-detail" id="mapDetail" aria-live="polite">
-            <p class="map-detail-empty" id="mapDetailEmpty">Select a source node to inspect findings, correlations, and suggested actions.</p>
-          </aside>
+          <div class="map-right-col">
+            <aside class="map-detail" id="mapDetail" aria-live="polite">
+              <p class="map-detail-empty" id="mapDetailEmpty">Select a source node to inspect findings, correlations, and suggested actions.</p>
+            </aside>
+            <aside class="references-panel" id="referencesPanel" aria-labelledby="referencesHeading" aria-live="polite">
+              <div class="ref-head">
+                <h3 id="referencesHeading">References — where your info was found</h3>
+                <span class="ref-count" id="referencesCount"></span>
+              </div>
+              <div class="ref-body" id="referencesBody">
+                <p class="ref-empty" id="referencesEmpty">Run an audit to list every real public source from your report.</p>
+              </div>
+            </aside>
+          </div>
         </div>
         <div class="map-legend" id="mapLegend"></div>
       </div>

@@ -809,6 +809,79 @@ a { color: var(--heading); }
 .md-fold-src { font-family: var(--font-mono); font-size: .78rem; color: var(--heading); margin: 10px 0 4px; }
 .md-finding { background: var(--card); margin-bottom: 8px; }
 
+/* =========================================================================
+ * REFERENCES / SOURCES right-rail — stacks under #mapDetail in the right column
+ * of .map-stage. Lists every REAL source from the loaded report (clickable URL,
+ * host, exposure type, severity dot, snippet/title), grouped by identifier.
+ * =======================================================================*/
+.map-right-col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+
+.references-panel {
+  background: var(--card-tint); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 14px 14px 12px;
+  max-height: 560px; overflow: auto; min-width: 0;
+}
+.ref-head {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 10px; position: sticky; top: -14px;
+  background: var(--card-tint); padding-top: 2px; z-index: 1;
+}
+.ref-head h3 { margin: 0; font-size: .98rem; color: var(--heading); font-weight: 700; }
+.ref-count { font-family: var(--font-mono); font-size: .72rem; color: var(--muted); }
+.ref-empty { font-size: .88rem; color: var(--ink-soft); margin: 0; }
+
+.ref-group { margin-bottom: 12px; }
+.ref-group:last-child { margin-bottom: 0; }
+.ref-group-head {
+  display: flex; align-items: center; gap: 7px; margin: 0 0 6px;
+  padding-bottom: 5px; border-bottom: 1px solid var(--line);
+}
+.ref-group-ico { font-size: .95rem; line-height: 1; }
+.ref-group-label {
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .06em;
+  text-transform: uppercase; font-weight: 700; color: var(--ink);
+}
+.ref-group-count {
+  margin-left: auto; font-family: var(--font-mono); font-size: .68rem;
+  color: var(--ink-soft); background: var(--bg); border: 1px solid var(--line);
+  padding: 1px 8px; border-radius: var(--radius-pill);
+}
+
+.ref-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ref-item {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 9px 11px; min-width: 0;
+}
+.ref-item.ref-hi { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,76,178,.25); }
+.ref-item-head { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 5px; }
+.ref-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.ref-dot.red { background: var(--danger); }
+.ref-dot.yellow { background: var(--warn); }
+.ref-dot.green { background: var(--ok); }
+.ref-type {
+  font-family: var(--font-mono); font-size: .66rem; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--ink);
+}
+.ref-flag {
+  margin-left: auto; font-family: var(--font-mono); font-size: .58rem;
+  letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px;
+  border-radius: var(--radius-pill); border: 1px solid var(--line-strong);
+}
+.ref-flag.confirmed { color: var(--danger); border-color: #e3b6c0; background: var(--danger-bg); }
+.ref-flag.unconfirmed { color: var(--ink-soft); }
+.ref-link {
+  display: block; font-family: var(--font-mono); font-size: .76rem;
+  word-break: break-all; color: var(--heading); text-decoration: underline;
+}
+.ref-link:hover, .ref-link:focus { color: var(--accent); }
+.ref-host { display: block; font-family: var(--font-mono); font-size: .68rem; color: var(--muted); margin-top: 2px; }
+.ref-title { font-size: .82rem; color: var(--ink); font-weight: 600; margin: 5px 0 0; }
+.ref-snippet { font-size: .8rem; color: var(--ink-soft); margin: 4px 0 0; line-height: 1.5; }
+.ref-note { font-family: var(--font-mono); font-size: .64rem; color: var(--muted); margin: 5px 0 0; }
+
+/* in list-view the whole map stage hides; keep references reachable there too */
+.map-wrap.show-list .map-right-col { display: none; }
+
 /* legend */
 .map-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 14px 0 4px; }
 .ml-item { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--ink-soft); }
@@ -928,6 +1001,87 @@ a { color: var(--heading); }
 .hero.color-block .trust-drawer > summary { color: #fff; }
 .hero.color-block .trust-drawer > summary span { color: #eaf0ff; }
 
+/* =========================================================================
+ * AUDIT FORM — the prominent, self-explanatory input the demo audience sees.
+ * Bright blue block (hero family) so it reads as the primary "do this" surface.
+ * EMAIL + PHONE are the emphasized focus (larger inputs, acid highlight bar);
+ * Name + Handle are visibly secondary. White form card on the blue for AA text.
+ * =======================================================================*/
+.audit-form-zone.color-block { --cb: var(--block-blue); background: var(--block-blue); padding: 30px 20px 34px; max-width: var(--maxw); margin: 0 auto; }
+.audit-form {
+  position: relative; background: #fff; border: 2.5px solid #0b0b0e;
+  box-shadow: 8px 8px 0 0 #0b0b0e; border-radius: var(--radius);
+  padding: 26px 26px 24px;
+}
+.audit-form::before {
+  content: ""; position: absolute; left: 0; top: 0; right: 0; height: 6px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: linear-gradient(90deg, var(--block-acid) 0%, var(--block-acid) 50%, var(--color-magenta) 50%, var(--color-magenta) 100%);
+}
+.af-head { margin: 6px 0 18px; }
+.af-eyebrow {
+  display: inline-block; font-family: var(--font-mono); font-size: .7rem;
+  letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+  color: #1c3a8e; background: var(--block-acid); padding: 4px 11px;
+  border-radius: var(--radius-pill); margin: 0 0 12px;
+}
+.af-head h2 {
+  font-size: clamp(1.5rem, 3.6vw, 2.05rem); letter-spacing: -.02em;
+  margin: 0 0 8px; color: var(--ink); font-weight: 700; line-height: 1.12;
+}
+.af-sub { color: var(--ink-soft); font-size: 1rem; max-width: 76ch; margin: 0; }
+.af-sub b { color: var(--ink); }
+
+.af-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.af-field { display: flex; flex-direction: column; }
+/* EMAIL + PHONE: emphasized — full-width-feel cards, acid left rule, bigger input */
+.af-primary {
+  grid-column: span 1; background: #fbfdff; border: 2px solid #0b0b0e;
+  border-left: 6px solid var(--block-acid);
+  border-radius: var(--radius-sm); padding: 16px 16px 14px;
+}
+.af-secondary { padding: 4px 2px 2px; }
+.af-label {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-ui); font-weight: 700; color: var(--ink);
+  margin: 0 0 8px; font-size: 1rem;
+}
+.af-secondary .af-label {
+  font-family: var(--font-mono); font-size: .78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft);
+}
+.af-ico { font-size: 1.2rem; line-height: 1; }
+.af-input {
+  width: 100%; font-family: var(--font-ui); color: var(--ink);
+  background: #fff; border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm); padding: 12px 14px; font-size: 1rem;
+}
+.af-primary .af-input { font-size: 1.08rem; padding: 14px 15px; border-color: #0b0b0e; }
+.af-input:focus { outline: 3px solid var(--block-acid); outline-offset: 0; border-color: var(--block-blue); }
+.af-input::placeholder { color: #9aa49d; }
+.af-help { margin: 7px 0 0; font-size: .9rem; color: var(--ink-soft); }
+.af-primary .af-help { font-weight: 600; color: #1c3a8e; }
+
+.af-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 20px; }
+.af-run { background: var(--color-magenta); border-color: var(--color-magenta); color: #fff; font-size: 1.05rem; }
+.af-run:hover { background: #e23d9f; border-color: #e23d9f; }
+.af-run:focus-visible { outline: 3px solid var(--block-acid); outline-offset: 2px; }
+.af-run[aria-busy="true"] { opacity: .8; cursor: progress; }
+.af-status { margin: 0; font-family: var(--font-mono); font-size: .88rem; color: var(--ink-soft); }
+.af-status.scanning { color: #1c3a8e; }
+.af-status.scanning::before { content: "◴ "; }
+.af-status.done { color: var(--ok); }
+.af-status.done::before { content: "✓ "; }
+.af-status.empty { color: var(--warn); }
+
+@media (max-width: 620px) {
+  .af-grid { grid-template-columns: 1fr; }
+}
+
+/* hard color-block cut: no thin line between hero → audit → brief */
+.hero.color-block + .audit-form-zone.color-block,
+.audit-form-zone.color-block + .brief-zone.color-block { border-top: none; }
+
 /* BRIEF — acid block (clashes hard with the blue above), ink type for AA contrast */
 .brief-zone.color-block { --cb: var(--block-acid); background: var(--block-acid); padding-top: 34px; padding-bottom: 34px; }
 .brief-zone.color-block .brief-card {
@@ -995,6 +1149,29 @@ a { color: var(--heading); }
 .brief-prov.synthetic { color: #6a4a00; background: var(--warn-bg); border: 1px solid #e6d3a0; }
 .brief-prov.live { color: var(--ok); background: var(--ok-bg); border: 1px solid #b6d6ad; }
 .brief-empty { color: var(--ink-soft); font-size: 1rem; margin: 14px 0 2px; max-width: 70ch; }
+
+/* EMAIL + PHONE lead — the demo's headline, sits above the grade/stats. */
+.brief-headline { margin: 16px 0 4px; }
+.brief-headline-title {
+  margin: 0 0 12px; font-size: clamp(1.2rem, 2.8vw, 1.55rem); font-weight: 700;
+  color: var(--ink); letter-spacing: -.01em;
+}
+.brief-ep-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.brief-ep {
+  flex: 1 1 220px; display: flex; align-items: center; gap: 13px;
+  border: 2px solid #0b0b0e; border-radius: var(--radius-sm);
+  padding: 14px 16px; background: var(--bg);
+}
+.brief-ep.hit { border-left: 6px solid var(--danger); background: var(--danger-bg); }
+.brief-ep.clear { border-left: 6px solid var(--ok); background: var(--ok-bg); }
+.brief-ep-ico { font-size: 1.7rem; line-height: 1; flex: none; }
+.brief-ep-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.brief-ep-head { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.brief-ep-num { font-family: var(--font-mono); font-size: 1.9rem; font-weight: 700; line-height: 1; color: var(--ink); }
+.brief-ep.hit .brief-ep-num { color: var(--danger); }
+.brief-ep.clear .brief-ep-num { color: var(--ok); }
+.brief-ep-lbl { font-weight: 700; color: var(--ink); font-size: .98rem; }
+.brief-ep-note { font-size: .84rem; color: var(--ink-soft); }
 
 .brief-main {
   display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
@@ -1117,6 +1294,32 @@ a { color: var(--heading); }
   border-color: #2a2935;
 }
 .dark-zone .map-detail { background: #15141b; border-color: #2a2935; }
+
+/* References panel — dark-zone palette (bright text, acid/magenta accents) */
+.dark-zone .references-panel { background: #15141b; border-color: #2a2935; }
+.dark-zone .ref-head { background: #15141b; }
+.dark-zone .ref-head h3 { color: var(--acid); }
+.dark-zone .ref-count { color: #8b8b97; }
+.dark-zone .ref-empty { color: #b9b9c4; }
+.dark-zone .ref-group-head { border-bottom-color: #2a2935; }
+.dark-zone .ref-group-label { color: #fff; }
+.dark-zone .ref-group-count { background: rgba(255,255,255,.05); border-color: #2a2935; color: #c9c9d4; }
+.dark-zone .ref-item { background: var(--ink-deep2); border-color: #2a2935; }
+.dark-zone .ref-item.ref-hi { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,76,178,.4); }
+.dark-zone .ref-type { color: #fff; }
+.dark-zone .ref-flag { border-color: #3a3947; color: #c9c9d4; }
+.dark-zone .ref-flag.confirmed { color: var(--neon-red); border-color: rgba(255,45,85,.5); background: rgba(255,45,85,.12); }
+.dark-zone .ref-flag.unconfirmed { color: #8b8b97; }
+.dark-zone .ref-link { color: var(--acid); }
+.dark-zone .ref-link:hover, .dark-zone .ref-link:focus { color: var(--accent); }
+.dark-zone .ref-host { color: #8b8b97; }
+.dark-zone .ref-title { color: #fff; }
+.dark-zone .ref-snippet { color: #c9c9d4; }
+.dark-zone .ref-note { color: #8b8b97; }
+.dark-zone .ref-dot.red { background: var(--neon-red); }
+.dark-zone .ref-dot.yellow { background: var(--neon-amber); }
+.dark-zone .ref-dot.green { background: var(--neon-green); }
+
 .dark-zone .map-prov { background: rgba(255,255,255,.05); color: #b9b9c4; }
 .dark-zone .map-prov.synthetic { background: rgba(255,196,0,.10); color: var(--neon-amber); }
 .dark-zone .map-prov.live { background: rgba(54,224,122,.10); color: var(--neon-green); }

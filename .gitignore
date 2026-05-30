@@ -13,6 +13,14 @@ crawlee_storage/
 # Secrets — never commit a real APIFY_TOKEN
 .env
 *.env
+
+# PRIVACY: a real footprint report is about a real person — never commit it.
+# integrations/run-live-audit.js writes these LOCAL-ONLY artifacts for the demo.
+web/data/real-report.local.json
+web/data/real-report.local.js
+*.local.json
+*.local.js
+integrations/live-runs/
 .env.*
 
 # Logs

@@ -23,6 +23,10 @@ function walk(dir) {
       continue;
     }
     if (!TEXT_EXTENSIONS.has(path.extname(ent.name))) continue;
+    // Skip gitignored local data (e.g. real-report.local.*): these hold real,
+    // multilingual Apify SERP results and are not part of the committed,
+    // English-only web surface this test is meant to lock.
+    if (/\.local\.[^.]+$/.test(ent.name)) continue;
     const text = fs.readFileSync(full, 'utf8');
     const lines = text.split(/\r?\n/);
     lines.forEach((line, index) => {
