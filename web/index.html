@@ -19,9 +19,9 @@
         <span class="brand-text">MirrorTrace <em>合规版</em></span>
       </a>
       <nav class="nav-links" aria-label="主导航">
+        <a href="#brief">综合简要</a>
         <a href="#gate">合规闸门</a>
         <a href="#report">足迹报告</a>
-        <a href="#closure">戒断模式</a>
         <a href="#how">工作原理</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="切换菜单" aria-expanded="false">☰</button>
@@ -47,6 +47,17 @@
           <p id="invBody"></p>
           <ul id="invPoints" class="redlines"></ul>
         </div>
+      </div>
+    </section>
+
+    <!-- ===================== COMPREHENSIVE BRIEF (结论 first) =====================
+         TOP, BRIGHT, 撞色: an at-a-glance summary derived from the loaded report
+         (data/example-report.json — a clearly-labelled SYNTHETIC fixture / real
+         detector→grade pipeline example, never a live scrape of a real person).
+         Big A–F grade + headline numbers + top 2–3 highest-severity risks. -->
+    <section class="brief-zone" id="brief">
+      <div class="brief-card" id="briefCard" aria-live="polite">
+        <!-- populated by renderBrief(); honest empty state until a report loads -->
       </div>
     </section>
 
@@ -88,8 +99,17 @@
       </div>
     </section>
 
-    <!-- ===================== SELF-EXPOSURE REPORT (Blacklight-style) ===================== -->
-    <section class="section" id="report">
+    <!-- ===================== BANDED SECTION DIVIDER (light → dark transition) =====================
+         A purposeful, guided transition: light "结论/输入" zone above gives way to
+         the deep-ink "现场/exposure scene" below. Scroll-linked gradient driven by
+         a CSS custom property set from an IntersectionObserver/scroll progress in
+         app.js; under prefers-reduced-motion it renders as a plain static dark band. -->
+    <div class="zone-divider" id="zoneDivider" aria-hidden="true">
+      <span class="zone-divider-label">↓ 进入暴露现场 · ENTERING THE EXPOSURE SCENE</span>
+    </div>
+
+    <!-- ===================== SELF-EXPOSURE REPORT (Blacklight-style · DARK ZONE) ===================== -->
+    <section class="section dark-zone" id="report">
       <div class="section-head">
         <span class="step-tag">第 2 步</span>
         <h2>自我足迹报告 · 我们会检查什么</h2>
@@ -289,32 +309,22 @@
 
         <p class="optout-foot" id="optoutFoot"></p>
       </div>
-    </section>
 
-    <!-- ===================== CLOSURE MODE ===================== -->
-    <section class="section" id="closure">
-      <div class="section-head">
-        <span class="step-tag">第 3 步</span>
-        <h2 id="closureHead"></h2>
-        <p class="lead" id="closureIntro"></p>
-      </div>
-      <div class="closure-grid" id="closureGrid"></div>
-
-      <div class="closure-demo" id="closureDemo">
-        <h3>反向 UI 示例 · 让你少看，而不是更上瘾</h3>
-        <div class="closure-card" id="closureCard">
-          <div class="closure-card-head">
-            <span class="distress-badge">高困扰风险 · 已折叠</span>
-            <button class="btn btn-tiny" id="revealBtn">需要二次确认才展开</button>
-          </div>
-          <div class="closure-collapsed" id="closureCollapsed">内容已折叠以保护你。展开前请确认你现在适合查看。</div>
+      <!-- ===== ONE-CLICK PURGE — the privacy promise made tangible =====
+           A prominent RED button at the BOTTOM of the dark exposure scene. It
+           REALLY purges this session's computed exposure data from the browser
+           (sessionStorage keys + in-memory report/graph state per the
+           shared/privacy/storage-policy.js PURGE_CONTRACT 'explicit_purge'
+           trigger), then shows an honest confirmation and visibly resets the
+           report/map to the empty state. NO fake: it actually clears state. -->
+      <div class="purge-zone" id="purgeZone">
+        <div class="purge-inner">
+          <h3 class="purge-title">看完了？把它从这台设备上抹掉。</h3>
+          <p class="purge-sub">这份暴露画像只活在你的浏览器里。点击下面的按钮，本会话计算出的所有暴露数据（sessionStorage + 内存中的报告/图谱）会被真实清除，报告与地图立即回到空状态。</p>
+          <button class="btn-purge" id="purgeAllBtn" type="button">一键清除所有信息</button>
+          <p class="purge-status" id="purgeStatus" aria-live="polite"></p>
+          <p class="purge-foot">清除契约：<code>shared/privacy/storage-policy.js</code> · PURGE_CONTRACT.triggers = explicit_purge（仅 memory / sessionStorage，server 为 FORBIDDEN）。本机不留痕，我们的服务器从未保存。</p>
         </div>
-        <div class="closure-controls">
-          <button class="btn btn-ghost" id="cooldownBtn">开始冷却计时</button>
-          <button class="btn btn-ghost" id="todayBtn">今天不打开</button>
-          <button class="btn btn-ghost" id="handoffBtn">移交可信联系人</button>
-        </div>
-        <p class="closure-status" id="closureStatus" aria-live="polite"></p>
       </div>
     </section>
 
@@ -365,7 +375,7 @@
   </main>
 
   <footer class="footer">
-    <p>MirrorTrace 合规版 · 把窥探的冲动反转成自我保护与戒断。</p>
+    <p>MirrorTrace 合规版 · 把窥探的冲动反转成自我保护：看清暴露，一键清除。</p>
     <p class="muted">合规红线写进代码：scope 枚举 + prohibited 模式拒绝 + 工具层白名单。参考架构：SpiderFoot（OSINT 模块 + 关联引擎）· The Markup Blacklight（隐私检查器）。</p>
   </footer>
 

@@ -2,10 +2,10 @@ window.__MIRRORTRACE_PLAN__ = {
   "product": {
     "name": "MirrorTrace 合规版",
     "subtitle": "Self Footprint Audit Pro",
-    "oneLiner": "把「想查别人」的冲动，反转成「审计自己 + 保全证据 + 戒断强迫性查看」的合规工具。",
+    "oneLiner": "把「想查别人」的冲动，反转成「审计自己 + 保全证据 + 一键清除痕迹」的合规工具。",
     "inversion": {
       "headline": "这不是追踪私人个体的工具。",
-      "body": "同样的 OSINT 能力，方向完全相反：不去窥探任何私人个体，而是审计你自己的公开数字足迹、保全涉及你本人的公开证据、监控你已授权或公开的对象（公众人物 / 品牌），并用 Closure Mode 把强迫性查看的冲动转化为自我保护。冲动 → 自我保护。窥探 → 戒断。",
+      "body": "同样的 OSINT 能力，方向完全相反：不去窥探任何私人个体，而是审计你自己的公开数字足迹、保全涉及你本人的公开证据、监控你已授权或公开的对象（公众人物 / 品牌），并给出可执行的 opt-out 下架与 takedown 处置。窥探 → 自我保护。",
       "points": [
         "不追踪任何私人个体（私人个体 / 暗恋对象 / 同事 / 陌生人）",
         "不做任何恋爱 / 暧昧 / 出轨推断",
@@ -34,7 +34,7 @@ window.__MIRRORTRACE_PLAN__ = {
       { "id": "A2", "title": "A2 · Source Router (Metamorph)", "role": "根据合规请求的类型，把任务路由到对应的公开数据源 actor（搜索引擎 / 新闻 / 官网 / 公开档案）。用 Apify Metamorph 动态切换 actor，不预先硬编码全部分支。" },
       { "id": "A3", "title": "A3 · Adaptive Crawler", "role": "AdaptivePlaywrightCrawler：能抓的页面用纯 HTTP，需渲染的才升级到浏览器。只抓公开页面，遇到登录 / 验证码 / 封禁即停止——合规退避，绝不绕过。" },
       { "id": "A5", "title": "A5 · Evidence & Scoring", "role": "对采集到的公开证据做结构化：计算 exposure / evidence_quality / actionability / distress_risk 四项分数，建立可引用的 evidence index（URL + 时间戳 + 哈希）。" },
-      { "id": "A6", "title": "A6 · Report & Closure", "role": "生成自我足迹报告，并接入 Closure Mode：折叠刺激性内容、冷却计时、「今天不打开」、移交可信联系人。" }
+      { "id": "A6", "title": "A6 · Report & Remediation", "role": "生成自我足迹报告（暴露地图为核心），并给出可执行处置：数据中介下架 opt-out、GDPR/CCPA takedown 请求、复检重现。" }
     ],
     "webhooks": [
       { "id": "WH1", "title": "Webhook · audit.completed", "role": "审计完成回调：把报告结构与证据索引推送给用户自己的端，不经第三方。" },
@@ -80,7 +80,7 @@ window.__MIRRORTRACE_PLAN__ = {
       { "key": "exposure_score", "label": "暴露度", "desc": "你的公开足迹在多大范围内可被检索到（0-100）。", "sample": "—" },
       { "key": "evidence_quality_score", "label": "证据质量", "desc": "已保全证据的可引用性：来源权威性 + 时间戳 + 完整性（0-100）。", "sample": "—" },
       { "key": "actionability_score", "label": "可行动性", "desc": "有多少条目附带明确的下一步（申请删除 / 报告 / 保全）（0-100）。", "sample": "—" },
-      { "key": "distress_risk_score", "label": "困扰风险", "desc": "内容对你本人造成情绪困扰的风险，用于触发 Closure Mode（0-100）。", "sample": "—" }
+      { "key": "distress_risk_score", "label": "困扰风险", "desc": "内容对你本人造成情绪困扰的风险，用于排序与提醒（后端打分，0-100）。", "sample": "—" }
     ],
     "evidenceIndexFields": [
       { "field": "source_url", "desc": "公开来源 URL（仅公开页面）" },
@@ -91,22 +91,12 @@ window.__MIRRORTRACE_PLAN__ = {
       { "field": "recommended_action", "desc": "建议动作（保全 / 申请删除 / 上报平台 / 法律咨询）" }
     ]
   },
-  "closureMode": {
-    "headline": "Closure Mode · 戒断模式",
-    "intro": "反向设计的 UI：当工具检测到强迫性查看冲动或高困扰内容，它不放大刺激，而是帮你停下来。",
-    "features": [
-      { "title": "折叠刺激性内容", "desc": "高 distress_risk 的条目默认折叠，需要明确二次确认才展开。" },
-      { "title": "冷却计时", "desc": "短时间内重复查看同一对象时，强制冷却倒计时，打断强迫循环。" },
-      { "title": "今天不打开", "desc": "一键把整个审计锁定到明天，附一句温和提醒。" },
-      { "title": "移交可信联系人", "desc": "把查看 / 决策权移交给你设定的可信联系人，由对方代为把关。" }
-    ]
-  },
   "plan48h": [
     { "phase": "0-8h", "title": "Policy Gate + input_schema", "status": "done", "desc": "落地 A0 合规闸门与 scope_type 枚举，写出拒绝/接受逻辑与替代任务表。" },
     { "phase": "8-20h", "title": "Metamorph 路由 + 白名单源", "status": "in_progress", "desc": "A2 路由表 + 合法数据源 actor 接线，MCP 工具层白名单。" },
     { "phase": "20-32h", "title": "Adaptive 采集 + 退避", "status": "todo", "desc": "A3 自适应爬虫，合规退避逻辑，公开页面边界。" },
     { "phase": "32-40h", "title": "评分 + 证据索引", "status": "todo", "desc": "A5 四项评分与 evidence index 结构化。" },
-    { "phase": "40-48h", "title": "报告 + Closure Mode + Demo", "status": "todo", "desc": "A6 报告生成、Closure Mode 反向 UI，打磨 demo。" }
+    { "phase": "40-48h", "title": "报告 + 处置 + Demo", "status": "todo", "desc": "A6 报告生成、暴露地图、opt-out / takedown 处置，打磨 demo。" }
   ]
 }
 ;

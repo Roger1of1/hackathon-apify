@@ -170,8 +170,8 @@
       { step: "A0", text: `通过合规闸门：scope=${scope}，记录到合规审计日志（仅元数据）。` },
       { step: "A2", text: `Metamorph 把任务路由到白名单内的公开数据源 actor，目标=${subject}。` },
       { step: "A3", text: "AdaptivePlaywrightCrawler 仅抓取公开页面；遇登录/验证码/封禁即合规退避并如实记录。" },
-      { step: "A5", text: "结构化证据，计算 exposure / evidence_quality / actionability / distress_risk 四项分数，建立可引用 evidence index。" },
-      { step: "A6", text: "生成自我足迹报告，按 distress_risk 触发 Closure Mode（折叠/冷却/移交）。" }
+      { step: "A5", text: "结构化证据，计算 exposure / evidence_quality / actionability 三项分数，建立可引用 evidence index。" },
+      { step: "A6", text: "生成自我足迹报告（暴露地图为核心），并给出 opt-out 下架 / takedown 等可执行处置。" }
     ];
   }
 
@@ -265,7 +265,8 @@
   function renderResult(res) {
     const out = document.getElementById("gateResult");
     out.innerHTML = "";
-    const v = el("div", "verdict " + (res.accepted ? "accept" : "reject"));
+    const v = el("div", "verdict " + (res.accepted ? "accept" : "reject") +
+      (prefersReducedMotion() ? "" : " stamp-in"));
 
     // Plain-language verdict first (HIBP-style instant outcome), then the
     // one-line meaning, then the technical reason. Strong top-down hierarchy:
@@ -1540,25 +1541,39 @@
     if (foldNode) {
       foldNode.foldedFrom.forEach(function (n) { point[n.id] = layout.placed["fold:lowrisk"]; });
     }
-    // center->source
+    // center->source. Edges DRAW ON via stroke-dashoffset (one-shot) on the dark
+    // canvas, staggered with the node settle. Tagged data-edge-to for hover-highlight.
+    let eIdx = 0;
     graph.edges.forEach(function (e) {
       if (e.kind !== "exposes") return;
       const p = point[e.to];
       if (!p) return;
-      edgeLayer.appendChild(svgEl("line", {
+      const line = svgEl("line", {
         x1: layout.cx, y1: layout.cy, x2: p.x, y2: p.y,
-        stroke: "#b9c4bd", "stroke-width": "1.4", class: "map-edge exposes"
-      }));
+        stroke: "#3a4a44", "stroke-width": "1.4", class: "map-edge exposes",
+        "data-edge-node": e.to
+      });
+      edgeLayer.appendChild(line);
+      if (!reduce) {
+        const len = Math.hypot(p.x - layout.cx, p.y - layout.cy);
+        line.style.strokeDasharray = String(len);
+        line.style.strokeDashoffset = String(len);
+        line.style.transition = "stroke-dashoffset .55s ease";
+        window.setTimeout(function () { line.style.strokeDashoffset = "0"; }, 40 + eIdx * 35);
+        eIdx += 1;
+      }
     });
-    // cross-source shared-identifier (dashed) — the correlation story
+    // cross-source shared-identifier (dashed) — the correlation story. Neon
+    // magenta on the dark canvas; draws on after the exposes edges.
     graph.edges.forEach(function (e) {
       if (e.kind !== "shared-identifier") return;
       const a = point[e.from], b = point[e.to];
       if (!a || !b) return;
       const line = svgEl("line", {
         x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-        stroke: "#ff4cb2", "stroke-width": "1.6", "stroke-dasharray": "5 4",
-        class: "map-edge shared", opacity: "0.85"
+        stroke: "#ff4cb2", "stroke-width": "1.8", "stroke-dasharray": "5 4",
+        class: "map-edge shared", opacity: "0.9",
+        "data-edge-from": e.from, "data-edge-to": e.to
       });
       const title = svgEl("title");
       title.textContent = "共享同一" + (e.via === "email" ? "邮箱" : "用户名") + " → 可被关联";
@@ -1580,14 +1595,18 @@
     svg.appendChild(centerG);
 
     // ---- source nodes (keyboard-focusable) ----
+    // apex = the single highest-severity node (sorted first). It gets a gentle
+    // "breathing" pulse to guide the eye — ONLY this one node, never the field.
+    const apexId = (graph.nodes[0] && graph.nodes[0].severityTier === "red") ? graph.nodes[0].id : null;
     const nodeLayer = svgEl("g", { class: "map-nodes" });
     svg.appendChild(nodeLayer);
     visible.forEach(function (n, i) {
       const p = layout.placed[n.id];
       if (!p) return;
       const r = nodeRadius(n.infoCount);
+      const isApex = !reduce && n.id === apexId;
       const g = svgEl("g", {
-        class: "map-node tier-" + n.severityTier + (n.kind === "fold" ? " is-fold" : ""),
+        class: "map-node tier-" + n.severityTier + (n.kind === "fold" ? " is-fold" : "") + (isApex ? " is-apex" : ""),
         tabindex: "0", role: "button",
         "data-node": n.id,
         transform: "translate(" + p.x.toFixed(1) + "," + p.y.toFixed(1) + ")"
@@ -1621,6 +1640,13 @@
       g.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onActivate(); }
       });
+      // hover/focus → highlight this node's connected edges (calm, not perpetual).
+      const hi = function () { highlightNodeEdges(svg, n.id, true); };
+      const lo = function () { highlightNodeEdges(svg, n.id, false); };
+      g.addEventListener("mouseenter", hi);
+      g.addEventListener("mouseleave", lo);
+      g.addEventListener("focus", hi);
+      g.addEventListener("blur", lo);
       nodeLayer.appendChild(g);
 
       // subtle one-shot ease-in: nodes settle from center into their ring.
@@ -1639,6 +1665,19 @@
 
     renderMapLegend(graph.legend);
     resetMapDetail();
+  }
+
+  // Toggle a highlight class on edges connected to a node (its center spoke +
+  // any shared-identifier edges touching it). Pure visual, reversible, no state.
+  function highlightNodeEdges(svg, nodeId, on) {
+    if (!svg) return;
+    svg.querySelectorAll(".map-edge").forEach(function (line) {
+      const to = line.getAttribute("data-edge-node");
+      const sf = line.getAttribute("data-edge-from");
+      const st = line.getAttribute("data-edge-to");
+      const connected = to === nodeId || sf === nodeId || st === nodeId;
+      if (connected) line.classList.toggle("edge-hi", on);
+    });
   }
 
   function renderMapCenterOnly(svg) {
@@ -2269,7 +2308,7 @@
    * emits a STIX 2.1 Observed Data object (reuses shared/enrich/stix-evidence.js)
    * + a ready-to-send erasure request (reuses shared/aux/takedown-letter.js) and
    * proposes an Apify Schedule/Webhook re-check so a REAPPEARING listing is
-   * re-flagged (Closure-Mode-friendly; integrations/schedules + integrations/webhooks).
+   * re-flagged (integrations/schedules + integrations/webhooks).
    *
    * Ref: OASIS STIX 2.1 Observed Data (OpenCTI/MISP interop) for the per-listing
    * evidence object; Apify Website Content Crawler + RAG Web Browser ingestion
@@ -2328,76 +2367,6 @@
         " · 复检 <b>integrations/schedules</b> + <b>integrations/webhooks</b>。" +
         "引用：OASIS STIX 2.1 Observed Data（OpenCTI / MISP 互通）；Apify Website Content Crawler + RAG Web Browser 复检抓取。";
     }
-  }
-
-  /* =========================================================================
-   * CLOSURE MODE
-   * =======================================================================*/
-
-  function renderClosure() {
-    const c = PLAN.closureMode;
-    document.getElementById("closureHead").textContent = c.headline;
-    document.getElementById("closureIntro").textContent = c.intro;
-    const grid = document.getElementById("closureGrid");
-    c.features.forEach(f => {
-      const item = el("div", "closure-item");
-      item.appendChild(el("h3", null, esc(f.title)));
-      item.appendChild(el("p", null, esc(f.desc)));
-      grid.appendChild(item);
-    });
-
-    const status = document.getElementById("closureStatus");
-    const collapsed = document.getElementById("closureCollapsed");
-    const revealBtn = document.getElementById("revealBtn");
-    let revealed = false;
-    revealBtn.addEventListener("click", () => {
-      if (!revealed) {
-        const ok = window.confirm("这条内容被标记为高困扰风险。你确定现在适合查看吗？");
-        if (!ok) { status.textContent = "已为你保持折叠。你可以稍后再决定。"; return; }
-        collapsed.textContent = "（此处为占位说明：真实运行时会展示已保全的公开证据条目，本 demo 不含真实数据。）";
-        collapsed.className = "closure-revealed";
-        revealBtn.textContent = "重新折叠";
-        revealed = true;
-        status.textContent = "已展开。如果感到不适，随时折叠。";
-      } else {
-        collapsed.textContent = "内容已折叠以保护你。展开前请确认你现在适合查看。";
-        collapsed.className = "closure-collapsed";
-        revealBtn.textContent = "需要二次确认才展开";
-        revealed = false;
-        status.textContent = "已重新折叠。";
-      }
-    });
-
-    let cooldownTimer = null;
-    document.getElementById("cooldownBtn").addEventListener("click", () => {
-      if (cooldownTimer) return;
-      let left = 30;
-      status.className = "closure-status cooldown-lock";
-      const tick = () => {
-        if (left <= 0) {
-          clearInterval(cooldownTimer); cooldownTimer = null;
-          status.className = "closure-status";
-          status.textContent = "冷却结束。希望你已经平静一些。";
-          return;
-        }
-        status.textContent = `冷却中：还有 ${left}s。强迫性查看的冲动通常几分钟内就会过去。`;
-        left -= 1;
-      };
-      tick();
-      cooldownTimer = setInterval(tick, 1000);
-    });
-
-    document.getElementById("todayBtn").addEventListener("click", () => {
-      status.className = "closure-status today-lock";
-      status.textContent = "已锁定到明天。今天就到这里——你已经做得很好了。";
-    });
-
-    document.getElementById("handoffBtn").addEventListener("click", () => {
-      const name = window.prompt("把查看 / 决策权移交给谁？（输入你信任的联系人名字）");
-      status.className = "closure-status";
-      if (name && name.trim()) status.textContent = `已（在此 demo 中）将把关权移交给「${name.trim()}」。真实版本会通知该联系人代为决定是否展开。`;
-      else status.textContent = "未设置可信联系人。";
-    });
   }
 
   /* =========================================================================
@@ -2478,14 +2447,299 @@
   function applyReport(report) {
     if (!report || typeof report !== "object") return;
     LOADED_REPORT = report;
+    // EPHEMERAL session cache (sessionStorage only — never localStorage/server,
+    // per shared/privacy/storage-policy.js ALLOWED_LOCATIONS). This is the real
+    // session state the one-click purge button clears.
+    try {
+      if (window.sessionStorage) {
+        sessionStorage.setItem(SESSION_REPORT_KEY, JSON.stringify(report));
+      }
+    } catch (e) { /* sessionStorage unavailable (e.g. some file:// modes) — memory only */ }
     const vm = gradeFromReport(report);
     if (vm) renderExposureGrade(vm);
     // re-drive the whole report view from the REAL produced report
+    renderBrief(report);         // 结论 first: top-of-page comprehensive brief
     renderProvenance(report);
     renderExposureMap(report);   // the #1 deliverable — radial exposure map
     renderFindings();
     renderEvidenceTable();
     renderSuggestedActions();
+    observeReveal();             // (re)wire scroll-enter reveal for new cards
+  }
+
+  /* =========================================================================
+   * ONE-CLICK PURGE — the privacy promise made tangible (storage-policy.js
+   * PURGE_CONTRACT 'explicit_purge'). REALLY clears this session's computed
+   * exposure data: sessionStorage keys + in-memory report/graph refs, then
+   * visibly resets every report/map view to its honest empty state. NO fake.
+   * =======================================================================*/
+  const SESSION_REPORT_KEY = "mirrortrace.exposure_report";
+  const SESSION_GRAPH_KEY = "mirrortrace.exposure_graph";
+
+  function purgeExposureData() {
+    // 1) sessionStorage — the only persisted (ephemeral) tier we ever write to.
+    let clearedKeys = 0;
+    try {
+      if (window.sessionStorage) {
+        [SESSION_REPORT_KEY, SESSION_GRAPH_KEY].forEach(function (k) {
+          if (sessionStorage.getItem(k) !== null) { sessionStorage.removeItem(k); clearedKeys += 1; }
+        });
+        // defensive: clear any other mirrortrace.* exposure keys
+        Object.keys(sessionStorage).forEach(function (k) {
+          if (k.indexOf("mirrortrace.") === 0) { sessionStorage.removeItem(k); clearedKeys += 1; }
+        });
+      }
+    } catch (e) { /* no sessionStorage — nothing persisted to clear */ }
+
+    // 2) in-memory refs (PURGE_CONTRACT.mustNullInMemoryRefs) — null the dossier.
+    LOADED_REPORT = null;
+    MAP_GRAPH = null;
+    MAP_REPORT = null;
+    MAP_SELECTED = null;
+
+    // 3) visibly reset every view to its honest empty state.
+    renderExposureGrade(null);
+    renderBrief(null);
+    renderProvenance(null);
+    renderExposureMap(null);   // center-only, no spokes
+    renderFindings();          // template catalog
+    renderEvidenceTable();     // evidence-index schema
+    renderSuggestedActions();  // honest empty
+
+    return { clearedKeys: clearedKeys };
+  }
+
+  function wirePurge() {
+    const btn = document.getElementById("purgeAllBtn");
+    const status = document.getElementById("purgeStatus");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      const res = purgeExposureData();
+      btn.classList.add("purged");
+      btn.disabled = true;
+      btn.textContent = "已清除 ✓";
+      if (status) {
+        status.className = "purge-status done";
+        status.textContent = "已清除 · 本机不留痕，我们的服务器从未保存（清了 " + res.clearedKeys + " 项会话缓存 + 内存中的报告/图谱）。";
+      }
+      // let the user re-load the synthetic example afterward (honest, not auto).
+      window.setTimeout(function () {
+        btn.disabled = false;
+        btn.classList.remove("purged");
+        btn.textContent = "重新载入示例报告";
+        btn.onclick = function () { btn.onclick = null; location.reload(); };
+      }, 2200);
+    });
+  }
+
+  /* =========================================================================
+   * COMPREHENSIVE BRIEF (结论 first) — bright 撞色 at-a-glance summary derived
+   * ONLY from the loaded report. Big A–F grade (count-up on reveal), headline
+   * numbers (sources / sensitive exposures), top 2–3 highest-severity risks.
+   * Honest empty state until a report loads — never invents a conclusion.
+   * =======================================================================*/
+  function renderBrief(report) {
+    const wrap = document.getElementById("briefCard");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    const findings = reportFindings(report);
+    if (!report || !findings.length) {
+      wrap.className = "brief-card empty";
+      wrap.appendChild(el("p", "brief-eyebrow", "综合简要报告 · COMPREHENSIVE BRIEF"));
+      wrap.appendChild(el("p", "brief-empty",
+        "尚未加载报告 · 暂无结论。运行一次真实自审（经第 1 步闸门、scope=self）后，这里会给出 A–F 暴露评分与最高风险摘要。绝不为未扫描对象编造结论。"));
+      return;
+    }
+
+    wrap.className = "brief-card" + (isSynthetic(report) ? " synthetic" : " live");
+    const vm = gradeFromReport(report);
+    const graph = buildExposureGraphClient(report, { selfLabel: "你" });
+
+    // headline numbers
+    const sourceCount = graph.meta.source_count;
+    const sharedLinks = graph.meta.shared_identifier_links;
+    const sensitive = findings.filter(function (f) {
+      const b = mapBandOf(f);
+      return b === "critical" || b === "high" || (f.risk === "high");
+    }).length;
+
+    // --- header: label + provenance flag ---
+    const top = el("div", "brief-top");
+    top.appendChild(el("span", "brief-eyebrow", "综合简要报告 · 结论先行"));
+    top.appendChild(el("span", "brief-prov " + (isSynthetic(report) ? "synthetic" : "live"),
+      isSynthetic(report) ? "合成 fixture · 真实流水线" : "真实流水线产出"));
+    wrap.appendChild(top);
+
+    // --- grade block (count-up) ---
+    const main = el("div", "brief-main");
+    const gradeWrap = el("div", "brief-grade");
+    const fam = vm && vm.graded ? gradeFamily(String(vm.grade)) : "none";
+    const letter = el("div", "brief-letter bg-" + fam, vm && vm.graded ? esc(String(vm.grade)) : "—");
+    letter.setAttribute("role", "img");
+    letter.setAttribute("aria-label", "暴露评分 " + (vm && vm.graded ? vm.grade : "未知"));
+    gradeWrap.appendChild(letter);
+    const gradeMeta = el("div", "brief-grade-meta");
+    gradeMeta.appendChild(el("span", "brief-grade-label", "暴露评分"));
+    const scoreEl = el("span", "brief-score", vm && vm.score != null ? "0" : "—");
+    if (vm && vm.score != null) scoreEl.dataset.target = String(vm.score);
+    gradeMeta.appendChild(scoreEl);
+    gradeMeta.appendChild(el("span", "brief-score-max", vm && vm.score != null ? "/ 100" : ""));
+    gradeWrap.appendChild(gradeMeta);
+    main.appendChild(gradeWrap);
+
+    // --- headline stat chips ---
+    const stats = el("div", "brief-stats");
+    [
+      { n: sourceCount, label: "暴露来源" },
+      { n: sensitive, label: "敏感暴露" },
+      { n: sharedLinks, label: "跨源关联" }
+    ].forEach(function (s) {
+      const chip = el("div", "brief-stat");
+      const num = el("span", "brief-stat-num", "0");
+      num.dataset.target = String(s.n);
+      chip.appendChild(num);
+      chip.appendChild(el("span", "brief-stat-lbl", s.label));
+      stats.appendChild(chip);
+    });
+    main.appendChild(stats);
+    wrap.appendChild(main);
+
+    // --- top 2–3 highest-severity risks ---
+    // rank by exact severity_band first (critical > high > medium > low > info),
+    // then by neon tier, then confidence — so the truly worst exposures lead.
+    const BAND_RANK = { critical: 4, high: 3, medium: 2, low: 1, info: 0 };
+    const top3 = findings.slice().sort(function (a, b) {
+      return ((BAND_RANK[mapBandOf(b)] || 0) - (BAND_RANK[mapBandOf(a)] || 0))
+        || (MAP_TIER_RANK[mapTierForBand(mapBandOf(b))] - MAP_TIER_RANK[mapTierForBand(mapBandOf(a))])
+        || ((b.confidence || 0) - (a.confidence || 0));
+    });
+    const seen = {};
+    const picked = [];
+    top3.forEach(function (f) {
+      if (picked.length >= 3) return;
+      if (seen[f.event_type]) return;
+      seen[f.event_type] = true;
+      picked.push(f);
+    });
+    if (picked.length) {
+      const risks = el("div", "brief-risks");
+      risks.appendChild(el("p", "brief-risks-label", "最高风险 · 优先处理"));
+      const ul = el("ul", "brief-risk-list");
+      picked.forEach(function (f) {
+        const meta = EVENT_META[f.event_type] || {};
+        const tier = mapTierForBand(mapBandOf(f));
+        const li = el("li", "brief-risk");
+        li.appendChild(el("span", "brief-risk-dot " + tier));
+        const t = el("div", "brief-risk-text");
+        t.appendChild(el("span", "brief-risk-name", esc(meta.name || f.event_type)));
+        if (meta.why) t.appendChild(el("span", "brief-risk-why", esc(meta.why)));
+        li.appendChild(t);
+        ul.appendChild(li);
+      });
+      risks.appendChild(ul);
+      wrap.appendChild(risks);
+    }
+
+    // --- jump CTA into the dark exposure scene ---
+    const cta = el("div", "brief-cta");
+    const go = el("a", "btn-brief-go", "查看完整暴露地图 ↓");
+    go.href = "#report";
+    cta.appendChild(go);
+    cta.appendChild(el("span", "brief-cta-note",
+      isSynthetic(report) ? "下面的数据来自真实检测器在合成 fixture 上的产出（非编造）。" : "下面是真实流水线产出。"));
+    wrap.appendChild(cta);
+
+    // count-up the grade score + stat chips once on reveal (honors reduced-motion).
+    countUpInside(wrap);
+  }
+
+  /* count-up: animate any [data-target] number from 0 → target ONCE. Under
+   * prefers-reduced-motion (or if already animated) it snaps to the final value. */
+  function countUpInside(root) {
+    const nums = root.querySelectorAll("[data-target]");
+    const reduce = prefersReducedMotion();
+    nums.forEach(function (n) {
+      const target = Number(n.dataset.target) || 0;
+      if (reduce) { n.textContent = String(target); return; }
+      const start = performance.now();
+      const dur = 700;
+      function frame(t) {
+        const p = Math.min(1, (t - start) / dur);
+        // easeOutCubic
+        const e = 1 - Math.pow(1 - p, 3);
+        n.textContent = String(Math.round(target * e));
+        if (p < 1) requestAnimationFrame(frame);
+        else n.textContent = String(target);
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  /* =========================================================================
+   * SCROLL-DRIVEN LIGHT → DARK GRADIENT (Job C, approved purposeful guide).
+   * As the user scrolls from the bright input zone into the report/exposure
+   * scene, the page background smoothly gradients from #f8f8f6 → #0b0b0e via a
+   * --scene CSS custom property (0..1) set from the report section's position.
+   * Under prefers-reduced-motion we DON'T animate — the lower zone is simply a
+   * static dark section (CSS handles that via the media query). NOT the removed
+   * mystery scroll-wheel: this is a one-directional light→dark scene guide.
+   * =======================================================================*/
+  function wireSceneGradient() {
+    if (prefersReducedMotion()) { document.documentElement.style.setProperty("--scene", "0"); return; }
+    const divider = document.getElementById("zoneDivider");
+    if (!divider) return;
+    let ticking = false;
+    function update() {
+      ticking = false;
+      const rect = divider.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      // progress: 0 when the divider is a screen below the viewport center,
+      // 1 once it has scrolled to the top — a smooth band, not a jolt.
+      const p = 1 - Math.max(0, Math.min(1, (rect.top + rect.height * 0.5) / vh));
+      document.documentElement.style.setProperty("--scene", p.toFixed(3));
+    }
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+  }
+
+  /* =========================================================================
+   * SCROLL-ENTER REVEAL — subtle fade+rise, staggered, ONCE per element via
+   * IntersectionObserver. Honors prefers-reduced-motion (everything visible,
+   * no transform). Purely additive: elements are fully visible without JS.
+   * =======================================================================*/
+  let revealObserver = null;
+  function observeReveal() {
+    if (prefersReducedMotion() || !("IntersectionObserver" in window)) {
+      document.querySelectorAll(".reveal").forEach(function (el2) { el2.classList.add("revealed"); });
+      return;
+    }
+    if (!revealObserver) {
+      revealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            const e2 = entry.target;
+            const delay = Number(e2.dataset.revealDelay || 0);
+            window.setTimeout(function () { e2.classList.add("revealed"); }, delay);
+            revealObserver.unobserve(e2);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    }
+    // tag the major cards/sections as reveal targets (idempotent), staggered.
+    const targets = document.querySelectorAll(
+      ".section-head, .map-wrap, .grade-card, .coverage, .finding-group, " +
+      ".cluster-card, .kanon, .ev-card, .actions-card, .optout-card, " +
+      ".arch-wrap, .apify-box, .purge-zone, .brief-card");
+    targets.forEach(function (t, i) {
+      if (t.classList.contains("reveal")) return;
+      t.classList.add("reveal");
+      t.dataset.revealDelay = String((i % 5) * 60);
+      revealObserver.observe(t);
+    });
   }
   function loadExampleReport() {
     if (window.__EX_REPORT__) { applyReport(window.__EX_REPORT__); return; }
@@ -2510,6 +2764,7 @@
     renderScopeSelect();
     renderPresets();
     renderExposureGrade(null);   // honest "no grade yet" until a real report loads
+    renderBrief(null);           // honest empty brief until a real report loads
     renderProvenance(null);      // hidden until a report loads
     renderCoverage();
     renderExposureMap(null);     // honest center-only map until a real report loads
@@ -2519,7 +2774,6 @@
     renderSuggestedActions();    // honest empty until a real report loads
     loadExampleReport();         // async; re-drives grade+findings+evidence+actions if a report exists
     renderOptout();
-    renderClosure();
     renderArch();
     renderPipelinePanel();
     wireApify();
@@ -2528,6 +2782,9 @@
     wireViewToggle();
     wireMapControls();
     wireIdentityGate();
+    wirePurge();                 // one-click real purge (sessionStorage + memory)
+    wireSceneGradient();         // scroll-linked light → dark scene gradient
+    observeReveal();             // subtle scroll-enter fade+rise (reduced-motion safe)
     updateReportForScope(null);
   }
 
