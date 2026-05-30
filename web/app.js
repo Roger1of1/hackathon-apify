@@ -919,6 +919,45 @@
     return null;
   }
 
+  var SC_KIND = { phone: "📱 Phone", email: "📧 Email", name: "👤 Name", handle: "🔖 Handle", identity: "🆔 Identity" };
+  function scLabel(s) {
+    if (s.site) return s.site;
+    var t = String(s.label || s.query || "")
+      .replace(/^phone fmt\s*/i, "").replace(/^email\s*/i, "")
+      .replace(/^(phone|name|handle|identity)\s*/i, "")
+      .replace(/^site:/i, "").replace(/^["']|["']$/g, "").trim();
+    return t || String(s.query || "source");
+  }
+  // Render the actual data sources this live run queried, as a neat grouped list.
+  function appendSourcesChecked(body) {
+    var rep = LOADED_REPORT;
+    var list = rep && rep.provenance && rep.provenance.sources_checked;
+    if (!Array.isArray(list) || !list.length) return;
+    var groups = {};
+    list.forEach(function (s) { var k = s.kind || "other"; (groups[k] = groups[k] || []).push(s); });
+    var wrapEl = el("div", "sources-checked");
+    wrapEl.appendChild(el("p", "sc-title", "Sources checked · " + list.length));
+    Object.keys(groups).forEach(function (k) {
+      var arr = groups[k];
+      var found = arr.filter(function (s) { return s.status === "found"; }).length;
+      var g = el("div", "sc-group");
+      g.appendChild(el("p", "sc-group-head",
+        (SC_KIND[k] || ("🔎 " + k)) + " · " + arr.length + " checked" + (found ? (" · " + found + " found") : "")));
+      var ul = el("ul", "sc-list");
+      arr.forEach(function (s) {
+        var st = s.status === "found" ? ["✓", "sc-found"] : s.status === "blocked" ? ["⛬", "sc-blocked"] : ["·", "sc-none"];
+        var li = el("li", "sc-row " + st[1]);
+        li.appendChild(el("span", "sc-ic", st[0]));
+        li.appendChild(el("span", "sc-name", esc(scLabel(s))));
+        if (s.status) li.appendChild(el("span", "sc-st", esc(s.status)));
+        ul.appendChild(li);
+      });
+      g.appendChild(ul);
+      wrapEl.appendChild(g);
+    });
+    body.appendChild(wrapEl);
+  }
+
   function renderExposureGrade(vm) {
     const wrap = document.getElementById("exposureGrade");
     if (!wrap) return;
@@ -975,10 +1014,12 @@
     });
     body.appendChild(scale);
 
+    // Sources checked — the actual data sources this live run queried (neat list)
+    appendSourcesChecked(body);
+
     const note = el("p", "grade-note", null);
-    const src = vm.source ? "Source: " + esc(vm.source) + " (synthetic or template fixture produced by the real detector pipeline, not a fabricated scrape). " : "";
-    note.innerHTML = src +
-      "Grade model: Mozilla HTTP Observatory / SecurityHeaders-style A–F scoring (baseline 100 minus weighted deductions). Code: <code>integrations/grade/exposure-grade.js</code>.";
+    note.innerHTML =
+      "Grade model: Mozilla HTTP Observatory–style A–F (baseline 100 − weighted deductions). Code: <code>integrations/grade/exposure-grade.js</code>.";
     body.appendChild(note);
 
     wrap.appendChild(letterEl);

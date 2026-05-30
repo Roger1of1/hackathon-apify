@@ -1722,3 +1722,20 @@ a { color: var(--heading); }
 @media (prefers-reduced-motion: reduce) {
   .scroll-track { display: none; }
 }
+
+/* Sources-checked list inside the exposure-grade card (the 31+ queried sources) */
+.sources-checked { margin-top: 14px; border-top: 1px solid rgba(255,255,255,.10); padding-top: 10px; }
+.sc-title { margin: 0 0 8px; font: 700 .72rem/1.2 "Space Mono", monospace; letter-spacing: .04em; text-transform: uppercase; color: var(--color-acid); }
+.sc-group { margin-bottom: 10px; }
+.sc-group-head { margin: 0 0 4px; font: 600 .8rem/1.3 "Space Grotesk", system-ui, sans-serif; color: #fff; }
+.sc-list { list-style: none; margin: 0; padding: 0; }
+.sc-row { display: flex; align-items: baseline; gap: 8px; padding: 2px 0; font: 400 .76rem/1.35 "Space Mono", monospace; color: #c1c1cc; }
+.sc-ic { flex: 0 0 1em; text-align: center; color: #8a8a99; }
+.sc-name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-st { flex: 0 0 auto; font-size: .64rem; letter-spacing: .03em; text-transform: uppercase; opacity: .55; }
+.sc-found .sc-ic { color: var(--color-acid); }
+.sc-found .sc-name { color: #fff; font-weight: 700; }
+.sc-found .sc-st { color: var(--color-acid); opacity: .85; }
+.sc-blocked .sc-ic { color: var(--color-magenta); }
+.sc-blocked .sc-st { color: var(--color-magenta); opacity: .8; }
+.sc-none { opacity: .62; }
