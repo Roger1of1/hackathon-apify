@@ -3,7 +3,7 @@
 The terminal stage. Renders the audit in three formats and stores them in the
 case KV store.
 
-## Outputs (named keys in `ex-ditector-case`)
+## Outputs (named keys in `mirrortrace-case`)
 - `report.md` — Obsidian-flavored Markdown (frontmatter, callouts, per-item sections)
 - `report.csv` — one row per evidence item
 - `report.json` / `REPORT` — full machine-readable bundle

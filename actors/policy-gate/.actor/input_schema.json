@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Policy Gate Input",
+  "title": "MirrorTrace Policy Gate Input",
   "description": "Define what you are auditing. Only compliant scope types are selectable — tracking private individuals or romantic/dating inference is not offered by this product.",
   "type": "object",
   "schemaVersion": 1,

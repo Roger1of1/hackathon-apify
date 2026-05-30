@@ -32,7 +32,7 @@
  * so the package is valid against the Frictionless profile and self-validating.
  *
  * ── Reference architecture #2: Datasette portable/publishable dataset ────────
- * Datasette's model is "take a directory of data and publish it as an explorable,
+ * Datasette's model is "take a directory of data and publish it as a explorable,
  * queryable, CITABLE site"; a Frictionless package is one of its native intake
  * shapes (datasette + the dogsheep/frictionless tooling import datapackage.json
  * straight into SQLite tables). Mirroring Datasette's emphasis on REPRODUCIBLE,

@@ -5,7 +5,7 @@
  * ADDITIVE regression test (B4R2 verifier) for the WEB Live Compliance Gate.
  *
  * Guards a real red-line: PRIVATE-SOCIAL SCRAPING (IG/FB/Weibo followers / likes /
- * comments of another person) must be REJECTED by window.ExDitector.runPolicyGate
+ * comments of another person) must be REJECTED by window.MirrorTrace.runPolicyGate
  * EVEN when an attacker forces a legal-looking scope_type=self. Before this round's
  * hardening, "scrape her instagram followers and likes" with scope=self slipped
  * through because the dating_app_presence pattern only matched keyword→platform
@@ -44,10 +44,10 @@ function loadGate() {
   };
   // eslint-disable-next-line no-new-func
   new Function('window', 'document', code)(win, doc);
-  if (!win.ExDitector || typeof win.ExDitector.runPolicyGate !== 'function') {
-    throw new Error('web/app.js did not export window.ExDitector.runPolicyGate');
+  if (!win.MirrorTrace || typeof win.MirrorTrace.runPolicyGate !== 'function') {
+    throw new Error('web/app.js did not export window.MirrorTrace.runPolicyGate');
   }
-  return win.ExDitector;
+  return win.MirrorTrace;
 }
 
 const gate = loadGate();

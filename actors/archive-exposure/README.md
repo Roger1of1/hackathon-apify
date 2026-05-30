@@ -1,6 +1,6 @@
 # AUX — Public-Archive Self-Exposure Audit (Wayback → STIX)
 
-An **auxiliary** Ex-Ditector actor. It answers one compliant question about the
+An **auxiliary** MirrorTrace actor. It answers one compliant question about the
 **SELF subject**:
 
 > *"What did I publish, then delete — but which still lives in a **public web

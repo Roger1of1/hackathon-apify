@@ -122,7 +122,7 @@ function buildIngestPlan(input, opts = {}) {
   const cfg = opts.config || loadIngestConfig();
   const safe = input && typeof input === 'object' ? input : {};
 
-  // ---- Guard 1: the REAL scope gate (read-only use of Codex's module) -------
+  // ---- Guard 1: the REAL scope gate (read-only use of Coda private person's module) -------
   const scopeResult = validateScope(safe);
   if (!scopeResult.allowed) {
     return drop(REFUSAL.SCOPE_REJECTED, {

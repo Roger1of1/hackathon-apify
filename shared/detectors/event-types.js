@@ -80,7 +80,7 @@ const EVENT_TYPES = Object.freeze({
 });
 
 /**
- * Coarse visibility of an exposure — how easily a *third party* could find it.
+ * Coarse visibility of a exposure — how easily a *third party* could find it.
  * Mirrors Blacklight's framing of "what a site/visitor can trivially observe".
  * Ordered low→high so the inspector panel can sort.
  */
@@ -93,7 +93,7 @@ const VISIBILITY = Object.freeze({
 const VISIBILITY_RANK = Object.freeze({ private: 1, linked: 2, indexed: 3 });
 
 /**
- * Risk band of an exposure to the SELF subject. This is about the subject's
+ * Risk band of a exposure to the SELF subject. This is about the subject's
  * own privacy hygiene, NOT a threat score about another person.
  */
 const RISK = Object.freeze({

@@ -1,21 +1,21 @@
-# Ex-Ditector（合规版） / Self Footprint Audit Pro
+# MirrorTrace（合规版） / Self Footprint Audit Pro
 
-> 把"忍不住查前任"的冲动，反转成"审计并保护你自己"的工具。
-> Turn the compulsive ex-checking impulse into self-protection.
+> 把"忍不住追踪私人个体"的冲动，反转成"审计并保护你自己"的工具。
+> Turn compulsive checking into self-protection.
 
-**Ex-Ditector（合规版）** 是一套基于 [Apify](https://apify.com) 的工具：审计 **你自己** 的公开数字足迹、为涉及你本人的公开事件留存证据、监控 **已授权 / 公众人物 / 品牌** 来源，并通过 **Closure Mode（了断模式）** 帮你减少强迫性反复查看。
+**MirrorTrace（合规版）** 是一套基于 [Apify](https://apify.com) 的工具：审计 **你自己** 的公开数字足迹、为涉及你本人的公开事件留存证据、监控 **已授权 / 公众人物 / 品牌** 来源，并通过 **Closure Mode（了断模式）** 帮你减少强迫性反复查看。
 
-它**明确不是**一个追踪前任的工具。
+它**明确不是**一个追踪私人个体的工具。
 
 ---
 
 ## 0. 合规反转（The Compliance Inversion）—— 先讲这个
 
-市面上的 "ex tracker" 把技术对准 **别人**。我们把同样的技术能力，整段反转，对准 **你自己 + 公开信息 + 已授权来源**：
+非同意追踪流程把技术对准 **别人**。我们把同样的技术能力，整段反转，对准 **你自己 + 公开信息 + 已授权来源**：
 
 | 旧的冲动（不做） | 反转后的产品（做） |
 | --- | --- |
-| 查前任在哪、和谁在一起 | 审计 **我自己** 在公网上暴露了什么（self-audit） |
+| 追踪私人个体在哪、和谁在一起 | 审计 **我自己** 在公网上暴露了什么（self-audit） |
 | 偷看私密社交账号 | 只看 **公开** 页面 + **已授权** 来源 |
 | 反复刷新、越查越焦虑 | **Closure Mode**：限频、汇总、了断，减少强迫性查看 |
 | 留对方的"黑料" | 为 **涉及我本人** 的公开事件留 **可验证证据**（哈希链） |
@@ -87,7 +87,7 @@ flowchart TD
 ## 3. 仓库结构（Repo Layout）
 
 ```
-ex-ditector/
+mirrortrace/
 ├── README.md                       # 本文件
 ├── DEPLOY.md                       # Apify 部署 + 静态托管指南
 ├── actors/                         # 5 个 Apify actor
@@ -127,7 +127,7 @@ ex-ditector/
 直接打开单页展示，它自包含、内置实时合规闸门，可本地试拒绝/放行逻辑：
 
 ```bash
-cd ex-ditector
+cd mirrortrace
 open web/index.html
 # 或起一个静态服务器（推荐，避免 file:// 限制）：
 python3 -m http.server 8080 --directory web
@@ -202,7 +202,7 @@ cd actors/policy-gate && apify push  # 对 5 个 actor 各执行一次
 触发一个会返回 `429` 的源。展示 crawler **指数退避 + 尊重 Retry-After + 降并发**，并在报告里 **如实写"被限流，已退避"**。对比说明：我们 **不** 换指纹、不绕验证码。被拒绝就如实记录。
 
 **[1:10–1:30] MCP Demo（工具层白名单）**
-展示 `mcp/client-config.example.json`：MCP 客户端只连到 `ex-ditector-policy-gate` + `ex-ditector-report` + `docs`。让 AI agent 尝试调用"私域抓取 actor"——它 **在工具列表里根本不存在**，agent 物理上调不到。合规作为工具边界。收尾回到合规反转主题。
+展示 `mcp/client-config.example.json`：MCP 客户端只连到 `mirrortrace-policy-gate` + `mirrortrace-report` + `docs`。让 AI agent 尝试调用"私域抓取 actor"——它 **在工具列表里根本不存在**，agent 物理上调不到。合规作为工具边界。收尾回到合规反转主题。
 
 ---
 

@@ -1,7 +1,7 @@
 /**
  * integrations/standby/server.js
  *
- * REAL Actor Standby web server for the Ex-Ditector policy gate, INERT outside
+ * REAL Actor Standby web server for the MirrorTrace policy gate, INERT outside
  * the Apify platform. Actor Standby keeps the gate warm in the background and
  * proxies user HTTP requests to this server, so the product behaves like a
  * real-time API: hand it ONE subject, get back either "inspecting" (the run
@@ -116,7 +116,7 @@ async function handle(req, res, opts = {}) {
   if (req.method === 'GET' && (url === '/' || url === '')) {
     const chain = opts.chain || loadChain();
     return send(res, 200, {
-      service: 'ex-ditector-policy-gate (Standby)',
+      service: 'mirrortrace-policy-gate (Standby)',
       what: 'Hand me ONE subject you are entitled to audit; I gate it and start your audit, or refuse with legal alternatives.',
       entry: chain.entry,
       method: 'POST /inspect',
@@ -200,7 +200,7 @@ function start() {
   const server = createServer();
   server.listen(port, () => {
     // eslint-disable-next-line no-console
-    console.log(`[standby] ex-ditector policy gate listening on :${port} (POST /inspect)`);
+    console.log(`[standby] mirrortrace policy gate listening on :${port} (POST /inspect)`);
   });
   return server;
 }

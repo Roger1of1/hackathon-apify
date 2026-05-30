@@ -1,6 +1,6 @@
 # Apify Dataset Views + Exports (compliant, marking-scoped)
 
-This capability wires the Ex-Ditector evidence/capture datasets into Apify's
+This capability wires the MirrorTrace evidence/capture datasets into Apify's
 **dataset views** (the Console output-tab projection declared in
 `.actor/actor.json`) and Apify's **dataset export API**
 (`GET /v2/datasets/{id}/items` with `format` / `fields` / `omit` / `clean` /

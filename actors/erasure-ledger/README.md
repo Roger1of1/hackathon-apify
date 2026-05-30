@@ -1,4 +1,4 @@
-# Ex-Ditector AUX — Erasure-Request Ledger / Removal Tracker
+# MirrorTrace AUX — Erasure-Request Ledger / Removal Tracker
 
 The piece that makes removal requests **actionable over time**. The other aux
 actors *draft* the requests:
@@ -27,7 +27,7 @@ exposure is gone — never by this actor. No findings in → empty ledger out.
   and is then restricted to `scope_type ∈ {self, public_figure}`. Tracking your
   *own* removals is inherently first-person; we fail **closed** for any other
   scope, and the gate's free-text laundering scan runs over `subject_label`, so a
-  laundered intent ("track my ex's removals") is rejected exactly as the web and
+  laundered intent ("track a private person's removals") is rejected exactly as the web and
   other actor paths reject it.
 - The `scope_type` enum in `input_schema.json` deliberately **omits**
   `consented`, `brand`, and `safety_evidence` — they cannot run this actor.

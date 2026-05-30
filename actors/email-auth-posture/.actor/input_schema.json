@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Email-Auth Posture Self-Check Input",
+  "title": "MirrorTrace Email-Auth Posture Self-Check Input",
   "description": "Audits the PUBLIC email-authentication posture (spoofability) of a domain you OWN, using only public DNS records. Prohibited scopes are intentionally absent from the enum; only self/public_figure are accepted because this is a self-/public-only audit.",
   "type": "object",
   "schemaVersion": 1,
@@ -48,7 +48,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     }
   },
   "required": ["scope_type", "domain"]

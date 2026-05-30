@@ -14,7 +14,7 @@
  *     anxiety-inducing effort?
  *
  * That second question is the entire point of the product's Closure Mode: a
- * self-audit that keeps re-surfacing an exposure the user already cleaned up is
+ * self-audit that keeps re-surfacing a exposure the user already cleaned up is
  * the compulsive-checking behaviour the product exists to REDUCE. So freshness
  * is not cosmetic — it directly drives "you can stop checking this one".
  *

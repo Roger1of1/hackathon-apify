@@ -1,6 +1,6 @@
 # AUX — Metadata Exposure Scanner (EXIF / XMP / IPTC / PDF info)
 
-An **auxiliary** Apify actor for Ex-Ditector (Self Footprint Audit Pro). It answers
+An **auxiliary** Apify actor for MirrorTrace (Self Footprint Audit Pro). It answers
 one compliant self-footprint question:
 
 > *"What is leaking out of the files I've already published publicly?"*

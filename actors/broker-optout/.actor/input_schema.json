@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Data-Broker Opt-Out Input",
+  "title": "MirrorTrace Data-Broker Opt-Out Input",
   "description": "Builds a self-removal workflow for the SELF subject's OWN data-broker listings. A broker opt-out is a first-person erasure ('remove the record about ME'), so the scope_type enum DELIBERATELY omits public_figure / brand / safety_evidence — you cannot opt anyone else out of a broker. Only self (and consented, which requires written authorization) are accepted. NO scraping happens: you supply listings you have personally CONFIRMED are about you.",
   "type": "object",
   "schemaVersion": 1,
@@ -16,7 +16,7 @@
     "subject_label": {
       "title": "Your name (for the erasure letter)",
       "type": "string",
-      "description": "The name to put on the GDPR/CCPA erasure request. If omitted, the letter shows an explicit [[ FILL IN ]] placeholder — never a fabricated name.",
+      "description": "The name to put on the GDPR/CCPA erasure request. If omitted, the letter shows a private personplicit [[ FILL IN ]] placeholder — never a fabricated name.",
       "editor": "textfield"
     },
     "authorization_evidence_url": {
@@ -41,7 +41,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     }
   },
   "required": ["scope_type"]

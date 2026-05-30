@@ -73,7 +73,7 @@ check('romance laundering under self => dropped by gate (no input)', () => {
 });
 check('stalking freeText under self => dropped by gate (no input)', () => {
   const p = buildIngestPlan(Object.assign({}, SELF, {
-    freeText: 'track my ex and watch their account for me',
+    freeText: 'track a private person and watch their account for me',
   }));
   assert.strictEqual(p.allowed, false);
   assert.strictEqual(p.refusal, REFUSAL.SCOPE_REJECTED);

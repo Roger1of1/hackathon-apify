@@ -85,7 +85,7 @@ t('toActionItem maps a real finding to a plain-language action with canonical pr
   // scan for prohibited CONCEPT words — note we exclude the legitimate field name
   // "subject_relationship: self_owned_exposure", which is the self-only marker.)
   const blob = JSON.stringify(item).toLowerCase().replace(/subject_relationship/g, '');
-  for (const bad of ['romance', 'intimacy', 'partner', 'romantic', 'gender', 'sexuality', 'live location', 'ex-partner']) {
+  for (const bad of ['romance', 'intimacy', 'partner', 'romantic', 'gender', 'sexuality', 'live location', 'non-consenting private person']) {
     assert.ok(!blob.includes(bad), `action must not contain "${bad}"`);
   }
   assert.strictEqual(item.subject_relationship, 'self_owned_exposure', 'self-only invariant');

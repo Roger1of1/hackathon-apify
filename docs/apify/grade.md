@@ -93,7 +93,7 @@ node -e "const {computeExposureGrade}=require('./integrations/grade/exposure-gra
 
 # Scope-gated entry (self-only; refuses stalking input via the real gate)
 node -e "const {gradeForScopedRun}=require('./integrations/grade/exposure-grade'); \
-  console.log(gradeForScopedRun({scope_type:'self',target_urls:['https://example.com/me'],goal:'track my ex'},[]).reason)"  # scope_rejected
+  console.log(gradeForScopedRun({scope_type:'self',target_urls:['https://example.com/me'],goal:'track a private person'},[]).reason)"  # scope_rejected
 
 # Self-test (also runs under: node integrations/run-module-selftests.js)
 node integrations/grade/_selftest.js

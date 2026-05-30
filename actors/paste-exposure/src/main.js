@@ -1,7 +1,7 @@
 /**
  * AUX — Public-Paste Self-Exposure Scan
  *
- * An auxiliary Apify actor that orbits the core Ex-Ditector pipeline. It answers
+ * An auxiliary Apify actor that orbits the core MirrorTrace pipeline. It answers
  * ONE compliant question about the SELF (or public_figure) subject:
  *   "Are MY OWN identifiers (email / domain / handle) sitting in a PUBLIC paste
  *    dump right now?"
@@ -59,7 +59,7 @@ const {
 // Dual-use identifier search: ONLY self + public_figure (subset of ALLOWED_SCOPES).
 const PASTE_SCOPES = new Set(['self', 'public_figure']);
 
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 
 /**
  * PUBLIC paste-search index. PSBDMP ("Pastebin Dump") exposes a documented,
@@ -202,7 +202,7 @@ Actor.main(async () => {
   }
 
   // Pull the shared case id if a case store exists (best-effort, standalone OK).
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

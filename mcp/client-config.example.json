@@ -1,22 +1,22 @@
 {
-  "_comment": "Ex-Ditector (合规版) — MCP client config example for Claude Desktop / Cursor. Copy to your client config and replace YOUR_USERNAME + <APIFY_TOKEN>. This is a PLACEHOLDER config; nothing here is deployed for you.",
+  "_comment": "MirrorTrace (合规版) — MCP client config example for Claude Desktop / Cursor. Copy to your client config and replace YOUR_USERNAME + <APIFY_TOKEN>. This is a PLACEHOLDER config; nothing here is deployed for you.",
   "_compliance_note": "The ?tools= query parameter is a COMPLIANCE CONTROL. Only compliant actors are whitelisted into the tool layer. Private-scraping actors are intentionally absent, so an AI agent physically cannot call them. See configurator-notes.md.",
   "_transport_note": "As of 2026-04-01 Apify migrated the MCP endpoint from SSE to Streamable HTTP. Use the streamable-http transport (or a remote-MCP-capable client). Legacy SSE config is deprecated.",
   "mcpServers": {
-    "ex-ditector": {
+    "mirrortrace": {
       "transport": "streamable-http",
-      "url": "https://mcp.apify.com?tools=YOUR_USERNAME/ex-ditector-policy-gate,YOUR_USERNAME/ex-ditector-report,docs",
+      "url": "https://mcp.apify.com?tools=YOUR_USERNAME/mirrortrace-policy-gate,YOUR_USERNAME/mirrortrace-report,docs",
       "headers": {
         "Authorization": "Bearer <APIFY_TOKEN>"
       }
     },
-    "_ex-ditector-stdio-bridge-alternative": {
+    "_mirrortrace-stdio-bridge-alternative": {
       "_comment": "Alternative for clients that only speak stdio: bridge to the remote streamable-http endpoint via mcp-remote. Same whitelist, same compliance boundary.",
       "command": "npx",
       "args": [
         "-y",
         "mcp-remote",
-        "https://mcp.apify.com?tools=YOUR_USERNAME/ex-ditector-policy-gate,YOUR_USERNAME/ex-ditector-report,docs",
+        "https://mcp.apify.com?tools=YOUR_USERNAME/mirrortrace-policy-gate,YOUR_USERNAME/mirrortrace-report,docs",
         "--header",
         "Authorization: Bearer <APIFY_TOKEN>"
       ]

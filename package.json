@@ -1,5 +1,5 @@
 {
-  "name": "ex-ditector",
+  "name": "mirrortrace",
   "version": "1.0.0",
   "private": true,
   "description": "Self Footprint Audit Pro — a compliant Apify-driven OSINT toolkit for auditing YOUR OWN public digital footprint, preserving public evidence, and reducing compulsive checking. Enforces hard red lines against private-person tracking and romantic inference.",

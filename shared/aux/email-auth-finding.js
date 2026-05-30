@@ -12,7 +12,7 @@
  * the audited subject can FIX today — exactly the Blacklight framing of "what a
  * third party can trivially do in your name from what's already public".
  *
- * None of the existing 14 Ex-Ditector actors cover email spoofability, so this
+ * None of the existing 14 MirrorTrace actors cover email spoofability, so this
  * is a genuinely-missing, high-leverage self-audit capability rather than churn.
  *
  * SCOPE / RED LINES (enforced upstream by the actor + shared/scope.js):

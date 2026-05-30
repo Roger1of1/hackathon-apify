@@ -1,7 +1,7 @@
 {
   "actorSpecification": 1,
-  "name": "ex-ditector-broker-optout",
-  "title": "Ex-Ditector AUX — Data-Broker Opt-Out (self-only)",
+  "name": "mirrortrace-broker-optout",
+  "title": "MirrorTrace AUX — Data-Broker Opt-Out (self-only)",
   "description": "Auxiliary actor. For the SELF subject's OWN data-broker / people-search listings (Spokeo, Whitepages, BeenVerified, …), it builds a removal workflow: every target is routed through shared/scope.js FIRST and the run is hard-restricted to scope_type=self (or consented with written authorization) — you can never opt another person, a public figure, or a brand out of a broker. From listings the USER CONFIRMS are their own, it emits (a) a STIX 2.1 Observed Data object per listing (reusing shared/enrich/stix-evidence.js — OpenCTI/MISP interop), (b) a ready-to-send GDPR Art.17 / CCPA erasure request per listing (reusing shared/aux/takedown-letter.js), and (c) an Apify Schedule/Webhook re-check PROPOSAL so a removed listing that REAPPEARS is re-flagged (the re-check re-reads the broker's OWN public surface via apify/website-content-crawler or apify/rag-web-browser, gated + capped by integrations/ingest/*). The known-broker registry is a clearly-labeled TEMPLATE holding only brokers' public opt-out contact points — NO scraped listings, NO fabricated 'you were found here' data. Nothing is scraped, sent, or removed by this actor.",
   "version": "1.0",
   "input": "./input_schema.json",

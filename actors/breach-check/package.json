@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-breach-check",
+  "name": "mirrortrace-breach-check",
   "version": "1.0.0",
-  "description": "AUX breach-exposure check — k-anonymity Pwned Passwords + email-hash correlation probes for Ex-Ditector.",
+  "description": "AUX breach-exposure check — k-anonymity Pwned Passwords + email-hash correlation probes for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

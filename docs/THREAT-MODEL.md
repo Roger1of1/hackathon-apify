@@ -1,8 +1,8 @@
 # THREAT-MODEL.md
 
-> **Frame:** The defining abuse case for a product named "Ex-Ditector" is obvious and must be
+> **Frame:** The defining abuse case for a product named "MirrorTrace" is obvious and must be
 > confronted head-on: **someone trying to use it to surveil, locate, or build a profile of an
-> ex-partner, crush, coworker, or other non-consenting private person.** This document
+> non-consenting private person, crush, coworker, or other non-consenting private person.** This document
 > enumerates misuse vectors, the layered controls that block each, and — honestly — the
 > residual risk that remains.
 
@@ -13,7 +13,7 @@
 - **Asset we protect:** non-consenting private individuals (and their intimate data) from being
   surveilled via this tool; and the integrity of the compliance guarantees.
 - **Primary adversary:** the **legitimate user acting in bad faith** — a person who installs the
-  tool intending to track an ex/crush/coworker. (Not a remote hacker; the threat is *intended
+  tool intending to track an private person / crush / coworker. (Not a remote hacker; the threat is *intended
   misuse of granted functionality*.)
 - **Secondary adversaries:** a user trying to socially-engineer/prompt-inject the engine into
   bypassing scope; a developer tempted to add a "just one crawler" feature.
@@ -27,7 +27,7 @@
 | **L1 Schema** | `scope_type` enum has **no private-person value**; objectives can't encode romance/gender | Makes the abuse case *unrepresentable* in a valid request |
 | **L2 A0 Policy Gate** | Fail-closed semantic + free-text (multilingual) rejection of private-person/dating/romance/gender intent | Blocks bad-faith jobs even when phrased cleverly |
 | **L3 MCP tool whitelist** | Collectors only expose `official_api`, `user_export`, `single_public_url`; **no generic crawler/spider tool exists** | Removes the *capability* to scrape/enumerate even if A0 were bypassed |
-| **L4 Demo data rules** | Shipped/demo targets are own-public/synthetic only (`allowed-urls.json`) | Prevents the product from normalizing real-ex/dating targets |
+| **L4 Demo data rules** | Shipped/demo targets are own-public/synthetic only (`allowed-urls.json`) | Prevents the product from normalizing real private-person/dating targets |
 | **L5 Human review** | `safety_evidence` and `consented` onboarding require human sign-off | Catches edge cases that automation shouldn't decide alone |
 | **L6 Audit & retention** | Every decision logged; 30/90-day retention; deletion | Limits accumulation, enables accountability and DSR |
 
@@ -37,8 +37,8 @@
 
 | # | Misuse vector (attacker goal) | Blocked by | Outcome |
 |---|---|---|---|
-| V1 | "Track my ex" — names a private person as target | L1 (no scope), L2 (private_person_tracking), L3 | **Rejected** with alternatives (audit your own footprint; safety_evidence if they target you) |
-| V2 | "看前任 IG 点赞评论暧昧" — infer ex's romantic interactions | L2 (romance_inference + private_person_tracking, multilingual) | **Rejected** |
+| V1 | "Track a private person" — names a private person as target | L1 (no scope), L2 (private_person_tracking), L3 | **Rejected** with alternatives (audit your own footprint; safety_evidence if they target you) |
+| V2 | "查看私人账号互动并推断关系" — infer a private person's romantic interactions | L2 (romance_inference + private_person_tracking, multilingual) | **Rejected** |
 | V3 | "Is my crush on Tinder / look up their dating profile" | L2 (dating_app_presence), PLATFORM-POLICY (no dating-app access) | **Rejected** |
 | V4 | "判断头像是男是女 / infer gender from photo" | L2 (gender_from_image) | **Rejected** |
 | V5 | Monitor a coworker / crush continuously | L1 (no scope), L2 (private_person_tracking) | **Rejected** |
@@ -65,7 +65,7 @@ We do **not** claim the product is misuse-proof. Remaining risks:
   building, retention limits, audit. The line we hold is **no sustained profiling** (see
   PRIVACY §2). A determined user pasting one URL once is low-leverage; persistence/aggregation —
   the actual harm — is structurally prevented.
-- **R3 — Mislabeling.** A user could lie ("this ex is a public figure / harassing me"). L5 human
+- **R3 — Mislabeling.** A user could lie ("this private person is a public figure / harassing me"). L5 human
   review and minimization reduce, but cannot fully eliminate, this. We accept review latency as
   the cost of safety.
 - **R4 — Classifier gaps.** Free-text intent detection can miss novel phrasings/languages. We

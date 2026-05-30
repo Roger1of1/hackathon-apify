@@ -112,5 +112,5 @@ node integrations/standby/test-standby.js
 ACTOR_WEB_SERVER_PORT=4321 node integrations/standby/server.js
 # in another shell:
 curl -s localhost:4321/inspect -d '{"scope_type":"self","target_urls":["https://example.com/me"]}'
-curl -s localhost:4321/inspect -d '{"scope_type":"self","subject_label":"track my ex","target_urls":["https://x/y"]}'  # -> 403
+curl -s localhost:4321/inspect -d '{"scope_type":"self","subject_label":"track a private person","target_urls":["https://x/y"]}'  # -> 403
 ```

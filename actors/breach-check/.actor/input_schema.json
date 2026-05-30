@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Breach Exposure Check Input",
+  "title": "MirrorTrace Breach Exposure Check Input",
   "description": "Checks the SELF subject's OWN credential hygiene against public breach corpora using k-anonymity. Secrets never leave the machine in full. Prohibited scopes are absent from the enum; only self/public_figure are accepted because credential enumeration is a dual-use technique restricted to those scopes.",
   "type": "object",
   "schemaVersion": 1,
@@ -22,7 +22,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "subject_label": {
       "title": "Subject label",

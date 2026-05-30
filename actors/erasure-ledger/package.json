@@ -1,5 +1,5 @@
 {
-  "name": "ex-ditector-erasure-ledger",
+  "name": "mirrortrace-erasure-ledger",
   "version": "1.0.0",
   "description": "AUX erasure-request ledger — tracks the SELF subject's own removal requests with statutory deadlines (GDPR Art.17 / CCPA) and a single Closure-Mode recheck date. Reuses the existing takedown planner; no fake data.",
   "type": "commonjs",

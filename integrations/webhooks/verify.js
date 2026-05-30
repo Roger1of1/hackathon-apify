@@ -14,7 +14,7 @@
  *  2) HMAC of the raw body — defense in depth. We compute
  *     HMAC-SHA256(rawBody, sharedSecret) and compare, in constant time, against
  *     a signature header we ask Apify to send via the webhook "headers" template
- *     (e.g. `X-Ex-Ditector-Signature: {{ ... }}` is not natively HMAC'd by Apify,
+ *     (e.g. `X-MirrorTrace-Signature: {{ ... }}` is not natively HMAC'd by Apify,
  *     so this path is for proxies/relays that DO add an HMAC, or for a future
  *     signing relay). The verifier is written so it works the moment such a
  *     header is present and is simply skipped when it is not configured.

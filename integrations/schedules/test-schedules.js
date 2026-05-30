@@ -91,7 +91,7 @@ console.log('\n[4] k-anonymous naming (HIBP stance): no PII in schedule names');
 
 check('short hash-prefix token -> accepted name', () => {
   const n = safeScheduleName('self', '5BAA6');
-  assert.strictEqual(n, 'ex-ditector-reaudit-self-5baa6');
+  assert.strictEqual(n, 'mirrortrace-reaudit-self-5baa6');
 });
 
 for (const pii of ['alice@example.com', 'verylonghandlename1234', 'a b', '']) {
@@ -121,7 +121,7 @@ check('buildScheduleBody emits a deterministic weekly cron for cadence=closure',
   });
   assert.ok(r.body, 'expected a body');
   assert.strictEqual(r.body.cronExpression, '0 9 * * 1');
-  assert.strictEqual(r.body.name, 'ex-ditector-reaudit-self-5baa6');
+  assert.strictEqual(r.body.name, 'mirrortrace-reaudit-self-5baa6');
 });
 
 console.log('\n[6] shipped config is a TEMPLATE (placeholders, never live)');

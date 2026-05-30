@@ -9,10 +9,10 @@
  * PROVES THE LOAD-BEARING GUARANTEE: an AI-agent caller cannot bypass the red
  * lines through the MCP tool layer. Specifically:
  *   (1) FAIL-CLOSED ON PROHIBITED SCOPE — every tool rejects a scope_type that is
- *       not in the allow-list (e.g. private_person_tracking / ex_partner).
+ *       not in the allow-list (e.g. private_person_tracking).
  *   (1b) FAIL-CLOSED ON LAUNDERED / STALKING freeText — a request with scope_type
  *       "self" but a stalking prompt is rejected by the natural-language intent
- *       scan, exactly as on the web (window.ExDitector.runPolicyGate) and actor
+ *       scan, exactly as on the web (window.MirrorTrace.runPolicyGate) and actor
  *       paths.
  *   (2) SELF-ONLY for broker opt-out — a broker opt-out for a public_figure /
  *       brand / another person is refused (DeleteMe/Aura authorization model).
@@ -80,10 +80,10 @@ t('callTool() on an unknown tool fails closed', () => {
 
 // ── (1) FAIL-CLOSED ON PROHIBITED scope_type — for EVERY tool ─────────────────
 for (const name of TOOL_NAMES) {
-  t(`${name}: rejects prohibited scope_type "ex_partner" (fail closed)`, () => {
+  t(`${name}: rejects prohibited scope_type "private_person_tracking" (fail closed)`, () => {
     const r = callTool(name, {
-      scope_type: 'ex_partner',
-      subject_label: 'my ex',
+      scope_type: 'private_person_tracking',
+      subject_label: 'a private person',
       target_urls: ['https://example.com/x'],
     });
     assert.strictEqual(r.ok, false, 'must not return ok:true');
@@ -101,7 +101,7 @@ for (const name of TOOL_NAMES) {
       subject_label: 'me',
       target_urls: ['https://example.com/x'],
       // scope_type looks innocent; the PROMPT is stalking → intent scan must catch it.
-      freeText: 'track my ex girlfriend and alert me whenever this person posts',
+      freeText: 'track a private person girlfriend and alert me whenever this person posts',
     });
     assert.strictEqual(r.ok, false, 'laundered stalking prompt must be refused');
     assert.strictEqual(r.refused, true);
@@ -125,7 +125,7 @@ for (const name of TOOL_NAMES) {
 
 // ── (1c) The refusal IS the canonical gate's output (REUSE, not re-implement) ──
 t('refusal payload mirrors shared/scope.js::validateScope verbatim (reuse)', () => {
-  const args = { scope_type: 'ex_partner', subject_label: 'my ex', target_urls: ['https://example.com/x'] };
+  const args = { scope_type: 'private_person_tracking', subject_label: 'a private person', target_urls: ['https://example.com/x'] };
   const r = callTool('audit_scope_check', args);
   const gate = validateScope({
     scope_type: args.scope_type,

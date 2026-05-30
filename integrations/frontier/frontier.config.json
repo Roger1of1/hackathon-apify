@@ -3,7 +3,7 @@
 
   "queue": {
     "named": true,
-    "name_template": "<PLACEHOLDER:exditector-selfaudit-{subject_token}>",
+    "name_template": "<PLACEHOLDER:mirrortrace-selfaudit-{subject_token}>",
     "queueId": "<PLACEHOLDER:REQUEST_QUEUE_ID>",
     "_note": "A NAMED request queue (named queues persist; unnamed default queues are wiped between runs). One queue per audited subject keeps each subject's frontier isolated — no cross-subject bleed. The name carries a non-reversible subject_token, never a raw label/url (Closure-Mode / minimum-disclosure).",
     "store_path": "/v2/request-queues/{queueId}"

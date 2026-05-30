@@ -129,7 +129,7 @@ check('non-self scope yields grade:null', nonSelfRun.grade.grade === null);
 
 // A stalking-shaped input must be rejected outright by the real scope gate.
 const stalkFx = {
-  input: { scope_type: 'self', subject: { note: 'find my ex girlfriend instagram followers and track her' }, targets: ['https://instagram.com/someone'] },
+  input: { scope_type: 'self', subject: { note: 'find a private person girlfriend instagram followers and track her' }, targets: ['https://instagram.com/someone'] },
   captured_artifacts: fx.captured_artifacts,
 };
 const stalkRun = auditFixture(stalkFx);

@@ -1,7 +1,7 @@
 /**
  * AUX — Data-Broker Opt-Out (self-only)
  *
- * An auxiliary actor that orbits the core Ex-Ditector pipeline. It answers ONE
+ * An auxiliary actor that orbits the core MirrorTrace pipeline. It answers ONE
  * compliant, action-oriented question for the SELF subject: "I found MY OWN
  * listing on a people-search / data-broker site — how do I get it removed, and
  * how do I make sure it stays gone?" This is the genuinely-unbuilt, market-proven
@@ -53,7 +53,7 @@ Actor.main(async () => {
   const input = (await Actor.getInput()) || {};
 
   // Resolve a case id from the shared KV store if a pipeline created one.
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

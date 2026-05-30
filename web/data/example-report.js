@@ -3,7 +3,7 @@ window.__EX_REPORT__ = {
   "__label": "SYNTHETIC / TEMPLATE-DERIVED REPORT — produced by integrations/run-self-audit.js",
   "__notice": "Findings below are the REAL output of shared/detectors over a clearly-labelled SYNTHETIC fixture (integrations/fixtures/self-audit-fixture.json). Nothing is fabricated: the grade is computed by integrations/grade/exposure-grade.js from exactly these findings. Point the runner at a real gate-approved capture for a real report.",
   "__source": "synthetic self-audit fixture (template) · real detector→grade pipeline",
-  "generated_at": "2026-05-30T15:05:28.326Z",
+  "generated_at": "2026-05-30T16:43:41.146Z",
   "scope": {
     "scope_type": "self",
     "subject": {

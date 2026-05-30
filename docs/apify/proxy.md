@@ -11,7 +11,7 @@ operator at deploy time.
 
 A proxy is the single most-abused part of any crawler: it is the exact tool an
 evasion/stalking pipeline reaches for to defeat IP bans, rate limits, geo walls,
-and captcha. Ex-Ditector uses Apify Proxy for the **opposite** reason —
+and captcha. MirrorTrace uses Apify Proxy for the **opposite** reason —
 **availability only**:
 
 - **IP diversity** so we are a polite, non-hammering client of a *public* page;

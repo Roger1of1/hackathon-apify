@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Crawler Input",
+  "title": "MirrorTrace Crawler Input",
   "description": "Normally provided automatically via metamorph from Discovery. Crawls the named queue's frontier, preserves public evidence, and backs off on blocks instead of evading them.",
   "type": "object",
   "schemaVersion": 1,
@@ -28,12 +28,12 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "queue_name": {
       "title": "Frontier queue name",
       "type": "string",
-      "description": "Named Request Queue filled by Discovery (ex-ditector-frontier-<caseId>).",
+      "description": "Named Request Queue filled by Discovery (mirrortrace-frontier-<caseId>).",
       "editor": "textfield"
     },
     "max_pages": {

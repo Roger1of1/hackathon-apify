@@ -3,7 +3,7 @@
 /**
  * mcp/server.js
  *
- * Ex-Ditector (合规版) — APIFY MCP TOOL-SERVER
+ * MirrorTrace (合规版) — APIFY MCP TOOL-SERVER
  * ─────────────────────────────────────────────────────────────────────────────
  * A small, runnable Model-Context-Protocol tool layer that exposes the product's
  * EXISTING, already-tested compliance planners as MCP tools an AI agent can call.
@@ -14,7 +14,7 @@
  * planner. If the gate refuses (prohibited scope_type, or laundered / stalking
  * freeText, or a private-social host), the tool fails CLOSED and returns the
  * gate's own refusal — never a result. This is the same gate the web path
- * (window.ExDitector.runPolicyGate) and every actor uses, so the MCP surface is
+ * (window.MirrorTrace.runPolicyGate) and every actor uses, so the MCP surface is
  * NOT a weaker side-door: it is the same wall.
  *
  * ZERO DUPLICATION. This file re-uses, never re-implements:
@@ -70,7 +70,7 @@ const { buildBrokerOptOutPlan } = require('../shared/aux/broker-optout.js');
 const { buildTakedownPlan } = require('../shared/aux/takedown-letter.js');
 const { toBundle } = require('../shared/enrich/stix-evidence.js');
 
-const SERVER_NAME = 'ex-ditector-mcp';
+const SERVER_NAME = 'mirrortrace-mcp';
 const SERVER_VERSION = '1.0.0';
 
 /**

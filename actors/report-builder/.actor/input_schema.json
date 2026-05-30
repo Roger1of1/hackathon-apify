@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Report Builder Input",
+  "title": "MirrorTrace Report Builder Input",
   "description": "Normally provided automatically via metamorph from the Diff stage.",
   "type": "object",
   "schemaVersion": 1,
@@ -21,7 +21,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "checks_per_day": {
       "title": "Checks per day (wellbeing signal for distress_risk_score)",

@@ -1,7 +1,7 @@
 /**
  * AUX — Breach Exposure Check (k-anonymity)
  *
- * An auxiliary actor that orbits the core Ex-Ditector pipeline. It answers ONE
+ * An auxiliary actor that orbits the core MirrorTrace pipeline. It answers ONE
  * compliant question about the SELF subject: "are my own credentials already
  * exposed in public breach corpora?" — the kind of thing a self-footprint audit
  * should surface so the user can rotate passwords and enable MFA.
@@ -51,7 +51,7 @@ const BREACH_SCOPES = new Set(['self', 'public_figure']);
 
 const PWNED_RANGE_URL = 'https://api.pwnedpasswords.com/range/';
 const HIBP_ACCOUNT_URL = 'https://haveibeenpwned.com/api/v3/breachedaccount/';
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 
 Actor.main(async () => {
   const input = (await Actor.getInput()) || {};
@@ -67,7 +67,7 @@ Actor.main(async () => {
     target_urls: ['https://example.invalid/self-credential-audit'],
     subject_label: input.subject_label,
     // Surface any text fields so the laundering scan can reject e.g. "find my
-    // ex's password" even under a legal-looking scope.
+    // a private person's password" even under a legal-looking scope.
     description: input.subject_label,
   });
 
@@ -101,7 +101,7 @@ Actor.main(async () => {
     return;
   }
 
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

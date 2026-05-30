@@ -186,7 +186,7 @@ for (const s of ['consented', 'brand', 'safety_evidence']) {
 
 // 8) An outright invalid / private-person scope is rejected by the gate, no fetch.
 {
-  const d = archivePreFetchDecision({ scope_type: 'private_person_tracking', subject_url: 'https://example.com', subject_label: 'find my ex' });
+  const d = archivePreFetchDecision({ scope_type: 'private_person_tracking', subject_url: 'https://example.com', subject_label: 'find a private person' });
   assert.strictEqual(d.willFetch, false, 'private_person_tracking must be rejected');
   assert.strictEqual(d.reason, 'scope_gate_rejected', 'rejection must come from the canonical scope gate');
   ok('private_person_tracking scope is rejected by the gate before any fetch');
@@ -198,7 +198,7 @@ for (const s of ['consented', 'brand', 'safety_evidence']) {
   const d = archivePreFetchDecision({
     scope_type: 'self',
     subject_url: 'https://example.com',
-    subject_label: 'track my ex girlfriend and find who she is dating',
+    subject_label: 'track a private person girlfriend and find who she is dating',
   });
   assert.strictEqual(d.willFetch, false, 'laundered stalking intent under self must be dropped');
   assert.strictEqual(d.reason, 'scope_gate_rejected', 'must be the gate, not a downstream check, that drops it');

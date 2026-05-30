@@ -1,11 +1,11 @@
-# Ex-Ditector AUX — Data-Broker Opt-Out (self-only)
+# MirrorTrace AUX — Data-Broker Opt-Out (self-only)
 
-Auxiliary Apify actor for the [Ex-Ditector / Self Footprint Audit Pro](../../README.md)
+Auxiliary Apify actor for the [MirrorTrace / Self Footprint Audit Pro](../../README.md)
 toolkit. It turns *"I found MY OWN listing on a people-search / data-broker site"*
 into a concrete, reviewable removal workflow — the compliant, self-only rebuild of
 what DeleteMe / Privacy Bee style services do.
 
-It is the **opposite** of an ex-stalking tool: it can only ever act on the
+It is the **opposite** of a private person-stalking tool: it can only ever act on the
 **requester's own** broker listings, it **scrapes nothing**, and it **sends
 nothing**. It emits a plan you review and act on yourself.
 

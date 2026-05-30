@@ -124,7 +124,7 @@ function makeArchivedUrlEvent({
     data: original,
     confidence: 0.95, // CDX rows are concrete archival facts, not inferences
     visibility: VISIBILITY.INDEXED, // anyone can pull it up by searching the archive
-    risk: RISK.MEDIUM, // an exposure the subject may have *thought* they removed
+    risk: RISK.MEDIUM, // a exposure the subject may have *thought* they removed
     source_url: replayUrl,
     meta: {
       surface_kind: 'archive_snapshot',

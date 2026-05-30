@@ -1,6 +1,6 @@
 # AUX — Breach Exposure Check (k-anonymity)
 
-An **auxiliary** Ex-Ditector actor that orbits the core self-footprint pipeline.
+An **auxiliary** MirrorTrace actor that orbits the core self-footprint pipeline.
 It answers one compliant question about the **SELF subject**: *are my own
 credentials already exposed in public breach corpora?* — so the user can rotate
 passwords and turn on MFA. It is the opposite of an attack tool: it only ever

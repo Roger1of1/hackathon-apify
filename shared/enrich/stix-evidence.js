@@ -7,7 +7,7 @@
  * cyber/OSINT observations, and the lingua franca SpiderFoot-class tools export
  * to) WITHOUT pulling a STIX library — we emit the plain JSON shape.
  *
- * Why STIX here: an exposure finding ("this email is public on this page,
+ * Why STIX here: a exposure finding ("this email is public on this page,
  * observed at time T, with this content hash") is exactly an Observed Data
  * object with first_observed / last_observed and an objects bag. Using the
  * standard shape makes evidence portable into a report, a SIEM, or a takedown

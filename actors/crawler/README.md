@@ -24,7 +24,7 @@ enforced in `failedRequestHandler` (and a secondary check in `requestHandler`).
 See the boundary comments in `src/main.js`.
 
 ## Human config
-- `DIFF_ACTOR_ID` env → `YOUR_USERNAME/ex-ditector-diff-evidence`.
+- `DIFF_ACTOR_ID` env → `YOUR_USERNAME/mirrortrace-diff-evidence`.
 
 ## Apify notes
 - Default 60 rps / 200 rps KV — low concurrency keeps us well under.

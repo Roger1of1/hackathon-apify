@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Public-Archive Self-Exposure Audit Input",
+  "title": "MirrorTrace Public-Archive Self-Exposure Audit Input",
   "description": "Finds PUBLIC web-archive (Wayback) snapshots of a URL/host you own — including pages you have since deleted — so you can request removal. Prohibited and non-applicable scopes are absent from the enum: only self/public_figure are accepted because enumerating an archive prefix is a dual-use technique restricted to those scopes. Only public archived snapshots of YOUR OWN surface are read; there is no field for third-party identity, romance, gender, location, or social-graph data.",
   "type": "object",
   "schemaVersion": 1,
@@ -51,7 +51,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "subject_label": {
       "title": "Subject label",

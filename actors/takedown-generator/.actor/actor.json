@@ -1,8 +1,8 @@
 {
   "actorSpecification": 1,
-  "name": "ex-ditector-takedown-generator",
-  "title": "Ex-Ditector AUX — Takedown / Removal-Letter Generator",
-  "description": "Auxiliary actor that closes the loop from audit to action. It reads the SELF subject's REAL detector findings (typed module_events the other Ex-Ditector actors produced), CLUSTERS them by co-occurrence key (host/email-prefix/handle) the SpiderFoot-correlation way via shared/enrich/cluster-keys.js, and drafts ready-to-review removal requests: GDPR Art.17 erasure, CCPA/CPRA delete, Google 'Results about you' search de-index, a self-remediation checklist for surfaces the subject controls, and credential-rotation guidance for breach/secret leaks. Scope-gated to self/public_figure ONLY via shared/scope.js; a takedown is inherently first-person ('remove info about ME'). NO fake data: every letter is a DETERMINISTIC template filled only from real event fields with explicit [[ FILL IN ]] blanks, marked is_template:true; nothing is sent and nothing is removed automatically. No findings in -> empty plan out.",
+  "name": "mirrortrace-takedown-generator",
+  "title": "MirrorTrace AUX — Takedown / Removal-Letter Generator",
+  "description": "Auxiliary actor that closes the loop from audit to action. It reads the SELF subject's REAL detector findings (typed module_events the other MirrorTrace actors produced), CLUSTERS them by co-occurrence key (host/email-prefix/handle) the SpiderFoot-correlation way via shared/enrich/cluster-keys.js, and drafts ready-to-review removal requests: GDPR Art.17 erasure, CCPA/CPRA delete, Google 'Results about you' search de-index, a self-remediation checklist for surfaces the subject controls, and credential-rotation guidance for breach/secret leaks. Scope-gated to self/public_figure ONLY via shared/scope.js; a takedown is inherently first-person ('remove info about ME'). NO fake data: every letter is a DETERMINISTIC template filled only from real event fields with explicit [[ FILL IN ]] blanks, marked is_template:true; nothing is sent and nothing is removed automatically. No findings in -> empty plan out.",
   "version": "1.0",
   "input": "./input_schema.json",
   "dockerfile": "./Dockerfile",

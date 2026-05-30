@@ -1,7 +1,7 @@
 /**
  * AUX — Takedown / Removal-Letter Generator
  *
- * An auxiliary actor that orbits the core Ex-Ditector pipeline and closes the
+ * An auxiliary actor that orbits the core MirrorTrace pipeline and closes the
  * loop: the audit actors tell the SELF subject WHAT is exposed; this actor turns
  * those real findings into structured, ready-to-review removal requests so the
  * subject can actually ACT — a GDPR Art.17 erasure letter, a CCPA/CPRA delete
@@ -90,7 +90,7 @@ Actor.main(async () => {
   // This actor fetches nothing, so we hand the gate a harmless self placeholder
   // ONLY to satisfy its target check, while still getting its prohibited-scope /
   // prohibited-intent rejection and its free-text laundering scan over the
-  // subject's label/name (so "draft a letter to find my ex" is rejected).
+  // subject's label/name (so "draft a letter to find a private person" is rejected).
   const gateDecision = validateScope({
     scope_type: scopeType,
     target_urls: ['https://example.invalid/self-takedown-draft'],
@@ -126,7 +126,7 @@ Actor.main(async () => {
   }
 
   // Resolve case id from the shared case store, like the other actors.
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

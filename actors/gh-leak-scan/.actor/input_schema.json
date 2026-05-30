@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Public GitHub Leak Scan Input",
+  "title": "MirrorTrace Public GitHub Leak Scan Input",
   "description": "Audits the SELF subject's OWN public GitHub footprint for self-committed secrets. Prohibited scopes are absent from the enum: account/repository enumeration is a dual-use technique, so only self/public_figure are accepted (consented/brand/safety_evidence intentionally cannot run this actor). This actor reads ONLY public GitHub data via the documented REST API and never bypasses authentication.",
   "type": "object",
   "schemaVersion": 1,
@@ -28,7 +28,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "subject_label": {
       "title": "Subject label",

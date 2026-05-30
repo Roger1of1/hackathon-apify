@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Public Attack-Surface Self-Scan Input",
+  "title": "MirrorTrace Public Attack-Surface Self-Scan Input",
   "description": "Audits a domain YOU OWN for publicly-discoverable subdomains (certificate-transparency logs) and a leaked registrant email (public WHOIS/RDAP). Subdomain discovery is a dual-use attack-surface-management technique, so the scope enum intentionally contains ONLY self and public_figure; consented/brand/safety_evidence cannot run this actor. You must explicitly assert that you own or are authorized to audit the domain.",
   "type": "object",
   "schemaVersion": 1,
@@ -51,7 +51,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "subject_label": {
       "title": "Subject label",

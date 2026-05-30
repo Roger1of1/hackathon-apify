@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Diff & Evidence Input",
+  "title": "MirrorTrace Diff & Evidence Input",
   "description": "Normally provided automatically via metamorph from the Crawler.",
   "type": "object",
   "schemaVersion": 1,
@@ -21,7 +21,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "checks_per_day": {
       "title": "Checks per day (wellbeing signal)",

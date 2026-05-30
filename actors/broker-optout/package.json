@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-broker-optout",
+  "name": "mirrortrace-broker-optout",
   "version": "1.0.0",
-  "description": "AUX data-broker opt-out — scope-gated, self-only removal workflow (STIX 2.1 Observed Data + GDPR/CCPA erasure letters + Apify re-check proposal) for Ex-Ditector.",
+  "description": "AUX data-broker opt-out — scope-gated, self-only removal workflow (STIX 2.1 Observed Data + GDPR/CCPA erasure letters + Apify re-check proposal) for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

@@ -1,7 +1,7 @@
 {
   "actorSpecification": 1,
-  "name": "ex-ditector-paste-exposure",
-  "title": "Ex-Ditector AUX — Public-Paste Self-Exposure Scan (self / public_figure)",
+  "name": "mirrortrace-paste-exposure",
+  "title": "MirrorTrace AUX — Public-Paste Self-Exposure Scan (self / public_figure)",
   "description": "Auxiliary actor. Checks whether the SELF subject's OWN identifiers (email / domain / handle) appear in PUBLIC paste dumps via a documented public paste-search index — a self-footprint surface distinct from named breaches (breach-check) and own-repo leaks (gh-leak-scan), exactly as HIBP treats 'Pastes' as a separate source. Scope-gated to self/public_figure ONLY via shared/scope.js. Emits typed module-events (event_type/source_module/data/confidence/source_url) for the SpiderFoot-style correlation engine; matched emails are carried as HIBP k-anonymity SHA-1 prefixes + a masked hint, never plaintext, and no paste body is stored. NO fake data: a failed/unavailable index means no event, never a fabricated paste.",
   "version": "1.0",
   "input": "./input_schema.json",

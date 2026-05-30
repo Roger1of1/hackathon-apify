@@ -6,7 +6,7 @@ into the report builder.
 ## Behavior
 - Loads this case's `capture` records from the inherited default dataset.
 - For each URL, compares the current `content_sha256` against the last known
-  value in the named baseline KV store `ex-ditector-baseline-<caseId>`.
+  value in the named baseline KV store `mirrortrace-baseline-<caseId>`.
 - Emits an immutable evidence-index entry **only for real changes**:
   - `new` — first time we've seen this URL
   - `changed` — content hash differs from baseline
@@ -20,4 +20,4 @@ If the crawl was blocked/aborted and produced no captures, the index is empty an
 the summary says so. Nothing is invented.
 
 ## Human config
-- `REPORT_ACTOR_ID` env → `YOUR_USERNAME/ex-ditector-report-builder`.
+- `REPORT_ACTOR_ID` env → `YOUR_USERNAME/mirrortrace-report-builder`.

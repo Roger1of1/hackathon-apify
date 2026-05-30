@@ -252,7 +252,7 @@ function ledgerRowsFromTakedownPlan(plan, opts = {}) {
 
 /**
  * Build the full erasure ledger. REUSES buildTakedownPlan to derive the requests
- * from the subject's REAL events; optionally folds in an existing broker opt-out
+ * from the subject's REAL events; optionally folds in a existing broker opt-out
  * plan's erasure_plan packets (also produced by takedown-letter, so same shape).
  *
  * @param {object} p

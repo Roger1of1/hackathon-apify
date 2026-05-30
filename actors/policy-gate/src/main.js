@@ -1,7 +1,7 @@
 /**
  * A0 — Policy Gate
  *
- * The mandatory entry point for the entire Ex-Ditector pipeline. NOTHING crawls
+ * The mandatory entry point for the entire MirrorTrace pipeline. NOTHING crawls
  * until this actor says yes. Responsibilities:
  *
  *   1. Validate scope_type against the frozen allow-list (shared/scope.js).
@@ -35,12 +35,12 @@ const { validateScope } = require('../../../shared/scope.js');
 const { makeCaseRecord, makeDecisionLog } = require('../../../shared/schemas.js');
 
 // Named KV store that carries the case across metamorph into downstream actors.
-const CASE_STORE_NAME = 'ex-ditector-case';
+const CASE_STORE_NAME = 'mirrortrace-case';
 
 // The actor we metamorph INTO on a successful gate. Configure via env so the
 // same image works whether you deploy under your own account namespace or not.
-// HUMAN CONFIG: set DISCOVERY_ACTOR_ID to "<YOUR_USERNAME>/ex-ditector-discovery".
-const DISCOVERY_ACTOR_ID = process.env.DISCOVERY_ACTOR_ID || 'YOUR_USERNAME/ex-ditector-discovery';
+// HUMAN CONFIG: set DISCOVERY_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-discovery".
+const DISCOVERY_ACTOR_ID = process.env.DISCOVERY_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-discovery';
 
 /**
  * Generate a stable-ish case id. Uses the run id when present so the case is
@@ -129,7 +129,7 @@ function startStandbyServer(port) {
     // Liveness probe Apify uses to keep the Standby actor warm.
     if (req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ready', service: 'ex-ditector-policy-gate' }));
+      res.end(JSON.stringify({ status: 'ready', service: 'mirrortrace-policy-gate' }));
       return;
     }
     if (req.method !== 'POST') {

@@ -1,4 +1,4 @@
-# Ex-Ditector AUX — Public-Paste Self-Exposure Scan
+# MirrorTrace AUX — Public-Paste Self-Exposure Scan
 
 An **auxiliary** Apify actor for *Self Footprint Audit Pro*. It answers one
 compliant, self-focused question:

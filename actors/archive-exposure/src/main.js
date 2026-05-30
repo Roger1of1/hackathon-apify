@@ -1,7 +1,7 @@
 /**
  * AUX — Public-Archive Self-Exposure Audit
  *
- * An auxiliary actor that orbits the core Ex-Ditector pipeline. It answers ONE
+ * An auxiliary actor that orbits the core MirrorTrace pipeline. It answers ONE
  * compliant question about the SELF subject: "what did I publish that I LATER
  * deleted, but which still lives in a PUBLIC web archive?" A live-only audit
  * misses this entirely. The Internet Archive Wayback Machine keeps public
@@ -67,7 +67,7 @@ const { VISIBILITY } = require('../../../shared/detectors/event-types.js');
 const ARCHIVE_SCOPES = new Set(['self', 'public_figure']);
 
 const CDX_ENDPOINT = 'https://web.archive.org/cdx/search/cdx';
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 const MAX_SNAPSHOT_BYTES = 1024 * 1024; // 1 MB cap per snapshot; we only need text
 
 /** True for a 429/403 that signals rate limiting — back off, never evade. */
@@ -164,7 +164,7 @@ Actor.main(async () => {
   }
 
   // Pull the shared case id if a case store exists (best-effort, standalone OK).
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

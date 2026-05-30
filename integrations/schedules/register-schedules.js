@@ -1,7 +1,7 @@
 /**
  * integrations/schedules/register-schedules.js
  *
- * Idempotently register the Ex-Ditector re-audit SCHEDULES on Apify via the
+ * Idempotently register the MirrorTrace re-audit SCHEDULES on Apify via the
  * public API (POST /v2/schedules). REAL code, INERT without credentials: it
  * refuses live calls unless APIFY_TOKEN is set AND every placeholder in
  * schedules.config.json has been replaced with real ids + a non-identifying

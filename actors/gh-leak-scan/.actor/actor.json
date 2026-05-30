@@ -1,7 +1,7 @@
 {
   "actorSpecification": 1,
-  "name": "ex-ditector-gh-leak-scan",
-  "title": "Ex-Ditector AUX — Public GitHub Leak Scan (self / public_figure)",
+  "name": "mirrortrace-gh-leak-scan",
+  "title": "MirrorTrace AUX — Public GitHub Leak Scan (self / public_figure)",
   "description": "Auxiliary actor. Scans the SELF subject's OWN public GitHub account — the public profile, public repositories, and public gists they control — for credentials they accidentally committed (API keys, tokens, private-key blocks, high-entropy .env assignments), so the subject can rotate them. Reuses the shared, redacting, entropy-gated secret detector; secrets are never echoed (only a fingerprint + masked hint). Scope-gated to self/public_figure ONLY via shared/scope.js (repo/account enumeration is a dual-use technique). Uses ONLY GitHub's public, documented REST API + public raw file content; honors rate limits and never bypasses auth. Optionally uses a GITHUB_TOKEN purely to RAISE the subject's OWN rate limit (never to reach private data). Emits typed module_events (SELF_USERNAME / SELF_PROFILE_URL / SECRET_LEAK_PUBLIC / EXPOSURE_SUMMARY) for the correlation engine. NO fake data: no network result => no event.",
   "version": "1.0",
   "input": "./input_schema.json",

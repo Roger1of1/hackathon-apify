@@ -1,7 +1,7 @@
 /**
  * AUX — Public Attack-Surface Self-Scan (Certificate Transparency + WHOIS)
  *
- * An auxiliary actor that orbits the core Ex-Ditector pipeline. It answers ONE
+ * An auxiliary actor that orbits the core MirrorTrace pipeline. It answers ONE
  * compliant question about a domain the SELF subject OWNS: "what can a stranger
  * trivially discover about my domain's attack surface from PUBLIC records?" — so
  * the user can lock down forgotten dev/admin hosts and enable WHOIS privacy.
@@ -56,7 +56,7 @@ const ASM_SCOPES = new Set(['self', 'public_figure']);
 
 const CRTSH_URL = 'https://crt.sh/';
 const RDAP_URL = 'https://rdap.org/domain/';
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 
 /**
  * Extract candidate hostnames from a crt.sh JSON row. `name_value` can hold
@@ -149,7 +149,7 @@ Actor.main(async () => {
     return;
   }
 
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

@@ -1,7 +1,7 @@
 /**
  * integrations/webhooks/receiver.js
  *
- * A small, self-contained HTTP receiver for Apify run webhooks for Ex-Ditector.
+ * A small, self-contained HTTP receiver for Apify run webhooks for MirrorTrace.
  *
  * What it does, in order, for every incoming POST:
  *   1) Captures the RAW body bytes (needed for HMAC verification).
@@ -165,7 +165,7 @@ async function handleWebhook({ rawBody, headers, urlSecretProvided }) {
     urlSecretProvided,
     urlSecretExpected: URL_SECRET,
     rawBody,
-    signatureHeader: headers['x-ex-ditector-signature'] || headers['x-apify-webhook-signature'],
+    signatureHeader: headers['x-mirrortrace-signature'] || headers['x-apify-webhook-signature'],
     hmacSecret: HMAC_SECRET,
   });
   if (!auth.authentic) {
@@ -254,14 +254,14 @@ function startServer(port = PORT) {
   });
   server.listen(port, () => {
     // eslint-disable-next-line no-console
-    console.log(`[ex-ditector] Apify webhook receiver listening on :${port}${PATH_PREFIX}/<secret>`);
+    console.log(`[mirrortrace] Apify webhook receiver listening on :${port}${PATH_PREFIX}/<secret>`);
     if (!URL_SECRET && !HMAC_SECRET) {
       // eslint-disable-next-line no-console
-      console.warn('[ex-ditector] WARNING: no APIFY_WEBHOOK_SECRET / APIFY_WEBHOOK_HMAC_SECRET set — all requests will be rejected (fail-closed).');
+      console.warn('[mirrortrace] WARNING: no APIFY_WEBHOOK_SECRET / APIFY_WEBHOOK_HMAC_SECRET set — all requests will be rejected (fail-closed).');
     }
     if (!APIFY_TOKEN) {
       // eslint-disable-next-line no-console
-      console.warn('[ex-ditector] Note: APIFY_TOKEN not set — output-health cannot fetch dataset/OUTPUT and will report UNKNOWN rather than guessing HEALTHY.');
+      console.warn('[mirrortrace] Note: APIFY_TOKEN not set — output-health cannot fetch dataset/OUTPUT and will report UNKNOWN rather than guessing HEALTHY.');
     }
   });
   return server;

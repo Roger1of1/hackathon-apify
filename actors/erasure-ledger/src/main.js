@@ -19,7 +19,7 @@
  *    and additionally restricted to scope_type ∈ {self, public_figure}. Tracking
  *    your OWN removal requests is inherently first-person; we fail CLOSED for any
  *    other scope, and the gate's free-text laundering scan runs over subject_label
- *    so a laundered intent ("track my ex's removals") is rejected exactly as the
+ *    so a laundered intent ("track a private person's removals") is rejected exactly as the
  *    web and other actor paths reject it.
  * 2. SELF only: this actor never fetches anything and never analyses a third
  *    party. It only schedules check-backs for the subject's OWN drafted requests.
@@ -154,7 +154,7 @@ Actor.main(async () => {
   }
 
   // Resolve case id from the shared case store, like the other actors.
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

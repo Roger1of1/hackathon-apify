@@ -1,6 +1,6 @@
 # A0 — Policy Gate
 
-The mandatory front door of Ex-Ditector. No crawl runs without passing here.
+The mandatory front door of MirrorTrace. No crawl runs without passing here.
 
 ## What it does
 1. Validates `scope_type` against the frozen allow-list in `shared/scope.js`
@@ -13,7 +13,7 @@ The mandatory front door of Ex-Ditector. No crawl runs without passing here.
 5. **On reject** → writes an immutable decision log, sets `OUTPUT`, fails the run
    honestly (no fake "success").
    **On allow** → writes an immutable `CASE` record + decision log into the named
-   KV store `ex-ditector-case`, then `Actor.metamorph()` into the discovery actor.
+   KV store `mirrortrace-case`, then `Actor.metamorph()` into the discovery actor.
    Storage is inherited across metamorph, so the case travels downstream.
 
 ## Two run modes
@@ -24,7 +24,7 @@ The mandatory front door of Ex-Ditector. No crawl runs without passing here.
     422 reject). **Never crawls, never metamorphs** — a cheap pre-flight check.
 
 ## Human config required
-- `DISCOVERY_ACTOR_ID` env var → set to `YOUR_USERNAME/ex-ditector-discovery`.
+- `DISCOVERY_ACTOR_ID` env var → set to `YOUR_USERNAME/mirrortrace-discovery`.
 - Provide a real `APIFY_TOKEN` in the platform (or `apify login`) to run.
 
 ## Try the rejection locally

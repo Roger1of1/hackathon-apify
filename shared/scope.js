@@ -1,7 +1,7 @@
 /**
  * shared/scope.js
  *
- * Canonical compliance boundary for Ex-Ditector (Self Footprint Audit Pro).
+ * Canonical compliance boundary for MirrorTrace (Self Footprint Audit Pro).
  *
  * This module is the SINGLE SOURCE OF TRUTH for what this product is allowed to
  * do. Every actor imports `validateScope` and the constants below. The product
@@ -136,7 +136,7 @@ const ALTERNATIVE_TASKS = Object.freeze({
 const PROHIBITED_TEXT_PATTERNS = Object.freeze([
   {
     code: 'private_person_tracking',
-    pattern: /(track|monitor|watch|stalk|surveil|scrape|crawl|alert me|ping me|追踪|监控|盯着|抓取).{0,90}(ex\b|crush|coworker|private individual|private person|this person|their account|前任|暗恋|同事|陌生人|这个人|他们的账号)/iu,
+    pattern: /(track|monitor|watch|stalk|surveil|scrape|crawl|alert me|ping me|追踪|监控|盯着|抓取).{0,90}(ex\b|crush|coworker|private individual|private person|this person|their account|私人个体|暗恋|同事|陌生人|这个人|他们的账号)/iu,
     reason: 'Request appears to track a private person rather than audit the user\'s own footprint.',
   },
   {

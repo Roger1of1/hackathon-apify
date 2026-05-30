@@ -80,7 +80,7 @@ t('scope-gate-first: private-person stalking input is refused (SCOPE_REJECTED)',
     target_urls: ['https://www.spokeo.com/me'],
     events: [spokeoListing()],
     // laundering attempt: legal scope + valid broker URL, but stalking free-text
-    freeText: 'track my ex and watch their account',
+    freeText: 'track a private person and watch their account',
   }, { now: NOW });
   assert.strictEqual(res.allowed, false);
   assert.strictEqual(res.refusal, REFUSAL.SCOPE_REJECTED);
@@ -90,7 +90,7 @@ t('scope-gate-first: private-person stalking input is refused (SCOPE_REJECTED)',
 
 t('scope-gate-first: disallowed scope_type is refused by the gate', () => {
   const res = buildOptOutPlan({
-    scope_type: 'ex_partner',
+    scope_type: 'private_person_tracking',
     target_urls: ['https://www.spokeo.com/them'],
     events: [spokeoListing()],
   }, { now: NOW });

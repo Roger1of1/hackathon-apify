@@ -111,7 +111,7 @@ gate-enforcing counterpart of that remote whitelist.
 
 ## What the self-test proves (`mcp/server_selftest.js`, 17 checks, green)
 
-1. **Fail closed on prohibited scope_type** — every tool rejects e.g. `ex_partner`.
+1. **Fail closed on prohibited scope_type** — every tool rejects e.g. `private_person_tracking`.
 2. **Fail closed on laundered / stalking `freeText`** — innocent `scope_type:"self"`
    + a stalking prompt is rejected by the intent scan (same as the web path).
 3. **Private-social host blocked** — even with a clean `scope_type`.

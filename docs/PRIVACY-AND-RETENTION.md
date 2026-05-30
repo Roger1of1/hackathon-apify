@@ -9,7 +9,7 @@
 
 ## 1. Privacy-by-design posture
 
-Ex-Ditector is built around **data minimization** and **purpose limitation**: the only data it
+MirrorTrace is built around **data minimization** and **purpose limitation**: the only data it
 collects is what is necessary for a declared, lawful `scope_type` (self / consented /
 public_figure / brand / safety_evidence). Anything outside that is rejected at A0 before
 collection, so the cleanest privacy control is **not collecting in the first place**.
@@ -25,7 +25,7 @@ A central, non-negotiable position of this product:
 
 A single public post is public. A continuously updated, searchable, time-stamped dossier of a
 private person — where they were, what they liked, who they interacted with — is surveillance,
-and it is the exact harm an ex-tracker would inflict. This is why:
+and it is the exact harm a non-consensual tracking workflow would inflict. This is why:
 
 - The scope model has **no "private person" scope** (COMPLIANCE.md §1).
 - `private_person_tracking` is a `prohibited_analysis` token.

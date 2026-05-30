@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-policy-gate",
+  "name": "mirrortrace-policy-gate",
   "version": "1.0.0",
-  "description": "A0 Policy Gate — compliance gate + metamorph router for Ex-Ditector.",
+  "description": "A0 Policy Gate — compliance gate + metamorph router for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

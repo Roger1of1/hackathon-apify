@@ -30,8 +30,8 @@ const { hashPage } = require('../../../shared/hashing.js');
 const { ALLOWED_SCOPES, hostOf, PRIVATE_SOCIAL_HOSTS } = require('../../../shared/scope.js');
 const { makeCaptureRecord, makeBackoffRecord } = require('../../../shared/schemas.js');
 
-// HUMAN CONFIG: set DIFF_ACTOR_ID to "<YOUR_USERNAME>/ex-ditector-diff-evidence".
-const DIFF_ACTOR_ID = process.env.DIFF_ACTOR_ID || 'YOUR_USERNAME/ex-ditector-diff-evidence';
+// HUMAN CONFIG: set DIFF_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-diff-evidence".
+const DIFF_ACTOR_ID = process.env.DIFF_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-diff-evidence';
 
 // Status codes that mean "the source is telling us to stop". We honor them.
 const BACKOFF_STATUS = new Set([401, 403, 429]);
@@ -42,7 +42,7 @@ const BLOCKED_RESOURCE_TYPES = ['media', 'font', 'websocket', 'manifest', 'other
 
 Actor.main(async () => {
   const input = (await Actor.getInput()) || {};
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   const queueName = input.queue_name;
   const maxPages = typeof input.max_pages === 'number' ? input.max_pages : 50;
 
@@ -69,7 +69,7 @@ Actor.main(async () => {
   const requestQueue = await Actor.openRequestQueue(queueName);
 
   // Named KV store for binary evidence (html + screenshots). Keyed per case.
-  const evidenceStore = await Actor.openKeyValueStore(`ex-ditector-evidence-${caseId}`);
+  const evidenceStore = await Actor.openKeyValueStore(`mirrortrace-evidence-${caseId}`);
 
   let captured = 0;
   let aborted = false;
@@ -222,7 +222,7 @@ Actor.main(async () => {
   await Actor.metamorph(DIFF_ACTOR_ID, {
     case_id: caseId,
     case_store_name: caseStoreName,
-    evidence_store_name: `ex-ditector-evidence-${caseId}`,
+    evidence_store_name: `mirrortrace-evidence-${caseId}`,
     scope_type: input.scope_type,
     checks_per_day: input.checks_per_day || 0,
     crawl_aborted: aborted,

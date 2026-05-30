@@ -1,6 +1,6 @@
 # shared/
 
-Canonical, dependency-free modules reused by every Ex-Ditector actor. **This is
+Canonical, dependency-free modules reused by every MirrorTrace actor. **This is
 the compliance chokepoint** — the red lines live here, not scattered across
 actors.
 

@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-attack-surface-scan",
+  "name": "mirrortrace-attack-surface-scan",
   "version": "1.0.0",
-  "description": "AUX public attack-surface self-scan — certificate-transparency subdomain discovery + public WHOIS registrant-email exposure check for Ex-Ditector.",
+  "description": "AUX public attack-surface self-scan — certificate-transparency subdomain discovery + public WHOIS registrant-email exposure check for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

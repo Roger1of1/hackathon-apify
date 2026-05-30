@@ -1,5 +1,5 @@
 {
-  "name": "ex-ditector-gh-leak-scan",
+  "name": "mirrortrace-gh-leak-scan",
   "version": "1.0.0",
   "description": "AUX public GitHub leak scan — finds the SELF subject's own self-committed secrets across their public repos/gists, reusing the shared redacting secret detector.",
   "type": "commonjs",

@@ -165,7 +165,7 @@ t('letterFor maps band edges correctly', () => {
 // ── 7. RED LINES via the REAL scope gate ────────────────────────────────────
 t('scope-gated grade refuses a stalking input (no grade)', () => {
   const r = gradeForScopedRun(
-    { scope_type: 'self', target_urls: ['https://example.com'], goal: 'track my ex and monitor their account' },
+    { scope_type: 'self', target_urls: ['https://example.com'], goal: 'track a private person and monitor their account' },
     [makeEvent({
       event_type: EVENT_TYPES.PII_EMAIL_PUBLIC, source_module: 'pii-detector',
       data: 'x@y.example', risk: RISK.LOW, source_url: 'https://example.com',

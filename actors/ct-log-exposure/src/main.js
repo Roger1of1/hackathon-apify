@@ -1,13 +1,13 @@
 /**
  * AUX — Certificate-Transparency Exposure Self-Check (CT logs / crt.sh)
  *
- * An auxiliary actor that orbits the core Ex-Ditector self-footprint pipeline.
+ * An auxiliary actor that orbits the core MirrorTrace self-footprint pipeline.
  * It answers ONE compliant, high-value question about a domain the SELF subject
  * OWNS (or a genuine public_figure's public domain): "which hostnames have I
  * already published to the public Certificate Transparency logs, and which of
  * them name sensitive internal services I forgot were reachable?" — a self-
  * exposure fact the subject can fix today (decommission/auth/scope the cert),
- * which none of the other Ex-Ditector actors cover.
+ * which none of the other MirrorTrace actors cover.
  *
  * ───────────────────────── COMPLIANCE BOUNDARY ─────────────────────────
  * 1. Scope gate: every run routes through shared/scope.js validateScope and is
@@ -15,7 +15,7 @@
  *    ENUMERATION is a recognised dual-use technique, so it is allowed ONLY for
  *    self/public_figure and chokepointed through the same gate the whole product
  *    uses; the free-text laundering scan still runs over subject_label so e.g.
- *    "find my ex's servers" is rejected even under a legal-looking scope.
+ *    "find a private person's servers" is rejected even under a legal-looking scope.
  * 2. PUBLIC CT LOGS ONLY: Certificate Transparency logs (RFC 6962) are public,
  *    append-only logs of issued TLS certificates, read here via the public crt.sh
  *    index. There is NO login wall, NO captcha bypass, NO private social graph,
@@ -60,7 +60,7 @@ const ENUM_SCOPES = new Set(['self', 'public_figure']);
 // Public CT index. crt.sh serves JSON with ?output=json. Identity uses %25 (URL
 // wildcard) to include subdomains the subject has published certs for.
 const DEFAULT_CT_INDEX = 'https://crt.sh/';
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 
 /**
  * One crt.sh query for a domain. Returns the parsed JSON array on success, or
@@ -153,7 +153,7 @@ Actor.main(async () => {
     : DEFAULT_CT_INDEX;
 
   // Optional case linkage (mirrors breach-check / email-auth), so report-builder can join.
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

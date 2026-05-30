@@ -1,7 +1,7 @@
 {
   "actorSpecification": 1,
-  "name": "ex-ditector-attack-surface-scan",
-  "title": "Ex-Ditector AUX — Public Attack-Surface Self-Scan (CT logs + WHOIS)",
+  "name": "mirrortrace-attack-surface-scan",
+  "title": "MirrorTrace AUX — Public Attack-Surface Self-Scan (CT logs + WHOIS)",
   "description": "Auxiliary actor. Audits a domain the SELF subject OWNS for publicly-discoverable exposure: enumerates subdomains from PUBLIC certificate-transparency logs (crt.sh, RFC 6962) to surface forgotten dev/admin/staging hosts, and checks public WHOIS/RDAP for a registrant email the subject leaked into the public record. Reframes the subdomain-discovery step of attack-surface-management tools (Amass / Subfinder) as a SELF inventory. Scope-gated to self/public_figure ONLY via shared/scope.js, and requires explicit ownership assertion of the domain. Emits typed module-events from the frozen event-types vocabulary; the registrant email becomes a k-anonymity prefix + masked display, never plaintext. NO fake data: a host/email is emitted ONLY if it really appears in the CT/WHOIS response; an empty response yields an empty inventory, never an invented surface. NO login bypass, no captcha/rate-limit evasion, no third-party identity resolution.",
   "version": "1.0",
   "input": "./input_schema.json",

@@ -1,4 +1,4 @@
-/* Ex-Ditector 合规版 — app.js
+/* MirrorTrace 合规版 — app.js
  *
  * Clarity-first dashboard. The Policy Gate is REAL logic, not a simulation.
  * No preloader, no radio-dial/channel nav, no scroll-driven wheel — those were
@@ -23,11 +23,11 @@
 (function () {
   "use strict";
 
-  const FALLBACK_PLAN = window.__EX_PLAN__ || null;
+  const FALLBACK_PLAN = window.__MIRRORTRACE_PLAN__ || null;
 
   /* =========================================================================
    * POLICY GATE — the genuine compliance logic (mirrors A0 / input_schema).
-   * UNCHANGED behaviour: window.ExDitector.runPolicyGate still really rejects
+   * window.MirrorTrace.runPolicyGate really rejects
    * stalking / private-individual / laundering inputs (tests stay green).
    * =======================================================================*/
 
@@ -68,9 +68,9 @@
     {
       id: "private_person_tracking",
       label: "追踪具名私人个体",
-      reason: "请求指向追踪 / 监控某个私人个体（前任 / 暗恋对象 / 同事 / 陌生人等）。本工具只服务于你自己及合法授权 / 公开实体。",
+      reason: "请求指向追踪 / 监控某个私人个体（私人个体 / 暗恋对象 / 同事 / 陌生人等）。本工具只服务于你自己及合法授权 / 公开实体。",
       patterns: [
-        /(前任|前男友|前女友|前夫|前妻|分手|复合)/i,
+        /(私人个体|前男友|前女友|前夫|前妻|分手|复合)/i,
         /\b(ex[-\s]?(boyfriend|girlfriend|husband|wife|partner)?)\b/i,
         /(暗恋|心仪|喜欢的(那个)?(人|男生|女生)|那个(女生|男生|妹子|小哥))/i,
         /(跟踪|蹲点|监控|偷偷查|查一下(他|她)|扒一下(他|她)|人肉|起底)(?!.*(我自己|本人|品牌|公司|公众人物))/i,
@@ -239,7 +239,7 @@
   function renderPresets() {
     const row = document.getElementById("presetRow");
     const presets = [
-      { t: "查我的前任在干嘛", txt: "帮我查一下我前任最近在干嘛，是不是有新对象了", kind: "reject" },
+      { t: "追踪某个私人个体", txt: "帮我追踪某个私人个体最近在干嘛，并推断其亲密关系", kind: "reject" },
       { t: "暧昧推断", txt: "看看这个人和我同事是不是有暧昧", kind: "reject" },
       { t: "头像猜性别", txt: "根据这个头像判断对方是男是女", kind: "reject" },
       { t: "交友 App 活跃", txt: "查他是不是在用 Tinder、Bumble", kind: "reject" },
@@ -598,7 +598,7 @@
    * category map, same x_scope_note red line — so the JSON a user copies
    * here is byte-for-byte the shape the real actor pipeline emits.
    *
-   * Why STIX Observed Data: an exposure finding ("this email is public on
+   * Why STIX Observed Data: a exposure finding ("this email is public on
    * this page, first/last observed at T, with this content hash") is exactly
    * an OASIS STIX 2.1 Observed Data object — first_observed / last_observed
    * + an objects bag of observables. That is the de-facto interchange shape
@@ -1835,7 +1835,7 @@
       console.warn("plan.json 加载失败（可能是 file:// 限制）。注入内置数据。");
       var s = document.createElement("script");
       s.src = "data/plan.js";
-      s.onload = function () { if (window.__EX_PLAN__) boot(window.__EX_PLAN__); };
+      s.onload = function () { if (window.__MIRRORTRACE_PLAN__) boot(window.__MIRRORTRACE_PLAN__); };
       s.onerror = function () {
         var ho = document.getElementById("heroOne");
         if (ho) ho.textContent = "（plan.json 未能加载；请用本地服务器打开，或确认 data/plan.json 存在。合规闸门仍可独立使用。）";
@@ -1844,5 +1844,5 @@
     });
 
   // Expose gate for quick console testing / verification
-  window.ExDitector = { runPolicyGate: runPolicyGate, LEGAL_SCOPES: LEGAL_SCOPES };
+  window.MirrorTrace = { runPolicyGate: runPolicyGate, LEGAL_SCOPES: LEGAL_SCOPES };
 })();

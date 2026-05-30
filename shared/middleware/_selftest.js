@@ -73,7 +73,7 @@ check('private-person scope_type dropped at scopeGate, fetch never runs', () => 
     url: 'https://example.com/someone',
     scopeEnvelope: {
       scope_type: 'private_person_tracking',
-      intent_text: '帮我查一下我前任住在哪',
+      intent_text: '帮我查一下我私人个体住在哪',
     },
   });
   assert.strictEqual(res.status, 'dropped', 'must be dropped');
@@ -92,7 +92,7 @@ check('laundering: self scope + stalking intent text dropped at gate', () => {
     url: 'https://example.com/p',
     scopeEnvelope: {
       scope_type: 'self',
-      intent_text: 'stalk my ex-girlfriend and find her home address',
+      intent_text: 'stalk a private person-girlfriend and find her home address',
     },
   });
   assert.strictEqual(res.status, 'dropped');

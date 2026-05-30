@@ -6,7 +6,7 @@
  *
  * WHY THIS EXISTS (product framing)
  * ---------------------------------
- * Ex-Ditector's "Closure Mode" exists to REDUCE compulsive checking. A scheduled
+ * MirrorTrace's "Closure Mode" exists to REDUCE compulsive checking. A scheduled
  * re-audit is the healthy alternative to a human refreshing a page 40x/day: the
  * platform does one paced, low-frequency sweep and the person gets a single
  * digest. So the scheduler's job is not "run as often as possible" — it is to
@@ -191,7 +191,7 @@ function safeScheduleName(scope, subjectToken) {
   if (!SCHEDULABLE_SCOPES.includes(scope)) {
     throw new Error(`safeScheduleName: scope "${scope}" is not schedulable.`);
   }
-  return `ex-ditector-reaudit-${scope}-${t.toLowerCase()}`;
+  return `mirrortrace-reaudit-${scope}-${t.toLowerCase()}`;
 }
 
 module.exports = {

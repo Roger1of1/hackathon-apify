@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-crawler",
+  "name": "mirrortrace-crawler",
   "version": "1.0.0",
-  "description": "A3 Crawler — AdaptivePlaywrightCrawler with compliance backoff for Ex-Ditector.",
+  "description": "A3 Crawler — AdaptivePlaywrightCrawler with compliance backoff for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

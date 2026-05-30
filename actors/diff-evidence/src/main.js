@@ -23,8 +23,8 @@
 const { Actor, log } = require('apify');
 const { makeEvidenceIndexEntry } = require('../../../shared/schemas.js');
 
-// HUMAN CONFIG: set REPORT_ACTOR_ID to "<YOUR_USERNAME>/ex-ditector-report-builder".
-const REPORT_ACTOR_ID = process.env.REPORT_ACTOR_ID || 'YOUR_USERNAME/ex-ditector-report-builder';
+// HUMAN CONFIG: set REPORT_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-report-builder".
+const REPORT_ACTOR_ID = process.env.REPORT_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-report-builder';
 
 /**
  * Read every `capture` record this case produced from the default dataset.
@@ -52,13 +52,13 @@ async function loadCaptures(caseId) {
 
 Actor.main(async () => {
   const input = (await Actor.getInput()) || {};
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   const caseStore = await Actor.openKeyValueStore(caseStoreName);
   const caseRecord = await caseStore.getValue('CASE');
   const caseId = (caseRecord && caseRecord.case_id) || input.case_id || 'unknown_case';
 
   // Named baseline store: maps url -> { content_sha256, ... } from the LAST run.
-  const baselineStore = await Actor.openKeyValueStore(`ex-ditector-baseline-${caseId}`);
+  const baselineStore = await Actor.openKeyValueStore(`mirrortrace-baseline-${caseId}`);
 
   const captures = await loadCaptures(caseId);
   log.info('Diff stage loaded captures.', { caseId, count: captures.length });

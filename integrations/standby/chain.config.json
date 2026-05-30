@@ -1,5 +1,5 @@
 {
-  "_comment": "Metamorph chain manifest for Ex-Ditector. Declares the ONE legal entry point (the policy gate) and the fixed downstream DAG it metamorphs into. The gate is the only door; every hop re-asserts scope so a metamorph cannot smuggle a rejected subject into the pipeline. No ids here are live — actorId values are placeholders the operator fills at deploy time. NO claim of deployment.",
+  "_comment": "Metamorph chain manifest for MirrorTrace. Declares the ONE legal entry point (the policy gate) and the fixed downstream DAG it metamorphs into. The gate is the only door; every hop re-asserts scope so a metamorph cannot smuggle a rejected subject into the pipeline. No ids here are live — actorId values are placeholders the operator fills at deploy time. NO claim of deployment.",
   "entry": "policy-gate",
   "scope_gate": "shared/scope.js",
   "stages": [

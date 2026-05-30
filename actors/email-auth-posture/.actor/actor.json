@@ -1,7 +1,7 @@
 {
   "actorSpecification": 1,
-  "name": "ex-ditector-email-auth-posture",
-  "title": "Ex-Ditector AUX — Email-Auth Posture Self-Check (SPF/DMARC/DKIM/MTA-STS)",
+  "name": "mirrortrace-email-auth-posture",
+  "title": "MirrorTrace AUX — Email-Auth Posture Self-Check (SPF/DMARC/DKIM/MTA-STS)",
   "description": "Auxiliary actor. Audits how easily a domain the SELF subject OWNS (or a genuine public_figure's public domain) can be SPOOFED, by reading only PUBLIC DNS records over DNS-over-HTTPS (RFC 8484): SPF (RFC 7208), DMARC (RFC 7489), DKIM (RFC 6376, only for supplied selectors), MX, MTA-STS (RFC 8461) and DNSSEC. It grades posture into an A-F band with every deduction traced to a cited RFC (Internet.nl / NIST SP 800-177 rubric) and emits typed module-events (record_type/event_type/source_module/domain/confidence/data) carrying a `domain` co-occurrence key for the SpiderFoot-style correlation engine. Scope-gated to self/public_figure ONLY via shared/scope.js; the prohibited scopes are absent from the input enum. NO fake data: an absent record is reported as not_found and the real risk is graded; DKIM with no selector is reported 'unknown', never a fabricated failure. No login walls, no private social graphs, no person-tracking, no romance/gender/intimacy inference; rate limits are honored (back off on 429).",
   "version": "1.0",
   "input": "./input_schema.json",

@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector CT-Log Exposure Self-Check Input",
+  "title": "MirrorTrace CT-Log Exposure Self-Check Input",
   "description": "Enumerates the hostnames a domain you OWN has published to PUBLIC Certificate Transparency logs (RFC 6962, via crt.sh), and grades the exposure. Prohibited scopes are intentionally absent from the enum; only self/public_figure are accepted because CT subdomain enumeration is a dual-use technique permitted only for a domain you own or a public figure's public domain.",
   "type": "object",
   "schemaVersion": 1,
@@ -41,7 +41,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     }
   },
   "required": ["scope_type", "domain"]

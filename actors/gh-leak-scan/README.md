@@ -1,4 +1,4 @@
-# Ex-Ditector AUX — Public GitHub Leak Scan
+# MirrorTrace AUX — Public GitHub Leak Scan
 
 Auxiliary Apify actor for **Self Footprint Audit Pro**. It audits the SELF
 subject's **own public GitHub footprint** for credentials they accidentally

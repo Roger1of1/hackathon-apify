@@ -1,5 +1,5 @@
 {
-  "name": "ex-ditector-archive-exposure",
+  "name": "mirrortrace-archive-exposure",
   "version": "1.0.0",
   "description": "AUX public-archive self-exposure audit — lists Wayback (Internet Archive) snapshots of a URL/host the SELF subject owns (incl. deleted pages), optionally scans snapshot text with the shared PII detector, and emits STIX-ready module-events dated to the true archive capture time.",
   "type": "commonjs",

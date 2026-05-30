@@ -4,7 +4,7 @@
  * Finding-shapers for the AUX Public-Paste Self-Exposure scan. They turn a real
  * hit from a PUBLIC paste-aggregator search ("does my OWN email / domain /
  * handle appear in a public paste dump?") into the SAME typed module_events the
- * rest of Ex-Ditector emits, so the SpiderFoot-style correlation engine
+ * rest of MirrorTrace emits, so the SpiderFoot-style correlation engine
  * (shared/correlation.js) and the report builder consume them with no special
  * casing.
  *

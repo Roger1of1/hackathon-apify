@@ -1,11 +1,11 @@
-# Ex-Ditector AUX — Email-Auth Posture Self-Check
+# MirrorTrace AUX — Email-Auth Posture Self-Check
 
 **How easily can someone spoof email from a domain you own — right now?**
 
 This auxiliary actor audits the **PUBLIC** email-authentication posture of a domain
 the SELF subject **owns** (or a genuine `public_figure`'s public domain) and grades
 its spoofability **A–F**, with every point deduction traced to a cited RFC. It fills
-a genuine gap: none of the other Ex-Ditector actors cover email spoofability, which
+a genuine gap: none of the other MirrorTrace actors cover email spoofability, which
 is one of the most consequential parts of a person's or brand's public footprint.
 
 It reads only records that are **public in DNS by design** — there is no login wall,

@@ -1,11 +1,11 @@
 {
   "actorSpecification": 1,
-  "name": "ex-ditector-policy-gate",
-  "title": "Ex-Ditector A0 — Policy Gate",
+  "name": "mirrortrace-policy-gate",
+  "title": "MirrorTrace A0 — Policy Gate",
   "description": "Compliance gate for Self Footprint Audit Pro. Validates scope_type, rejects prohibited scopes with legal alternatives, requires authorization for consented scopes, writes an immutable case + decision log, then metamorphs into discovery. Runs as Standby or as a normal run.",
   "version": "1.0",
   "meta": {
-    "templateId": "ex-ditector"
+    "templateId": "mirrortrace"
   },
   "input": "./input_schema.json",
   "dockerfile": "../Dockerfile",

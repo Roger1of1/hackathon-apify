@@ -1,7 +1,7 @@
 /**
  * AUX — Public GitHub Leak Scan
  *
- * An auxiliary actor that orbits the core Ex-Ditector pipeline. It answers ONE
+ * An auxiliary actor that orbits the core MirrorTrace pipeline. It answers ONE
  * compliant question about the SELF subject: "did I accidentally commit a secret
  * to one of my OWN public GitHub repos / gists?" — exactly what a self-footprint
  * audit should surface so the user can rotate the leaked credential.
@@ -56,7 +56,7 @@ const {
 const GH_SCOPES = new Set(['self', 'public_figure']);
 
 const GH_API = 'https://api.github.com';
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 
 // Only inspect small, text-like files whose name/extension suggests config or
 // source that commonly carries committed secrets. Keeps the scan precise & cheap.
@@ -160,7 +160,7 @@ Actor.main(async () => {
   }
 
   // Pull the shared case id if a case store exists (best-effort, standalone OK).
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

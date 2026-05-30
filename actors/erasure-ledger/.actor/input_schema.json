@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Erasure-Request Ledger Input",
+  "title": "MirrorTrace Erasure-Request Ledger Input",
   "description": "Tracks YOUR OWN removal requests and their statutory deadlines. Tracking your own removals is a first-person action, so the scope enum intentionally omits consented/brand/safety_evidence and accepts only self/public_figure. This actor fetches nothing and analyses no third party; it only schedules check-backs for requests already drafted from your OWN findings, reusing the existing takedown planner.",
   "type": "object",
   "schemaVersion": 1,
@@ -16,7 +16,7 @@
     "findings_dataset_name": {
       "title": "Findings dataset name",
       "type": "string",
-      "description": "Name of the Apify dataset holding the typed module_events produced by the other Ex-Ditector actors. Records that are not valid module_events are ignored. Leave empty to pass findings inline via 'events'.",
+      "description": "Name of the Apify dataset holding the typed module_events produced by the other MirrorTrace actors. Records that are not valid module_events are ignored. Leave empty to pass findings inline via 'events'.",
       "editor": "textfield"
     },
     "events": {
@@ -56,7 +56,7 @@
     "subject_name": {
       "title": "Your name (for the letters)",
       "type": "string",
-      "description": "Optional. Passed through to the reused takedown planner. Left blank, it becomes an explicit placeholder — never fabricated.",
+      "description": "Optional. Passed through to the reused takedown planner. Left blank, it becomes a private personplicit placeholder — never fabricated.",
       "editor": "textfield"
     },
     "case_id": {
@@ -68,7 +68,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "subject_label": {
       "title": "Subject label",

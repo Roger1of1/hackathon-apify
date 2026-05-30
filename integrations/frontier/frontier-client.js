@@ -49,7 +49,7 @@ function tokenMark(token) {
 function requestDescriptorsFor(plan, token, opts = {}) {
   const queueId = plan.queueId;
   const qId = encodeURIComponent(queueId);
-  const name = opts.queueName || '<PLACEHOLDER:exditector-selfaudit-{subject_token}>';
+  const name = opts.queueName || '<PLACEHOLDER:mirrortrace-selfaudit-{subject_token}>';
 
   const create = {
     purpose: 'create_or_get_named_queue',

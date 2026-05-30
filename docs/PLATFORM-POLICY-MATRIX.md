@@ -1,12 +1,12 @@
 # PLATFORM-POLICY-MATRIX.md
 
 > **Disclaimer:** This matrix summarizes **general, publicly stated** platform positions on
-> automated access and scraping, and maps them to what Ex-Ditector permits. Platform terms
+> automated access and scraping, and maps them to what MirrorTrace permits. Platform terms
 > change frequently and differ by jurisdiction and product surface. This is **not legal
 > advice**; always check the current primary source (the linked ToS/Developer Policy) and
 > consult counsel before relying on any row.
 >
-> **Product rule of thumb:** Ex-Ditector only ever uses one of three access modes —
+> **Product rule of thumb:** MirrorTrace only ever uses one of three access modes —
 > **(A) official API** within ToS, **(B) the user's own data export**, or
 > **(C) a single, manually supplied public URL viewed once, no login.** It never operates a
 > crawler/spider, never logs in to scrape, and never evades platform controls
@@ -21,14 +21,14 @@
 - **User-export** — the data-subject downloads their own data from the platform and uploads it.
 - **Single manual URL** — one publicly reachable URL the user pastes; fetched once; no
   crawling, pagination, or login.
-- **Forbidden** — Ex-Ditector will not do this, both because platform terms generally prohibit
+- **Forbidden** — MirrorTrace will not do this, both because platform terms generally prohibit
   it and because our own red lines do.
 
 ---
 
 ## Matrix
 
-| Platform | What ToS/Policy generally says about automated access / scraping (public position) | Authorized vs unauthorized distinction | Ex-Ditector ALLOWS | Ex-Ditector FORBIDS |
+| Platform | What ToS/Policy generally says about automated access / scraping (public position) | Authorized vs unauthorized distinction | MirrorTrace ALLOWS | MirrorTrace FORBIDS |
 |---|---|---|---|---|
 | **Instagram / Facebook (Meta)** | Meta's Terms and Platform/Developer policies generally prohibit accessing or collecting data from its services using automated means (bots, scrapers, crawlers) **without prior written permission**. Meta has publicly taken an **anti-scraping** stance and pursued legal action against unauthorized scrapers, while distinguishing **authorized crawling** (e.g. permitted via robots.txt / agreements / official APIs) from **unauthorized scraping** (automated collection without permission). | Authorized: official Graph/Marketing APIs for assets you own/manage, or crawling Meta expressly permits. Unauthorized: any automated collection of profiles, friends, posts, likes, comments without permission. | (A) Graph API for **owned/managed** assets; (B) user's own "Download Your Information" export; (C) single public URL viewed once. | Automated scraping of any profile/feed/likes/comments; harvesting friends/followers; logging in to collect; collecting on private/non-owned accounts. |
 | **Tinder (Match Group)** | Tinder's Terms of Use generally **prohibit** the use of **robots, spiders, crawlers, scrapers, or other automated means** to access the service or collect/data-mine information, and separately **prohibit using the service to stalk, harass, intimidate, or harm** another person. Dating-profile data is intimate personal data. | No authorized scraping path exists for third-party data. Even the official surface is for personal dating use, not intelligence-gathering. | **Nothing.** No access mode is enabled for Tinder or any dating app. | All access: presence checks ("is X on Tinder"), profile lookups, scraping, data-mining, AND any stalking/harassment use. Doubly forbidden: by Tinder ToU and by our `dating_app_presence` / `romance_inference` prohibitions. |

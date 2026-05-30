@@ -17,7 +17,7 @@
  * public" — and it is a self-exposure fact the subject can ACT on (decommission
  * the host, rotate/scope the cert, put it behind auth).
  *
- * None of the existing Ex-Ditector actors enumerate a subject's OWN published
+ * None of the existing MirrorTrace actors enumerate a subject's OWN published
  * hostnames from CT logs, so this is a genuinely-missing, high-leverage self-audit
  * capability rather than churn. It also feeds the SAME `domain` correlation key as
  * the attack-surface and email-auth actors, so a leaked `admin.example.com` here

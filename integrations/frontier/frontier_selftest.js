@@ -53,7 +53,7 @@ ok('refusal carries scope reasons', Array.isArray(stalk.scope_reasons) && stalk.
 const launder = buildEnqueuePlan({
   scope_type: 'self',
   target_urls: ['https://self-demo.example/me'],
-  subject_label: 'stalk my ex and watch this person',
+  subject_label: 'stalk a private person and watch this person',
 });
 ok('laundered stalking intent under scope=self refused', launder.allowed === false);
 

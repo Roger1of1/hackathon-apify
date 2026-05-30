@@ -32,7 +32,7 @@
       "id": "AU-04",
       "scope_type": "safety_evidence",
       "label": "Hand-made static evidence HTML (about the user themselves)",
-      "url": "file:///Users/roger/Documents/hackathon1/ex-ditector/demo/sample-evidence.html",
+      "url": "file:///Users/roger/Documents/hackathon1/mirrortrace/demo/sample-evidence.html",
       "note": "Synthetic, locally authored evidence sample involving the user. Demonstrates single-item preservation + retention, not monitoring of any third party."
     },
     {

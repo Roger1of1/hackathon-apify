@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Metadata Exposure Scanner Input",
+  "title": "MirrorTrace Metadata Exposure Scanner Input",
   "description": "Scans the SELF subject's OWN public assets for leaked embedded metadata (EXIF GPS, device serial, software, author, contact email). Reading embedded metadata is a dual-use technique, so the scope enum intentionally omits consented/brand/safety_evidence and accepts only self/public_figure. Only logged-out, publicly-reachable URLs you own (or a public figure's public assets) are fetched; no login, captcha, or rate-limit evasion.",
   "type": "object",
   "schemaVersion": 1,
@@ -29,7 +29,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "subject_label": {
       "title": "Subject label",

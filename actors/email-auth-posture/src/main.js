@@ -1,18 +1,18 @@
 /**
  * AUX — Email-Auth Posture Self-Check (SPF / DMARC / DKIM / MX / MTA-STS / DNSSEC)
  *
- * An auxiliary actor that orbits the core Ex-Ditector self-footprint pipeline.
+ * An auxiliary actor that orbits the core MirrorTrace self-footprint pipeline.
  * It answers ONE compliant, high-value question about a domain the SELF subject
  * OWNS (or a genuine public_figure's public domain): "how easily can someone
  * spoof email FROM my domain right now?" — a self-exposure fact the subject can
- * fix today, which none of the other Ex-Ditector actors cover.
+ * fix today, which none of the other MirrorTrace actors cover.
  *
  * ───────────────────────── COMPLIANCE BOUNDARY ─────────────────────────
  * 1. Scope gate: every run routes through shared/scope.js validateScope and is
  *    additionally restricted to scope_type ∈ {self, public_figure}. Auditing a
  *    domain's email-auth posture is a self-/public-only activity here; the
  *    free-text laundering scan still runs over subject_label so e.g. "find my
- *    ex's mail server" is rejected even under a legal-looking scope.
+ *    a private person's mail server" is rejected even under a legal-looking scope.
  * 2. PUBLIC DNS ONLY: we read SPF/DMARC/DKIM/MX/MTA-STS records, which are
  *    published in public DNS by design. There is NO login wall, NO private
  *    social graph, NO person-tracking, NO romance/gender/intimacy inference,
@@ -67,7 +67,7 @@ const POSTURE_SCOPES = new Set(['self', 'public_figure']);
 // Public DNS-over-HTTPS resolver (RFC 8484, application/dns-json). Cloudflare's
 // 1.1.1.1 endpoint is well-documented and DNSSEC-validating (sets AD bit).
 const DEFAULT_DOH = 'https://cloudflare-dns.com/dns-query';
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 
 /**
  * One DoH query. Returns { Answer:[], ad:boolean } on success or null on any
@@ -176,7 +176,7 @@ Actor.main(async () => {
     : [];
 
   // Optional case linkage (mirrors breach-check), so the report-builder can join.
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

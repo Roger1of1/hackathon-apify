@@ -1,7 +1,7 @@
 /**
  * integrations/webhooks/register-webhooks.js
  *
- * Idempotently register the Ex-Ditector webhooks on Apify via the public API
+ * Idempotently register the MirrorTrace webhooks on Apify via the public API
  * (POST /v2/webhooks). This is REAL code, but it is INERT without credentials:
  * it refuses to run unless APIFY_TOKEN is set and the placeholder ids in
  * webhooks.config.json have been replaced with your real actor/task ids. This
@@ -56,7 +56,7 @@ async function main() {
       requestUrl,
       payloadTemplate: payloadTemplateString,
       shouldInterpolateStrings: true,
-      idempotencyKey: `ex-ditector-${wh.name}`,
+      idempotencyKey: `mirrortrace-${wh.name}`,
       description: wh.description,
     };
 

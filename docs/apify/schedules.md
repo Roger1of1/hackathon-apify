@@ -13,7 +13,7 @@ refresh.
 
 ## Why schedules, and why they are *floors* not *triggers*
 
-Ex-Ditector's **Closure Mode** exists to **reduce compulsive checking**. The
+MirrorTrace's **Closure Mode** exists to **reduce compulsive checking**. The
 healthy alternative to refreshing a search 40x/day is: the platform does **one
 paced, low-frequency sweep** and the person gets a single digest. So our
 scheduler is the inverse of a "run as often as possible" cron. It enforces a

@@ -3,7 +3,7 @@
  *
  * Builds the incremental work list for a case using a NAMED Request Queue. The
  * Policy Gate metamorphed into us, so we inherit its storage: the immutable
- * CASE record lives in the named KV store `ex-ditector-case`.
+ * CASE record lives in the named KV store `mirrortrace-case`.
  *
  * "Incremental" = the named queue is reused across runs for the same case, and
  * Crawlee de-duplicates by uniqueKey, so re-running discovery only adds genuinely
@@ -23,14 +23,14 @@ const { Actor, log } = require('apify');
 const { validateScope } = require('../../../shared/scope.js');
 const { makeDiscoveryRecord } = require('../../../shared/schemas.js');
 
-// HUMAN CONFIG: set CRAWLER_ACTOR_ID to "<YOUR_USERNAME>/ex-ditector-crawler".
-const CRAWLER_ACTOR_ID = process.env.CRAWLER_ACTOR_ID || 'YOUR_USERNAME/ex-ditector-crawler';
+// HUMAN CONFIG: set CRAWLER_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-crawler".
+const CRAWLER_ACTOR_ID = process.env.CRAWLER_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-crawler';
 
 Actor.main(async () => {
   // Input arrives either from the Policy Gate metamorph (INPUT-METAMORPH-1, read
   // transparently by getInput) or, in dev, directly.
   const input = (await Actor.getInput()) || {};
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
 
   // Defense in depth: re-validate. If someone invokes discovery directly,
   // bypassing the gate, we still refuse prohibited scopes.
@@ -65,7 +65,7 @@ Actor.main(async () => {
   // NAMED request queue keyed by case so discovery is incremental across runs.
   // Crawlee dedupes by uniqueKey (default = the URL), so re-enqueuing a seen URL
   // is a no-op — exactly the "incremental" behavior we want.
-  const queueName = `ex-ditector-frontier-${caseId}`;
+  const queueName = `mirrortrace-frontier-${caseId}`;
   const requestQueue = await Actor.openRequestQueue(queueName);
 
   let added = 0;

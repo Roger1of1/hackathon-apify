@@ -84,7 +84,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Door 1: the REAL scope gate (read-only use of Codex's module).
+// Door 1: the REAL scope gate (read-only use of Coda private person's module).
 const { validateScope } = require('../../shared/scope.js');
 // Reuse — do NOT duplicate — the STIX encoder and the erasure-letter builder.
 const { toObservedData, toBundle } = require('../../shared/enrich/stix-evidence.js');

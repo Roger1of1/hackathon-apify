@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-ct-log-exposure",
+  "name": "mirrortrace-ct-log-exposure",
   "version": "1.0.0",
-  "description": "AUX CT-log exposure self-check — public Certificate-Transparency (crt.sh) hostname enumeration + A-F exposure grade for Ex-Ditector.",
+  "description": "AUX CT-log exposure self-check — public Certificate-Transparency (crt.sh) hostname enumeration + A-F exposure grade for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-discovery",
+  "name": "mirrortrace-discovery",
   "version": "1.0.0",
-  "description": "A2 Discovery — named Request Queue incremental discovery for Ex-Ditector.",
+  "description": "A2 Discovery — named Request Queue incremental discovery for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

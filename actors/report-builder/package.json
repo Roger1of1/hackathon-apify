@@ -1,5 +1,5 @@
 {
-  "name": "ex-ditector-report-builder",
+  "name": "mirrortrace-report-builder",
   "version": "1.0.0",
   "description": "A6 Report Builder — Obsidian Markdown + CSV + JSON report with compliant scoring.",
   "type": "commonjs",

@@ -1,6 +1,6 @@
-# Ex-Ditector AUX — Certificate-Transparency Exposure Self-Check
+# MirrorTrace AUX — Certificate-Transparency Exposure Self-Check
 
-> **Auxiliary** actor in the Ex-Ditector *Self Footprint Audit Pro* toolkit. It
+> **Auxiliary** actor in the MirrorTrace *Self Footprint Audit Pro* toolkit. It
 > answers one compliant, high-leverage question about **a domain you own**:
 > *"Which hostnames have I already published to the public Certificate
 > Transparency logs, and which of them name sensitive internal services I forgot
@@ -36,7 +36,7 @@ re-scope the certificate.
   so every run routes through `shared/scope.js` `validateScope` **and** is further
   restricted to `scope_type ∈ {self, public_figure}`. The prohibited scopes are
   intentionally **absent from the input enum**. The free-text laundering scan runs
-  over `subject_label`, so a prohibited intent ("find my ex's servers") is rejected
+  over `subject_label`, so a prohibited intent ("find a private person's servers") is rejected
   even under a legal-looking scope.
 - **Public CT logs only.** RFC 6962 logs are public by design. There is **no login
   wall, no captcha bypass, no private social graph, no person-tracking, and no
@@ -54,7 +54,7 @@ re-scope the certificate.
 | `domain` | ✅ | the registrable domain you own, e.g. `example.com` |
 | `ct_index_url` | | public CT index base, defaults to `https://crt.sh/` (https only) |
 | `subject_label` | | human label; scanned by the compliance gate |
-| `case_id` / `case_store_name` | | optional linkage to a shared Ex-Ditector case |
+| `case_id` / `case_store_name` | | optional linkage to a shared MirrorTrace case |
 
 ## Output
 

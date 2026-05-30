@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Discovery Input",
+  "title": "MirrorTrace Discovery Input",
   "description": "Normally provided automatically via metamorph from the Policy Gate. The same compliant scope enum is enforced here as defense in depth.",
   "type": "object",
   "schemaVersion": 1,
@@ -30,7 +30,7 @@
       "type": "string",
       "description": "Named key-value store holding the immutable CASE record.",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "target_urls": {
       "title": "Target URLs",

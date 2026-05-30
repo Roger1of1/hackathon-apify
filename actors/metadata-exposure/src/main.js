@@ -1,7 +1,7 @@
 /**
  * AUX — Metadata Exposure Scanner (EXIF / XMP / IPTC / PDF info)
  *
- * An auxiliary actor that orbits the core Ex-Ditector pipeline. It answers ONE
+ * An auxiliary actor that orbits the core MirrorTrace pipeline. It answers ONE
  * compliant self-footprint question: "what is leaking out of the files I have
  * ALREADY published publicly?" — GPS coordinates baked into a photo, a camera
  * serial, the editing software, an author name, or a contact email embedded in
@@ -59,7 +59,7 @@ const {
 // Dual-use embedded-metadata extraction: ONLY self + public_figure.
 const METADATA_SCOPES = new Set(['self', 'public_figure']);
 
-const USER_AGENT = 'ex-ditector-self-footprint-audit';
+const USER_AGENT = 'mirrortrace-self-footprint-audit';
 const MAX_BYTES = 25 * 1024 * 1024; // never download an enormous asset; cap at 25 MB.
 
 function hostnameOf(u) {
@@ -118,7 +118,7 @@ Actor.main(async () => {
   }
 
   // Resolve case id from the shared case store, like the other actors.
-  const caseStoreName = input.case_store_name || 'ex-ditector-case';
+  const caseStoreName = input.case_store_name || 'mirrortrace-case';
   let caseId = input.case_id || null;
   try {
     const caseStore = await Actor.openKeyValueStore(caseStoreName);

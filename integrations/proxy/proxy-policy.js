@@ -9,7 +9,7 @@
  * ---------------------------------
  * A proxy is the most easily-abused part of any crawler: it is the exact tool an
  * evasion/stalking pipeline reaches for to defeat IP bans, rate limits, and geo
- * walls. Ex-Ditector uses proxies for the OPPOSITE reason — AVAILABILITY ONLY:
+ * walls. MirrorTrace uses proxies for the OPPOSITE reason — AVAILABILITY ONLY:
  *   - IP diversity so we are a polite, non-hammering client of a PUBLIC page;
  *   - geo-correct rendering of the USER'S OWN page as their region sees it.
  * It NEVER uses a proxy to look "more human", to outlast a ban, or to get behind
@@ -157,7 +157,7 @@ function decideProxy(input, opts = {}) {
   const cfg = opts.config || loadProxyConfig();
   const safe = input && typeof input === 'object' ? input : {};
 
-  // ---- Guard 1: the REAL scope gate (read-only use of Codex's module) -------
+  // ---- Guard 1: the REAL scope gate (read-only use of Coda private person's module) -------
   const scopeResult = validateScope(safe);
   if (!scopeResult.allowed) {
     return drop(REFUSAL.SCOPE_REJECTED, {

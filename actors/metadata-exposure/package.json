@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-metadata-exposure",
+  "name": "mirrortrace-metadata-exposure",
   "version": "1.0.0",
-  "description": "AUX metadata-exposure scanner — EXIF/XMP/IPTC/PDF leak detection on the SELF subject's own public assets, emitting typed correlation module-events for Ex-Ditector.",
+  "description": "AUX metadata-exposure scanner — EXIF/XMP/IPTC/PDF leak detection on the SELF subject's own public assets, emitting typed correlation module-events for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

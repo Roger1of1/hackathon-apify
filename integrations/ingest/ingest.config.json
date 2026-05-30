@@ -1,5 +1,5 @@
 {
-  "_comment": "Config for the SELF-AUDIT INGESTION layer: how Ex-Ditector fetches a vetted subject's OWN public footprint using two Apify first-party actors — apify/website-content-crawler (page crawl -> clean markdown/text) and apify/rag-web-browser (public web search/fetch for context). NO credentials here; actorIds are PLACEHOLDERS and deployed:false. The live actorId + APIFY_TOKEN are supplied by the operator at the LAST deploy step. Nothing here performs a fetch.",
+  "_comment": "Config for the SELF-AUDIT INGESTION layer: how MirrorTrace fetches a vetted subject's OWN public footprint using two Apify first-party actors — apify/website-content-crawler (page crawl -> clean markdown/text) and apify/rag-web-browser (public web search/fetch for context). NO credentials here; actorIds are PLACEHOLDERS and deployed:false. The live actorId + APIFY_TOKEN are supplied by the operator at the LAST deploy step. Nothing here performs a fetch.",
 
   "actors": {
     "website_content_crawler": {

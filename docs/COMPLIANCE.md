@@ -1,4 +1,4 @@
-# Ex-Ditector (合规版) — COMPLIANCE.md
+# MirrorTrace (合规版) — COMPLIANCE.md
 
 > **Status:** Normative. This is the governing red-line document for the product. Every
 > module (collectors, MCP tools, UI, storage) must conform.
@@ -10,12 +10,12 @@
 
 ## 0. Purpose & one-sentence frame
 
-Ex-Ditector helps a user **audit their OWN public footprint**, **preserve public evidence
+MirrorTrace helps a user **audit their OWN public footprint**, **preserve public evidence
 that involves themselves**, **monitor sources they are legitimately entitled to monitor**
 (consented individuals, public figures, brands), and **reduce compulsive checking** of those
 sources.
 
-It is **not** a people-search, an ex-tracker, a "find out who they're dating" tool, or a
+It is **not** a people-search tool, a non-consensual tracking workflow, a "find out who they're dating" tool, or a
 private-social scraper. Those use cases are out of scope by design and are actively rejected
 by the Policy Gate (A0), not merely discouraged.
 
@@ -37,7 +37,7 @@ missing or failing scope validation.
 ### Hard exclusions baked into the enum
 
 There is **deliberately no scope_type** for:
-- "ex-partner", "crush", "coworker", "acquaintance", "someone I met"
+- "non-consenting private person", "crush", "coworker", "acquaintance", "someone I met"
 - any **private individual** who is not the user and has not consented
 - any **dating-app / romance / gender** objective
 
@@ -60,7 +60,7 @@ a `self` job, the engine will not perform them.
 | `private_person_tracking` | Aggregating/monitoring a non-consenting private individual |
 
 A0 scans both the structured request **and** free text (multilingual) for these objectives.
-E.g. `看前任 IG 点赞评论暧昧` maps to `romance_inference` + `private_person_tracking` and is
+E.g. `查看私人账号互动并推断关系` maps to `romance_inference` + `private_person_tracking` and is
 rejected.
 
 ---
@@ -149,7 +149,7 @@ request ──▶ A0 POLICY GATE ──▶ (pass) ──▶ MCP tool whitelist �
                   ├─ 3. objective free of prohibited_analysis tokens? (structured + free-text, multilingual)
                   ├─ 4. data source ∈ {official_api, user_export, single_public_url}?
                   ├─ 5. no private-individual signal? (named non-public person, dating context,
-                  │       "ex/crush/coworker", romance/gender intent)
+                  │       "private person / crush / coworker", romance/gender intent)
                   └─ on ANY fail ──▶ REJECT (reason + compliant alternatives), write audit log
 ```
 

@@ -1,7 +1,7 @@
 {
-  "name": "ex-ditector-paste-exposure",
+  "name": "mirrortrace-paste-exposure",
   "version": "1.0.0",
-  "description": "AUX public-paste self-exposure scan — searches public paste indexes for the SELF subject's own email/domain/handle, emitting privacy-preserving typed module-events for Ex-Ditector.",
+  "description": "AUX public-paste self-exposure scan — searches public paste indexes for the SELF subject's own email/domain/handle, emitting privacy-preserving typed module-events for MirrorTrace.",
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {

@@ -1,4 +1,4 @@
-# Ex-Ditector AUX — Public Attack-Surface Self-Scan (CT logs + WHOIS)
+# MirrorTrace AUX — Public Attack-Surface Self-Scan (CT logs + WHOIS)
 
 Auxiliary actor in the **Self Footprint Audit Pro** toolkit. It audits a domain
 **you own** for what a stranger can trivially discover about its public attack

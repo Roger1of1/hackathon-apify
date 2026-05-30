@@ -1,6 +1,6 @@
 # DEPLOY.md — 部署指南 / Deployment Guide
 
-把 Ex-Ditector（合规版）真正跑起来：5 个 Apify actor + Schedule + Webhook + 静态托管的 `web/`。
+把 MirrorTrace（合规版）真正跑起来：5 个 Apify actor + Schedule + Webhook + 静态托管的 `web/`。
 
 > **诚实前提**：真实抓取需要 **你自己的 Apify 账号**。本仓库不含任何凭据。
 > 所有 `YOUR_USERNAME` / `<APIFY_TOKEN>` 都是占位符，请替换为你自己的值。
@@ -52,7 +52,7 @@ cd ../report-builder     && apify push    # A6 · Closure Mode 报告
 cd ../..
 ```
 
-推送后，每个 actor 会以 `YOUR_USERNAME/ex-ditector-<name>` 的形式出现在 Apify Console。
+推送后，每个 actor 会以 `YOUR_USERNAME/mirrortrace-<name>` 的形式出现在 Apify Console。
 
 > 验证 `scope_type` enum 是否生效：在 Console 里手动用一个非法 scope（如 `"ex"`）触发 actor，平台应在 **input 校验阶段** 直接拒绝——这就是 compliance-as-code 的第一道闸。
 
@@ -64,19 +64,19 @@ A0 是 **Standby** actor（常驻、低延迟响应请求），通过 `Actor.met
 
 ### 3.1 开启 Standby
 
-在 Apify Console → `ex-ditector-policy-gate` → **Standby** 标签：
+在 Apify Console → `mirrortrace-policy-gate` → **Standby** 标签：
 - 开启 Standby 模式
-- 记下 Standby URL（形如 `https://YOUR_USERNAME--ex-ditector-policy-gate.apify.actor/`）
+- 记下 Standby URL（形如 `https://YOUR_USERNAME--mirrortrace-policy-gate.apify.actor/`）
 
 ### 3.2 设置 metamorph 目标（target actor IDs）
 
 A0 需要知道每个下游 actor 的 ID 才能 metamorph。通过 **环境变量** 注入（Console → actor → Settings → Environment variables，或在 task 的 input 里传）：
 
 ```text
-TARGET_DISCOVERY = YOUR_USERNAME/ex-ditector-discovery
-TARGET_CRAWLER   = YOUR_USERNAME/ex-ditector-crawler
-TARGET_DIFF      = YOUR_USERNAME/ex-ditector-diff-evidence
-TARGET_REPORT    = YOUR_USERNAME/ex-ditector-report-builder
+TARGET_DISCOVERY = YOUR_USERNAME/mirrortrace-discovery
+TARGET_CRAWLER   = YOUR_USERNAME/mirrortrace-crawler
+TARGET_DIFF      = YOUR_USERNAME/mirrortrace-diff-evidence
+TARGET_REPORT    = YOUR_USERNAME/mirrortrace-report-builder
 ```
 
 > "metamorph target usernames"：把上面四个变量里的 `YOUR_USERNAME` 替换成 **你自己的** Apify 用户名。
@@ -97,13 +97,13 @@ TARGET_REPORT    = YOUR_USERNAME/ex-ditector-report-builder
 ```text
 Cron: 0 9 * * *        # 每天 09:00；注意 ≥ 1 分钟间隔
 Tasks:
-  - ex-ditector-policy-gate (task: self-audit-daily, input: { "scope_type": "self", ... })
+  - mirrortrace-policy-gate (task: self-audit-daily, input: { "scope_type": "self", ... })
 ```
 
 CLI 方式（可选）创建 task：
 
 ```bash
-apify call YOUR_USERNAME/ex-ditector-policy-gate --input ./demo/allowed-urls.json
+apify call YOUR_USERNAME/mirrortrace-policy-gate --input ./demo/allowed-urls.json
 # 验证一次性运行通过后，再在 Console 把它存为 task 并挂 Schedule
 ```
 

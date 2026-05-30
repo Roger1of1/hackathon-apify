@@ -1,5 +1,5 @@
 {
-  "title": "Ex-Ditector Public-Paste Self-Exposure Scan Input",
+  "title": "MirrorTrace Public-Paste Self-Exposure Scan Input",
   "description": "Searches PUBLIC paste indexes for the SELF subject's OWN identifiers. Prohibited scopes are absent from the enum; only self/public_figure are accepted because identifier search is a dual-use technique restricted to those scopes. No paste body is stored; matched emails are carried only as k-anonymity hash prefixes.",
   "type": "object",
   "schemaVersion": 1,
@@ -22,7 +22,7 @@
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "ex-ditector-case"
+      "default": "mirrortrace-case"
     },
     "subject_label": {
       "title": "Subject label",

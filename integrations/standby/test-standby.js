@@ -78,7 +78,7 @@ function post(server, path, body) {
 // Inputs. STALKING input uses a prohibited text pattern the real gate rejects.
 const STALKING = {
   scope_type: 'self',
-  subject_label: 'track my ex and find everywhere they post',
+  subject_label: 'track a private person and find everywhere they post',
   target_urls: ['https://example.com/someone-elses-profile'],
 };
 const SELF_OK = {

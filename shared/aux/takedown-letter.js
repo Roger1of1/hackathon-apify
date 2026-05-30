@@ -2,7 +2,7 @@
  * shared/aux/takedown-letter.js
  *
  * Turns the SELF subject's REAL detector findings (typed module_events produced
- * by the other Ex-Ditector actors) into structured, legally-grounded *takedown /
+ * by the other MirrorTrace actors) into structured, legally-grounded *takedown /
  * removal request* packets the subject can review, sign, and send. This is the
  * "now what do I DO about it?" step — it closes the loop from "here is your
  * public exposure" (audit) to "here is a concrete remediation action" without

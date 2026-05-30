@@ -1,6 +1,6 @@
-# Ex-Ditector AUX — Takedown / Removal-Letter Generator
+# MirrorTrace AUX — Takedown / Removal-Letter Generator
 
-Closes the loop from **audit** to **action**. The other Ex-Ditector actors tell
+Closes the loop from **audit** to **action**. The other MirrorTrace actors tell
 you *what* of your own public footprint is exposed; this actor turns those real
 findings into **ready-to-review removal requests** you can sign and send.
 
@@ -27,7 +27,7 @@ For each finding (clustered by host), it picks the route(s) that actually apply:
   first-person ("remove information about **ME**"). `consented` / `brand` /
   `safety_evidence` are refused here; the input-schema enum omits them entirely.
 - The gate's free-text laundering scan runs over `subject_label` / `subject_name`,
-  so a laundered intent (e.g. "draft a letter to *track my ex*") is rejected.
+  so a laundered intent (e.g. "draft a letter to *track a private person*") is rejected.
 - **No romance / gender / sexuality / intimacy / live-location** pathway. It reads
   the **frozen** `EVENT_TYPES` enum and ignores anything outside it.
 

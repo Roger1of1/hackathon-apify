@@ -147,7 +147,7 @@ function buildProbes(identity = {}) {
  */
 function detectBrokerListing(page = {}) {
   // Dual-use gate: refuse anything that is not the subject's own (or a
-  // public_figure's public) record. Zero events, never an exception — same shape
+  // public_figure's public) record. Zero events, never a exception — same shape
   // as the other gated detectors so the registry can dispatch it uniformly.
   if (!ALLOWED_SCOPES.has(page.scope_type)) return [];
 
