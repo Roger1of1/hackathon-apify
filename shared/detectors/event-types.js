@@ -66,6 +66,15 @@ const EVENT_TYPES = Object.freeze({
   // (HIBP-style) — we never transmit or store the full secret.
   BREACH_RANGE_HIT: 'BREACH_RANGE_HIT',
 
+  // The SELF (or public_figure) subject's OWN aggregated record is exposed on a
+  // known data-broker / people-search listing page (Spokeo/Whitepages/…). This
+  // is the trigger condition a DeleteMe/Aura-style service scans for and the
+  // precondition for a GDPR Art.17 / CCPA erasure request. The detector ONLY
+  // confirms the subject's own identity tokens against the PUBLIC text of a
+  // broker page the operator supplied; it never invents a listing and never
+  // targets another person. (See broker-listing-detector.js.)
+  BROKER_LISTING_HIT: 'BROKER_LISTING_HIT',
+
   // Aggregate / meta events.
   EXPOSURE_SUMMARY: 'EXPOSURE_SUMMARY',
 });

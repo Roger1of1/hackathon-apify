@@ -127,7 +127,18 @@
         "policy": "integrations/exports/redaction-policy.js",
         "export_client": "integrations/exports/export-client.js",
         "sync_views": "integrations/exports/sync-dataset-views.js",
-        "tests": "integrations/exports/test-exports.js"
+        "evidence_package": "integrations/exports/datapackage.js",
+        "tests": "integrations/exports/test-exports.js",
+        "tests_datapackage": "integrations/exports/test-datapackage.js"
+      },
+      "portable_evidence_package": {
+        "format": "Frictionless Tabular Data Package (datapackage.json + per-record-type CSV resources with Table Schemas)",
+        "purpose": "The subject OWNS their evidence: a self-contained, offline-openable, Datasette/SQLite/pandas-importable, citable bundle. WRAPS redaction-policy.js (never bypasses): every row is run through redactRecord(row, marking) first, so a non-RED package physically cannot carry url/storage-key/note columns. Embeds the Self-Exposure Grade ledger so the A-F letter is re-derivable from the published rows. Deterministic sha256 content fingerprint pins an exact bundle for citation.",
+        "refs": [
+          "https://specs.frictionlessdata.io/data-package/",
+          "https://specs.frictionlessdata.io/tabular-data-resource/",
+          "https://datasette.io/"
+        ]
       },
       "config": {
         "dataset_views": "integrations/exports/dataset-views.config.json"
@@ -177,6 +188,103 @@
       },
       "docs": "docs/apify/proxy.md",
       "deployed": false
+    },
+    "optout": {
+      "path": "integrations/optout",
+      "capability": "Scope-gated DATA-BROKER OPT-OUT workflow (Apify WCC/RAG re-check + paced Schedule + reappearance Webhook)",
+      "summary": "Turns the subject's OWN confirmed broker listings into (1) a STIX 2.1 Observed Data record, (2) a ready-to-send GDPR Art.17 erasure request, and (3) a PROPOSED paced Apify re-check (Schedule cron + reappearance Webhook). Removing yourself from people-search/data-broker sites (Spokeo/Whitepages/BeenVerified/…) is the most-recommended concrete self-protection step (EFF, Privacy Rights Clearinghouse, California Delete Act/DROP) and the literal OPPOSITE of stalking: a first-person 'remove the listing about ME' request, valid ONLY for the subject's own listing. buildOptOutPlan() runs an ordered fail-closed guard chain: Door 1 = the REAL shared/scope.js gate (read-only) refuses any rejected subject; Door 2 = SELF-ONLY narrowing to scope=self|consented (public_figure/brand/safety_evidence refused — you cannot delete a third party from a broker); then it confirms listings ONLY from REAL module_events whose host matches a broker in the TEMPLATE registry (no fabricated listings — empty in => empty out). It REUSES (never duplicates) shared/enrich/stix-evidence.js for the Observed Data and shared/aux/takedown-letter.js for the erasure draft (a broker host is third-party => GDPR_ERASURE+CCPA_DELETE+SEARCH_DEINDEX). A removed listing that REAPPEARS is re-flagged via a paced re-check whose cron is derived by the REAL integrations/schedules cadence-policy (anti-compulsion floor: higher distress => slower) plus an ACTOR.RUN.SUCCEEDED webhook (integrations/webhooks); the re-check ingests through the EXISTING WCC/RAG path (integrations/ingest, robots forced on, pages/depth clamped). consented is NOT auto-schedulable => manual re-check (fail-closed). NO-FAKE-DATA + deployed:false throughout.",
+      "entrypoints": {
+        "policy": "integrations/optout/optout-policy.js",
+        "tests": "integrations/optout/_selftest.js"
+      },
+      "config": {
+        "broker_registry_template": "integrations/optout/broker-registry.template.json"
+      },
+      "reuses": {
+        "stix_observed_data": "shared/enrich/stix-evidence.js (toObservedData/toBundle)",
+        "erasure_request": "shared/aux/takedown-letter.js (buildTakedownPlan → GDPR Art.17)",
+        "scope_gate": "shared/scope.js (validateScope, read-only)",
+        "recheck_cadence": "integrations/schedules/cadence-policy.js (evaluateCadence → cron)",
+        "recheck_ingest": "integrations/ingest (apify/website-content-crawler + apify/rag-web-browser)",
+        "reappearance_alert": "integrations/webhooks (ACTOR.RUN.SUCCEEDED)"
+      },
+      "scopes_allowed_self_removal": ["self", "consented"],
+      "registry_is_template": true,
+      "actors_used": {
+        "website_content_crawler": "apify/website-content-crawler",
+        "rag_web_browser": "apify/rag-web-browser"
+      },
+      "maps_to": "shared/detectors module_events -> shared/enrich/stix-evidence (STIX 2.1 Observed Data, OpenCTI/MISP interop) + shared/aux/takedown-letter (GDPR Art.17 erasure)",
+      "docs": "docs/apify/optout.md",
+      "deployed": false
+    },
+    "mcp": {
+      "path": "mcp",
+      "capability": "Apify MCP tool-server (Model Context Protocol) — gate-enforcing AI-agent surface",
+      "summary": "A real, runnable MCP tool layer (mcp/server.js) that exposes the product's EXISTING compliance planners to AI agents as three tools — audit_scope_check, plan_broker_optout, build_takedown_letter — where EVERY handler routes its subject through the REAL shared/scope.js validateScope() FIRST (read-only require) and then REUSES (never re-implements) shared/aux/broker-optout.js, shared/aux/takedown-letter.js and shared/enrich/stix-evidence.js. The single guarantee: an AI-agent caller CANNOT bypass the red lines through the tool layer — a non-self/non-consented subject, a prohibited scope_type, a laundered/stalking freeText, and a private-social host are all rejected by the same gate that guards the web (window.ExDitector.runPolicyGate) and actor paths; on refusal the tool FAILS CLOSED and returns the gate's own refusal, never a result. This is the LOCAL, gate-enforcing counterpart of the remote Apify MCP server's ?tools= whitelist (mcp/client-config.example.json): the whitelist keeps private-scraping actors physically uncallable, and this server keeps prohibited INTENT uncallable. Mirrors the Apify MCP contract (each tool declares a JSON-Schema inputSchema; listTools()=tools/list, callTool()=tools/call; transport moved SSE→Streamable HTTP on 2026-04-01). The transport adapter is intentionally NOT bundled so the registry stays dependency-free and unit-testable. REFERENCE ARCHITECTURES: DeleteMe/Aura broker opt-out (authorization-gated, self-only removal acting only on confirmed listings) for plan_broker_optout, and GDPR Art.17 RTBF erasure-request automation (third-party data-subject erasure channel, template-only) for build_takedown_letter. NO network fetch, NO fabricated data, deployed:false.",
+      "entrypoints": {
+        "server": "mcp/server.js",
+        "tests": "mcp/server_selftest.js"
+      },
+      "config": {
+        "client_config_example": "mcp/client-config.example.json",
+        "configurator_notes": "mcp/configurator-notes.md"
+      },
+      "tools": {
+        "audit_scope_check": "pre-flight: returns the canonical scope-gate decision only (never footprint data); rejects private-person tracking + laundered stalking prompts",
+        "plan_broker_optout": "SELF-ONLY data-broker opt-out plan (DeleteMe/Aura pattern) over user-confirmed listings; refused for public_figure/brand/other; reuses buildBrokerOptOutPlan",
+        "build_takedown_letter": "GDPR Art.17 RTBF / CCPA-delete erasure letters (template) + STIX 2.1 evidence bundle from the user's OWN findings; reuses buildTakedownPlan + toBundle"
+      },
+      "reuses": {
+        "scope_gate": "shared/scope.js (validateScope, read-only — front-door of every tool)",
+        "broker_optout": "shared/aux/broker-optout.js (buildBrokerOptOutPlan — self-only)",
+        "takedown_letter": "shared/aux/takedown-letter.js (buildTakedownPlan → GDPR Art.17)",
+        "stix_observed_data": "shared/enrich/stix-evidence.js (toBundle)"
+      },
+      "platform_constraints": {
+        "transport": "streamable-http (SSE removed 2026-04-01)",
+        "tool_whitelist_param": "?tools= on https://mcp.apify.com is the remote compliance control (private-scraping actors absent)",
+        "tool_contract": "each tool declares a JSON-Schema inputSchema; tools/list + tools/call",
+        "fail_closed": true,
+        "no_network_fetch": true
+      },
+      "docs": "docs/apify/mcp.md",
+      "deployed": false
+    },
+    "grade": {
+      "path": "integrations/grade",
+      "capability": "Self-Exposure Grade — a deterministic A+…F letter over the run's REAL module_events (Mozilla HTTP Observatory / SecurityHeaders model)",
+      "summary": "A single plain number a first-time visitor grasps in a second ('my footprint is a D'). Computed ONLY over the user's already-collected REAL module_events: baseline 100, a frozen table of NAMED per-category weighted deductions (secret leak −45, breach hit −40, broker listing −30, self-published postal −30, …), each scaled by the event's frozen RISK + VISIBILITY rank, with repeat-damping + a per-category cap, mapped onto A+…F bands — exactly the Observatory's baseline-minus-named-penalties shape, reframed from security headers to SELF privacy exposures. Every deduction in the breakdown NAMES the finding that caused it, so the user sees WHICH exposure to remove to raise the grade (Closure-Mode friendly). NO-FAKE-DATA: zero real events ⇒ graded:false / grade:null ('no data, no grade') — never a fabricated 'A' for an unscanned subject. SCOPE-GATED: gradeForScopedRun routes the input through the REAL shared/scope.js (read-only) and grades ONLY an allowed scope=self run; any rejection or non-self scope returns NO grade. The breakdown ledger is the exact reproducible rubric the portable evidence package publishes, so a third party can re-derive the letter from the bundle.",
+      "entrypoints": {
+        "grade": "integrations/grade/exposure-grade.js",
+        "tests": "integrations/grade/_selftest.js"
+      },
+      "reads_readonly": [
+        "shared/detectors/event-types.js (frozen EVENT_TYPES / RISK / VISIBILITY vocab)",
+        "shared/enrich/severity.js (worst-finding severity band cross-check)",
+        "shared/scope.js (the REAL gate; gradeForScopedRun, self-only)"
+      ],
+      "scopes_allowed": ["self"],
+      "model": {
+        "baseline": 100,
+        "method": "baseline-100 weighted named-deduction, A+…F bands",
+        "refs": [
+          "https://developer.mozilla.org/en-US/observatory/docs/tests_and_scoring",
+          "https://github.com/mozilla/http-observatory/blob/main/httpobs/docs/scoring.md"
+        ]
+      },
+      "no_fake_data": "empty-in => grade:null (no data, no grade)",
+      "docs": "docs/apify/grade.md",
+      "deployed": false
+    }
+  },
+  "ci": {
+    "module_selftest_aggregator": {
+      "path": "integrations/run-module-selftests.js",
+      "purpose": "Discovers & spawns every *_selftest.js in the repo (each in its own node process) so the ~dozen real module self-tests are guarded by CI — the default npm test (test/run-compliance-tests.js, Codex-owned) only checks scope-rejection fixtures. Additive + collision-safe: does NOT modify test/ or package.json.",
+      "suggested_npm_script": { "test:modules": "node integrations/run-module-selftests.js" },
+      "run_directly": "node integrations/run-module-selftests.js",
+      "fails_closed_on_zero_tests": true
     }
   },
   "compliance": {

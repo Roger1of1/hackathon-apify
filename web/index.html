@@ -101,6 +101,11 @@
         先在<a href="#gate">第 1 步</a>用 <code>self</code> 或 <code>public_figure</code> 范围通过闸门，下面的检查项就会按你的范围呈现。当前显示的是完整检查项目录。
       </div>
 
+      <!-- audit COVERAGE summary (Blacklight-style top-line: what the battery
+           checks, before the per-category detail). Counts derive purely from the
+           real check catalog below — this is the audit SCHEMA, not findings. -->
+      <div class="coverage" id="coverageSummary" aria-label="自审覆盖范围概览"></div>
+
       <!-- grouped finding categories — fed by shared/detectors EVENT_TYPES -->
       <div class="findings" id="findingsGroups"></div>
 
@@ -152,6 +157,41 @@
           <thead><tr><th>字段</th><th>说明</th></tr></thead>
           <tbody></tbody>
         </table>
+      </div>
+
+      <!-- DATA-BROKER OPT-OUT — the concrete "now what do I do" action. Plain,
+           conventional card (no metaphor, no animation). Self-only, scope-gated,
+           TEMPLATE registry (no fabricated listings). Surfaces shared/optout/. -->
+      <div class="optout-card" id="optoutCard">
+        <div class="optout-head">
+          <span class="optout-step">下一步处置</span>
+          <h3>数据中介下架 · Data-broker opt-out</h3>
+        </div>
+        <p class="optout-intro">
+          看清暴露之后，最实际的一步是把<strong>你自己</strong>的条目从数据中介（people-search / 数据经纪）站点下架。
+          这是一个 <strong>self-only</strong>（仅限你本人）流程：每个目标都先经过<a href="#gate">第 1 步合规闸门</a>，
+          任何针对他人的下架请求都会被拒绝——下架只为你自己的挂牌。
+        </p>
+
+        <!-- known-broker registry: clearly a TEMPLATE, no fabricated listing data -->
+        <div class="optout-reg-head">
+          <span class="field-label" style="margin:0;">已知中介登记表 · 模板</span>
+          <span class="optout-template-flag">模板 · 公开退订入口，无真实挂牌数据</span>
+        </div>
+        <table class="optout-table" id="optoutTable">
+          <thead><tr><th>数据中介</th><th>退订方式</th><th>公开退订入口</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="optout-honesty">
+          上表只登记各中介<strong>公开的退订 URL 与方式</strong>。是否在某中介上有你的挂牌，
+          要等真实自审运行（经闸门、scope=self）后才会确认；本页<strong>不</strong>编造任何挂牌命中。
+        </p>
+
+        <!-- the workflow, as a plain 3-step list — reuses existing modules -->
+        <div class="field-label" style="margin-top:16px;">每条「已确认是你自己的挂牌」会生成：</div>
+        <ol class="optout-flow" id="optoutFlow"></ol>
+
+        <p class="optout-foot" id="optoutFoot"></p>
       </div>
     </section>
 

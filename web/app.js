@@ -266,11 +266,25 @@
     out.innerHTML = "";
     const v = el("div", "verdict " + (res.accepted ? "accept" : "reject"));
 
+    // Plain-language verdict first (HIBP-style instant outcome), then the
+    // one-line meaning, then the technical reason. Strong top-down hierarchy:
+    // a first-time visitor reads big word → what it means → why.
     const head = el("div", "verdict-head");
-    head.appendChild(el("span", null, res.accepted ? "✓ 通过 · ACCEPTED" : "⊘ 拒绝 · REJECTED"));
+    const mark = el("span", "verdict-mark", res.accepted ? "✓" : "⊘");
+    const word = el("span", "verdict-word", res.accepted ? "可以做" : "已拒绝");
+    head.appendChild(mark);
+    head.appendChild(word);
     head.appendChild(el("span", "verdict-badge", res.accepted ? "compliant" : "blocked"));
     v.appendChild(head);
 
+    // one-line "what this means" — plain language, no jargon
+    v.appendChild(el("p", "verdict-meaning",
+      res.accepted
+        ? "这个请求落入合法范围，闸门放行，可以进入自审流水线。"
+        : "这个请求越过了合规红线，闸门当场拦下，不会进行任何抓取。"));
+
+    // technical reason, labelled so it reads as the supporting detail
+    v.appendChild(el("p", "verdict-why-label", res.accepted ? "判定依据" : "为什么被拒"));
     v.appendChild(el("p", "verdict-reason", esc(res.reason)));
 
     if (res.accepted) {
@@ -722,6 +736,71 @@
     } catch (e) { /* no-op: copy unavailable offline */ }
   }
 
+  /* Audit COVERAGE summary — a Blacklight-style top-line that tells the user, at
+   * a glance, what the self-audit battery checks BEFORE they read the per-category
+   * detail. Sharpens the report hierarchy: coverage → categories → findings.
+   *
+   * NO FAKE DATA: every number here is COUNTED from the real FINDING_GROUPS check
+   * catalog rendered below — it describes the audit SCHEMA ("会检查什么"), never a
+   * scraped result. Labels make that explicit so it can't be read as findings. */
+  function renderCoverage() {
+    const wrap = document.getElementById("coverageSummary");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    const cats = FINDING_GROUPS.length;
+    const checks = FINDING_GROUPS.reduce((n, g) => n + g.items.length, 0);
+    const sev = { high: 0, medium: 0, low: 0, info: 0 };
+    FINDING_GROUPS.forEach(g => g.items.forEach(it => {
+      if (sev[it.sev] != null) sev[it.sev] += 1;
+    }));
+
+    // one plain top-line stat row (HIBP/Blacklight: lead with the count)
+    const stats = el("div", "cov-stats");
+    [
+      { n: cats, label: "暴露类别" },
+      { n: checks, label: "检查项" }
+    ].forEach(s => {
+      const cell = el("div", "cov-stat");
+      cell.appendChild(el("span", "cov-num", String(s.n)));
+      cell.appendChild(el("span", "cov-lbl", s.label));
+      stats.appendChild(cell);
+    });
+
+    // severity-weight distribution of the checks (not findings) — a labelled bar
+    const distWrap = el("div", "cov-dist");
+    distWrap.appendChild(el("span", "cov-dist-label", "检查项按暴露等级分布"));
+    const bar = el("div", "cov-bar", null);
+    bar.setAttribute("role", "img");
+    bar.setAttribute("aria-label",
+      "高暴露 " + sev.high + " 项，中暴露 " + sev.medium + " 项，低暴露 " + sev.low + " 项");
+    [["high", "高"], ["medium", "中"], ["low", "低"]].forEach(([k]) => {
+      if (!sev[k]) return;
+      const seg = el("div", "cov-seg " + k);
+      seg.style.flexGrow = String(sev[k]);
+      bar.appendChild(seg);
+    });
+    distWrap.appendChild(bar);
+    const legend = el("div", "cov-legend");
+    [["high", "高暴露", sev.high], ["medium", "中暴露", sev.medium], ["low", "低暴露", sev.low]]
+      .forEach(([k, name, n]) => {
+        if (!n) return;
+        const li = el("span", "cov-leg-item");
+        li.appendChild(el("span", "cov-leg-dot " + k));
+        li.appendChild(el("span", null, name + " " + n + " 项"));
+        legend.appendChild(li);
+      });
+    distWrap.appendChild(legend);
+
+    wrap.appendChild(stats);
+    wrap.appendChild(distWrap);
+
+    // honesty line: this is coverage/schema, not findings
+    wrap.appendChild(el("p", "cov-note",
+      "以上是本次自审「会检查什么」的覆盖范围（审计 schema），不是抓取结果。" +
+      "真实运行经闸门、scope=self 后，命中的条目才会带 URL+时间戳+哈希填入下方各类别。"));
+  }
+
   function renderFindings() {
     const wrap = document.getElementById("findingsGroups");
     if (!wrap) return;
@@ -993,6 +1072,77 @@
   }
 
   /* =========================================================================
+   * DATA-BROKER OPT-OUT — the concrete self-protection action surfaced in the
+   * report. Mirrors the backend opt-out input-builder (shared/optout/): every
+   * target is routed through the real scope gate FIRST and self-removal is ONLY
+   * ever for the user's OWN listing. The broker registry below is a clearly
+   * labelled TEMPLATE carrying each broker's PUBLIC opt-out URL + method — NO
+   * fabricated listing data (no "you were found on X"). A confirmed-self listing
+   * emits a STIX 2.1 Observed Data object (reuses shared/enrich/stix-evidence.js)
+   * + a ready-to-send erasure request (reuses shared/aux/takedown-letter.js) and
+   * proposes an Apify Schedule/Webhook re-check so a REAPPEARING listing is
+   * re-flagged (Closure-Mode-friendly; integrations/schedules + integrations/webhooks).
+   *
+   * Ref: OASIS STIX 2.1 Observed Data (OpenCTI/MISP interop) for the per-listing
+   * evidence object; Apify Website Content Crawler + RAG Web Browser ingestion
+   * for the re-check sweep (the existing WCC/RAG ingest path re-reads the broker
+   * page to detect reappearance).
+   * =======================================================================*/
+
+  // TEMPLATE registry: PUBLIC opt-out entry points only. Each broker's opt-out
+  // URL/method is itself public policy info — NOT a claim that the user is listed.
+  const BROKER_REGISTRY = [
+    { name: "Spokeo", method: "网页表单 + 邮箱确认", url: "https://www.spokeo.com/optout" },
+    { name: "Whitepages", method: "条目移除表单", url: "https://www.whitepages.com/suppression-requests" },
+    { name: "BeenVerified", method: "网页表单 + 邮箱确认", url: "https://www.beenverified.com/app/optout/search" },
+    { name: "Intelius", method: "网页表单", url: "https://www.intelius.com/opt-out" },
+    { name: "Radaris", method: "管理资料后移除", url: "https://radaris.com/page/how-to-remove" },
+    { name: "Acxiom", method: "GDPR/CCPA 数据主体请求", url: "https://www.acxiom.com/optout/" }
+  ];
+
+  function renderOptout() {
+    const tbody = document.querySelector("#optoutTable tbody");
+    if (tbody) {
+      BROKER_REGISTRY.forEach(b => {
+        const tr = el("tr");
+        tr.appendChild(el("td", "optout-broker", esc(b.name)));
+        tr.appendChild(el("td", "optout-method", esc(b.method)));
+        const td = el("td");
+        const a = el("a", "optout-link", esc(b.url));
+        a.href = b.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+        td.appendChild(a);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      });
+    }
+
+    const flow = document.getElementById("optoutFlow");
+    if (flow) {
+      const steps = [
+        { tag: "闸门", text: "先过合规闸门：scope=self（或 consented）才放行。针对他人的下架请求当场拒绝——这是 self-only 流程。" },
+        { tag: "STIX", text: "为该挂牌生成一条 STIX 2.1 Observed Data 证据对象（复用 shared/enrich/stix-evidence.js，与上面报告里的形状一致），记录 URL + 首次/最后观测 + 内容哈希。" },
+        { tag: "请求信", text: "套用一封可直接发送的删除/退订请求（复用 shared/aux/takedown-letter.js，GDPR Art.17 / CCPA 口径），按该中介的公开退订方式投递。" },
+        { tag: "复检", text: "排一个 Apify Schedule + Webhook 周期复检：若已下架的挂牌重新出现，自动重新标记。复检沿用现有 WCC / RAG 抓取路径重新读取该中介页面。" }
+      ];
+      steps.forEach(s => {
+        const li = el("li", "optout-flow-item");
+        li.appendChild(el("span", "optout-flow-tag", esc(s.tag)));
+        li.appendChild(el("span", null, esc(s.text)));
+        flow.appendChild(li);
+      });
+    }
+
+    const foot = document.getElementById("optoutFoot");
+    if (foot) {
+      foot.innerHTML =
+        "代码：<b>shared/optout/</b>（input-builder，先过 <b>shared/scope.js</b> 闸门、self-only 拒绝他人）" +
+        " · 复用 <b>shared/enrich/stix-evidence.js</b> + <b>shared/aux/takedown-letter.js</b>" +
+        " · 复检 <b>integrations/schedules</b> + <b>integrations/webhooks</b>。" +
+        "引用：OASIS STIX 2.1 Observed Data（OpenCTI / MISP 互通）；Apify Website Content Crawler + RAG Web Browser 复检抓取。";
+    }
+  }
+
+  /* =========================================================================
    * CLOSURE MODE
    * =======================================================================*/
 
@@ -1138,9 +1288,11 @@
     renderHero();
     renderScopeSelect();
     renderPresets();
+    renderCoverage();
     renderFindings();
     renderClusterCard();
     renderEvidenceTable();
+    renderOptout();
     renderClosure();
     renderArch();
     renderPipelinePanel();

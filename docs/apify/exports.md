@@ -52,7 +52,52 @@ Enforcement is fail-closed and double-walled:
 | `integrations/exports/dataset-views.config.json` | Declarative views (transformation + display) per actor, each tagged with a `marking`. |
 | `integrations/exports/export-client.js` | Real `GET /v2/datasets/{id}/items` client. INERT (dry-run) without `APIFY_TOKEN`; re-redacts JSON rows client-side as a backstop. |
 | `integrations/exports/sync-dataset-views.js` | Computes the merge of the config into each actor's `.actor/actor.json` `storages.dataset.views`. Dry-run by default; `--write` is an actor-owner action. |
+| `integrations/exports/datapackage.js` | Portable **Frictionless Data Package** emitter. WRAPS `redaction-policy.js` and serializes the redacted rows into a self-contained `datapackage.json` + per-record-type CSV resources the subject OWNS. |
 | `integrations/exports/test-exports.js` | Self-test (12 assertions). Lives here, not under `test/`. |
+| `integrations/exports/test-datapackage.js` | Self-test for the package emitter (11 assertions). Lives here, not under `test/`. |
+
+## Portable evidence package (Frictionless / Datasette) — the subject OWNS it
+
+The export client streams a marking-scoped projection over the API. But the
+product promise is stronger: the audit subject should be able to **walk away with
+their evidence** in an open standard, not have it locked in a dashboard.
+`datapackage.js` emits a [Frictionless Tabular Data Package](https://specs.frictionlessdata.io/data-package/):
+a self-describing `datapackage.json` descriptor plus one tabular **CSV resource
+per `record_type`**, each with a [Table Schema](https://specs.frictionlessdata.io/table-schema/)
+of typed fields. It opens offline and imports unchanged into Datasette / SQLite /
+pandas / OpenRefine.
+
+It is the publish-side bookend to the redaction policy and **cannot widen it**:
+
+- Every raw row is run through `redactRecord(row, marking)` first; a row that
+  redacts to `null` is dropped (never half-emitted). At a non-RED marking the
+  **Table Schema itself** is built from `allowedFields(type, marking)`, so it
+  physically cannot name `url` / `html_key` / `screenshot_key` / `note`.
+- **No fake data:** zero real rows ⇒ zero resources + an explicit
+  `meta.note: "no findings — empty evidence package"`. No sample rows are injected.
+- **Citable + reproducible (Datasette model):** the descriptor records provenance
+  (`created`, marking, source dataset/actor id) and a deterministic
+  `x-content-sha256` fingerprint over the whole bundle, so a citation pins an
+  exact run. It can embed the **Self-Exposure Grade ledger** (see
+  [grade.md](grade.md)) as its own resource, so a third party can re-derive the
+  A–F letter from the published rows.
+- **Pure + offline:** `buildDataPackage()` does no I/O and needs no token; an
+  opt-in `writeDataPackage(pkg, outDir)` is the only thing that touches disk, and
+  only when the caller passes an explicit directory.
+
+```bash
+# Build + inspect a portable package (pure, no token, no network)
+node -e "const {buildDataPackage}=require('./integrations/exports/datapackage'); \
+  const p=buildDataPackage([{record_type:'capture',case_id:'c1',url:'https://example.com/me',content_sha256:'a'.repeat(64),status_code:200,captured_at:'2026-05-30T00:00:00.000Z'}],{marking:'TLP:GREEN',now:'2026-05-30T00:00:00.000Z'}); \
+  console.log(p.files['datapackage.json'])"
+
+# Self-test
+node integrations/exports/test-datapackage.js
+```
+
+Reference: Frictionless Data Package <https://specs.frictionlessdata.io/data-package/>,
+Tabular Data Resource <https://specs.frictionlessdata.io/tabular-data-resource/>,
+Datasette portable/citable publishing <https://datasette.io/>.
 
 ## Usage
 

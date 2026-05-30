@@ -45,6 +45,7 @@ const OBSERVABLE_CATEGORY = Object.freeze({
   COOKIE_THIRD_PARTY: 'cookie',
   LEAK_REFERRER: 'url',
   BREACH_RANGE_HIT: 'credential-exposure',
+  BROKER_LISTING_HIT: 'data-broker-record',
   EXPOSURE_SUMMARY: 'observed-data',
 });
 

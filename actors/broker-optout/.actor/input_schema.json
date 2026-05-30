@@ -1,0 +1,48 @@
+{
+  "title": "Ex-Ditector Data-Broker Opt-Out Input",
+  "description": "Builds a self-removal workflow for the SELF subject's OWN data-broker listings. A broker opt-out is a first-person erasure ('remove the record about ME'), so the scope_type enum DELIBERATELY omits public_figure / brand / safety_evidence — you cannot opt anyone else out of a broker. Only self (and consented, which requires written authorization) are accepted. NO scraping happens: you supply listings you have personally CONFIRMED are about you.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "A data-broker opt-out removes the record about the requester, so it is only ever 'self'. 'consented' is permitted ONLY with a written authorization URL (a real person who agreed in writing). public_figure / brand / safety_evidence are intentionally NOT offered — they cannot file a broker self-removal.",
+      "editor": "select",
+      "enum": ["self", "consented"],
+      "enumTitles": ["Self (remove MY own broker listings)", "Consented (someone who authorized me, in writing)"],
+      "default": "self"
+    },
+    "subject_label": {
+      "title": "Your name (for the erasure letter)",
+      "type": "string",
+      "description": "The name to put on the GDPR/CCPA erasure request. If omitted, the letter shows an explicit [[ FILL IN ]] placeholder — never a fabricated name.",
+      "editor": "textfield"
+    },
+    "authorization_evidence_url": {
+      "title": "Authorization evidence URL (consented only)",
+      "type": "string",
+      "description": "Required when scope_type=consented: a URL to written consent from the subject. Without it, the run is refused by the scope gate.",
+      "editor": "textfield"
+    },
+    "confirmed_listings": {
+      "title": "Broker listings you CONFIRMED are about you",
+      "type": "array",
+      "description": "One object per listing you personally verified is about YOU, e.g. { \"broker_id\": \"spokeo\", \"listing_url\": \"https://www.spokeo.com/Your-Name/123\", \"confirmed_self\": true }. broker_id must be a known broker (see README registry). A listing WITHOUT confirmed_self:true is skipped — this actor never scrapes or invents a listing. Private-social URLs are blocked by the scope gate.",
+      "editor": "json",
+      "default": []
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    }
+  },
+  "required": ["scope_type"]
+}

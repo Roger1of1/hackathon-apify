@@ -74,6 +74,17 @@ const CATEGORIES = Object.freeze([
     event_types: [EVENT_TYPES.BREACH_RANGE_HIT],
   },
   {
+    id: 'data_brokers',
+    label: 'Data-broker listings',
+    short: 'People-search sites publishing a profile of you',
+    why_it_matters:
+      'A data broker (people-search site) has aggregated a public profile of you '
+      + '— name, location and more on one page. You can request removal via the '
+      + "broker's opt-out and, where it applies, a right-to-erasure request. This "
+      + 'is only shown when your own details were actually confirmed on the page.',
+    event_types: [EVENT_TYPES.BROKER_LISTING_HIT],
+  },
+  {
     id: 'pii',
     label: 'Personal info you published',
     short: 'Contact details a stranger can copy off your pages',

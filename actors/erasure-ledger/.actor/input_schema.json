@@ -1,0 +1,81 @@
+{
+  "title": "Ex-Ditector Erasure-Request Ledger Input",
+  "description": "Tracks YOUR OWN removal requests and their statutory deadlines. Tracking your own removals is a first-person action, so the scope enum intentionally omits consented/brand/safety_evidence and accepts only self/public_figure. This actor fetches nothing and analyses no third party; it only schedules check-backs for requests already drafted from your OWN findings, reusing the existing takedown planner.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Tracking your own removal requests is permitted ONLY for your own footprint (self) or a genuine public figure acting publicly. Other compliant scopes (consented/brand/safety_evidence) intentionally cannot run this actor.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (your own footprint)", "Public figure"],
+      "default": "self"
+    },
+    "findings_dataset_name": {
+      "title": "Findings dataset name",
+      "type": "string",
+      "description": "Name of the Apify dataset holding the typed module_events produced by the other Ex-Ditector actors. Records that are not valid module_events are ignored. Leave empty to pass findings inline via 'events'.",
+      "editor": "textfield"
+    },
+    "events": {
+      "title": "Inline findings (module_events)",
+      "type": "array",
+      "description": "Optional: pass module_event records directly (for offline/composed runs). Each must be a real module_event; anything else is dropped. No fake data is generated to fill gaps.",
+      "editor": "json",
+      "default": []
+    },
+    "submitted_at": {
+      "title": "Real submission dates",
+      "type": "object",
+      "description": "Optional map of { \"<host>|<request_kind>\": \"<ISO date you actually sent it>\" }. When you supply a real submission date, the statutory respond-by deadline is computed from it. With no date the clock is honestly marked 'not started' — no deadline is invented.",
+      "editor": "json",
+      "default": {}
+    },
+    "broker_plan_store_name": {
+      "title": "Broker opt-out plan KV store",
+      "type": "string",
+      "description": "Optional. Name of a KV store holding a previously-produced broker_optout_plan, so its erasure letters fold into this ledger. Only a real broker_optout_plan with an erasure_plan is accepted; anything else is ignored.",
+      "editor": "textfield"
+    },
+    "broker_plan_key": {
+      "title": "Broker opt-out plan KV key",
+      "type": "string",
+      "description": "KV key for the broker_optout_plan record. Defaults to BROKER_OPTOUT_PLAN.",
+      "editor": "textfield",
+      "default": "BROKER_OPTOUT_PLAN"
+    },
+    "owned_hosts": {
+      "title": "Hosts you control",
+      "type": "array",
+      "description": "Hostnames the subject controls (e.g. your-name.com). Findings on these become a self-remediation item rather than a third-party data-subject request.",
+      "editor": "stringList",
+      "default": []
+    },
+    "subject_name": {
+      "title": "Your name (for the letters)",
+      "type": "string",
+      "description": "Optional. Passed through to the reused takedown planner. Left blank, it becomes an explicit placeholder — never fabricated.",
+      "editor": "textfield"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name). Used only for reporting and routed through the scope gate's free-text laundering scan.",
+      "editor": "textfield"
+    }
+  },
+  "required": ["scope_type"]
+}

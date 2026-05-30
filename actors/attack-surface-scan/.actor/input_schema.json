@@ -1,0 +1,64 @@
+{
+  "title": "Ex-Ditector Public Attack-Surface Self-Scan Input",
+  "description": "Audits a domain YOU OWN for publicly-discoverable subdomains (certificate-transparency logs) and a leaked registrant email (public WHOIS/RDAP). Subdomain discovery is a dual-use attack-surface-management technique, so the scope enum intentionally contains ONLY self and public_figure; consented/brand/safety_evidence cannot run this actor. You must explicitly assert that you own or are authorized to audit the domain.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Attack-surface discovery is permitted ONLY for your own domain (self) or a genuine public figure's publicly-operated domain. Other compliant scopes are intentionally absent.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (a domain you own)", "Public figure (publicly-operated domain)"],
+      "default": "self"
+    },
+    "domain": {
+      "title": "Apex domain you own",
+      "type": "string",
+      "description": "The apex domain to audit, e.g. \"example.com\". Only hosts that belong to THIS domain are inventoried; certificate SANs for other domains are discarded. Do not enter a domain you do not own or are not authorized to audit.",
+      "editor": "textfield"
+    },
+    "i_own_this_domain": {
+      "title": "I confirm I own or am authorized to audit this domain",
+      "type": "boolean",
+      "description": "Required. This actor performs a SELF attack-surface inventory; it must not be pointed at infrastructure you do not control. The run is refused unless this is checked.",
+      "editor": "checkbox",
+      "default": false
+    },
+    "check_whois": {
+      "title": "Check public WHOIS/RDAP for a leaked registrant email",
+      "type": "boolean",
+      "description": "If true, query the PUBLIC RDAP record for the domain to detect a registrant email exposed in WHOIS (so you can enable registrar privacy). The email is converted to a k-anonymity prefix + masked display; the full address is never stored.",
+      "editor": "checkbox",
+      "default": true
+    },
+    "max_subdomains": {
+      "title": "Max subdomains to report",
+      "type": "integer",
+      "description": "Cap on how many discovered subdomains to emit, to keep the inventory readable. Discovery itself is bounded by the CT log response.",
+      "editor": "number",
+      "default": 200,
+      "minimum": 1,
+      "maximum": 2000
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name or org). Used only for reporting.",
+      "editor": "textfield"
+    }
+  },
+  "required": ["scope_type", "domain"]
+}

@@ -23,6 +23,8 @@ const tracker = require('./tracker-detector.js');
 const breach = require('./breach-range-detector.js');
 const secret = require('./secret-leak-detector.js');
 const userenum = require('./username-enum-detector.js');
+const brokerListing = require('./broker-listing-detector.js');
+const indexability = require('./indexability-detector.js');
 
 /**
  * Artifact "kinds" a detector consumes. The crawler tags each captured artifact
@@ -33,6 +35,8 @@ const ARTIFACT_KINDS = Object.freeze({
   PAGE_RESOURCES: 'page_resources', // scripts/cookies/js_api_calls/links of a page
   BREACH_RANGE: 'breach_range',   // a precomputed k-anon range result for a self credential
   USERNAME_PROBES: 'username_probes', // upstream-collected handle-presence probes (scope-gated)
+  BROKER_PAGE: 'broker_page',     // operator-captured PUBLIC text of a known broker result page (scope-gated)
+  PAGE_INDEXING: 'page_indexing', // observed indexing-control directives of a page (meta robots, X-Robots-Tag, canonical, robots.txt, archive presence)
 });
 
 /**
@@ -88,6 +92,28 @@ const REGISTRY = Object.freeze([
     consumes: ARTIFACT_KINDS.USERNAME_PROBES,
     produces: [EVENT_TYPES.SELF_USERNAME, EVENT_TYPES.SELF_PROFILE_URL],
     run: (artifact) => userenum.detectUsernameAccounts(artifact),
+  },
+  {
+    // Data-broker listing-confirmation module (DeleteMe/Aura-style "is my record
+    // on this people-search broker?"). DUAL-USE: self-refuses unless
+    // artifact.scope_type is self|public_figure, and emits nothing unless a
+    // CORROBORATED self-match is confirmed against operator-captured public text —
+    // it never fabricates a listing. Feeds the existing opt-out + erasure planners.
+    name: brokerListing.MODULE,
+    consumes: ARTIFACT_KINDS.BROKER_PAGE,
+    produces: [EVENT_TYPES.BROKER_LISTING_HIT],
+    run: (artifact) => brokerListing.detectBrokerListing(artifact),
+  },
+  {
+    // Discoverability/indexability module (Google indexing-control + Blacklight
+    // "what's trivially observable" framing). Reads the indexing DIRECTIVES the
+    // crawler observed on a self-controlled page and reports how findable the
+    // page (and the exposures on it) are to a stranger — never invents a posture;
+    // emits nothing when no url and no directive are present.
+    name: indexability.MODULE,
+    consumes: ARTIFACT_KINDS.PAGE_INDEXING,
+    produces: [EVENT_TYPES.EXPOSURE_SUMMARY],
+    run: (artifact) => indexability.detectIndexability(artifact),
   },
 ]);
 

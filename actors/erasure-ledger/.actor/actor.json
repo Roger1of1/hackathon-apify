@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-erasure-ledger",
+  "title": "Ex-Ditector AUX — Erasure-Request Ledger / Removal Tracker",
+  "description": "Auxiliary actor that tracks the SELF subject's OWN removal requests over time. It reads the subject's REAL typed module_events, REUSES shared/aux/erasure-ledger.js (which reuses shared/aux/takedown-letter.js — no re-implementation of letter/statute/cluster logic), and produces one trackable LEDGER ROW per drafted request with: the controller's statutory response deadline (GDPR Art.12(3): one month +2; CCPA/CPRA §1798.130: 45 days +45) and the single date to check back (Closure Mode), so the subject verifies removal on the deadline instead of compulsively re-checking. Optionally folds in a previously-produced broker_optout_plan's erasure letters from KV. Scope-gated to self/public_figure ONLY via shared/scope.js. NO fake data: deadlines are computed deterministically from real submission dates the subject supplies; no removal outcome is invented (a row is 'removed' only when a later re-scan confirms it); no findings in -> empty ledger out; is_template:true. Patterns applied: DeleteMe/Aura consolidated removal dashboard + GDPR Art.17 RTBF deadline automation.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "./Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Erasure ledger rows + summary",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 128,
+  "maxMemoryMbytes": 1024
+}

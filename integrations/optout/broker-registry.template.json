@@ -1,0 +1,93 @@
+{
+  "_comment": "TEMPLATE — known data-broker / people-search opt-out REGISTRY. THIS IS A TEMPLATE, NOT SCRAPED DATA. Every entry below records ONLY each broker's own PUBLICLY DOCUMENTED opt-out URL + method (the routes the brokers themselves publish). It contains NO listing about any person, NO fabricated 'we found you on X' result, and asserts nothing about whether YOU are listed. A real listing is confirmed ONLY from REAL crawler output (a module_event whose source_url host matches a broker.host) passed to optout-policy.js — never from this file. `is_template: true` is carried so no consumer can mistake registry entries for findings. Opt-out URLs/methods change; the operator MUST re-verify each broker's current opt-out page before relying on it. Sources: each broker's published privacy/opt-out page; cross-referenced with public consumer-rights guidance (e.g. EFF/Privacy Rights Clearinghouse broker opt-out lists, California Delete Act / DROP registry).",
+  "is_template": true,
+  "schema_version": "1.0",
+  "registry_kind": "data_broker_optout_routes",
+  "review_banner": "Re-verify every opt-out URL + method against the broker's current site before use. Routes change without notice.",
+  "brokers": [
+    {
+      "id": "spokeo",
+      "name": "Spokeo",
+      "host": "spokeo.com",
+      "category": "people_search",
+      "optout_url": "https://www.spokeo.com/optout",
+      "optout_method": "web_form_then_email_confirm",
+      "requires": ["listing_url", "email_for_confirmation"],
+      "self_only": true,
+      "notes": "Paste the exact listing URL; confirm via the emailed link.",
+      "is_template": true
+    },
+    {
+      "id": "whitepages",
+      "name": "Whitepages",
+      "host": "whitepages.com",
+      "category": "people_search",
+      "optout_url": "https://www.whitepages.com/suppression-requests",
+      "optout_method": "web_form_then_phone_verify",
+      "requires": ["listing_url", "phone_for_verification"],
+      "self_only": true,
+      "notes": "Suppression request may require an automated phone verification call.",
+      "is_template": true
+    },
+    {
+      "id": "beenverified",
+      "name": "BeenVerified",
+      "host": "beenverified.com",
+      "category": "people_search",
+      "optout_url": "https://www.beenverified.com/app/optout/search",
+      "optout_method": "web_form_then_email_confirm",
+      "requires": ["listing_url", "email_for_confirmation"],
+      "self_only": true,
+      "notes": "Search for your record, select it, confirm via email.",
+      "is_template": true
+    },
+    {
+      "id": "intelius",
+      "name": "Intelius",
+      "host": "intelius.com",
+      "category": "people_search",
+      "optout_url": "https://www.intelius.com/opt-out",
+      "optout_method": "web_form_then_email_confirm",
+      "requires": ["listing_url", "email_for_confirmation"],
+      "self_only": true,
+      "notes": "PeopleConnect-family broker; opt-out may also suppress sibling sites.",
+      "is_template": true
+    },
+    {
+      "id": "radaris",
+      "name": "Radaris",
+      "host": "radaris.com",
+      "category": "people_search",
+      "optout_url": "https://radaris.com/control/privacy",
+      "optout_method": "account_claim_then_remove",
+      "requires": ["listing_url", "email_for_confirmation"],
+      "self_only": true,
+      "notes": "Requires claiming/controlling the profile before removal.",
+      "is_template": true
+    },
+    {
+      "id": "mylife",
+      "name": "MyLife",
+      "host": "mylife.com",
+      "category": "reputation_score",
+      "optout_url": "https://www.mylife.com/ccpa/index.pubview",
+      "optout_method": "ccpa_request_email_or_form",
+      "requires": ["listing_url", "email_for_confirmation"],
+      "self_only": true,
+      "notes": "Use the CCPA portal; phone follow-up sometimes required.",
+      "is_template": true
+    },
+    {
+      "id": "acxiom",
+      "name": "Acxiom (LiveRamp)",
+      "host": "acxiom.com",
+      "category": "marketing_data_broker",
+      "optout_url": "https://www.acxiom.com/optout/",
+      "optout_method": "web_form",
+      "requires": ["identity_fields_for_match"],
+      "self_only": true,
+      "notes": "Marketing data broker (not a people-search page); opt-out is a suppression request, no public listing URL to cite.",
+      "is_template": true
+    }
+  ]
+}

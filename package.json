@@ -16,6 +16,7 @@
   "scripts": {
     "lint": "eslint .",
     "test": "node test/run-compliance-tests.js",
+    "test:modules": "node integrations/run-module-selftests.js",
     "test:scope": "node -e \"const {validateScope}=require('./shared/scope.js'); console.log(JSON.stringify(validateScope({scope_type:'private_person_tracking'}),null,2))\""
   },
   "engines": {
