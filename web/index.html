@@ -7,9 +7,35 @@
   <meta name="description" content="把窥探前任的冲动反转成审计自己、保全证据、戒断强迫性查看的合规 OSINT 工具。" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主内容</a>
+
+  <!-- PRELOADER (GT-Mechanik signature: crosshair corner SVGs + a short calibration sweep).
+       Reframed for an OSINT/compliance tool: it reads as "calibrating the compliance gate /
+       tuning scope channels", echoing how the correlation pipeline (Track A, shared/correlation.js)
+       runs ONLY for self|public_figure — fail-closed. Pure CSS, no GSAP/network dependency, so it
+       works offline via file://; app.js removes it on DOMContentLoaded and it is hidden entirely
+       under prefers-reduced-motion. It never blocks the Live Compliance Gate. -->
+  <div class="preloader" id="preloader" role="status" aria-label="正在校准合规闸门" aria-live="polite">
+    <svg class="ph-corner ph-tl" viewBox="0 0 40 40" aria-hidden="true"><path d="M2 14V2h12M2 2l8 8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
+    <svg class="ph-corner ph-tr" viewBox="0 0 40 40" aria-hidden="true"><path d="M38 14V2H26M38 2l-8 8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
+    <svg class="ph-corner ph-bl" viewBox="0 0 40 40" aria-hidden="true"><path d="M2 26v12h12M2 38l8-8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
+    <svg class="ph-corner ph-br" viewBox="0 0 40 40" aria-hidden="true"><path d="M38 26v12H26M38 38l-8-8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
+    <div class="ph-core">
+      <svg class="ph-wheel" viewBox="0 0 120 120" aria-hidden="true" fill="none">
+        <circle cx="60" cy="60" r="56" stroke="var(--color-magenta)" stroke-width="1.5" opacity="0.7"/>
+        <circle cx="60" cy="60" r="40" stroke="var(--color-dark-green)" stroke-width="1" opacity="0.6"/>
+        <line x1="60" y1="2" x2="60" y2="118" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
+        <line x1="2" y1="60" x2="118" y2="60" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
+        <circle class="ph-needle" cx="60" cy="8" r="4" fill="var(--color-magenta)"/>
+        <circle cx="60" cy="60" r="5" fill="var(--color-acid)"/>
+      </svg>
+      <p class="ph-label para-ui-xs">校准合规闸门 · CALIBRATING GATE</p>
+      <p class="ph-sub para-ui-xs">SELF · PUBLIC_FIGURE · BRAND · CONSENTED · SAFETY_EVIDENCE</p>
+    </div>
+  </div>
 
   <header class="nav" id="nav">
     <div class="nav-inner">
@@ -31,8 +57,25 @@
 
   <main id="main">
     <!-- HERO -->
-    <section class="hero" id="hero">
+    <section class="hero" id="hero" data-channel="00.0" data-title="信号源 / Signal">
       <div class="hero-bg" aria-hidden="true"></div>
+      <!-- scroll-driven data-wheel (GT-Mechanik signature; rotates via GSAP ScrollTrigger scrub,
+           falls back to a CSS-static crosshair wheel when GSAP CDN is unavailable offline) -->
+      <svg class="hero-wheel" data-wheel viewBox="0 0 200 200" aria-hidden="true" fill="none">
+        <circle cx="100" cy="100" r="96" stroke="var(--color-dark-green)" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="100" cy="100" r="70" stroke="var(--color-magenta)" stroke-width="1.5" opacity="0.7"/>
+        <circle cx="100" cy="100" r="44" stroke="var(--color-dark-green)" stroke-width="1"/>
+        <circle cx="100" cy="100" r="6" fill="var(--color-acid)"/>
+        <line x1="100" y1="0" x2="100" y2="200" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
+        <line x1="0" y1="100" x2="200" y2="100" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
+        <g font-family="monospace" font-size="9" fill="var(--color-dark-green)">
+          <text x="100" y="14" text-anchor="middle">SELF</text>
+          <text x="186" y="103" text-anchor="middle">PUB</text>
+          <text x="100" y="196" text-anchor="middle">BRAND</text>
+          <text x="14" y="103" text-anchor="middle">SAFE</text>
+        </g>
+        <circle cx="100" cy="30" r="4" fill="var(--color-magenta)"/>
+      </svg>
       <div class="hero-inner">
         <p class="eyebrow">合规 OSINT · Apify 驱动</p>
         <h1 id="heroName">Ex-Ditector <span class="accent">合规版</span></h1>
@@ -53,7 +96,8 @@
     </section>
 
     <!-- LIVE COMPLIANCE GATE -->
-    <section class="section gate" id="gate">
+    <section class="section gate" id="gate" data-channel="01.5" data-title="合规闸门 / Gate" data-graphic="dial">
+      <div class="channel-flag para-ui-xs" aria-hidden="true"><span class="ping"></span>CH 01.5 · GATE</div>
       <div class="section-head">
         <span class="tag tag-star">★ 核心演示</span>
         <h2>Live Compliance Gate · 合规闸门</h2>
@@ -84,6 +128,20 @@
             <p>选择一个 scope 或输入请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行——没有假数据。</p>
           </div>
         </div>
+      </div>
+
+      <!-- SELF-EXPOSURE INSPECTOR (Blacklight-style privacy inspector, reframed for SELF audit).
+           Populated by app.js ONLY when the gate ACCEPTS a self / public_figure scope.
+           Rows are clearly-labeled TEMPLATE checks (what a third party could trivially discover),
+           never fabricated scrape results. -->
+      <div class="inspector" id="inspector" hidden>
+        <div class="inspector-head">
+          <h3>自我暴露检查器 · Self-Exposure Inspector</h3>
+          <span class="tag para-ui-xs" id="inspectorScope">scope —</span>
+        </div>
+        <p class="inspector-note" id="inspectorNote"></p>
+        <ul class="exposure-list" id="exposureList"></ul>
+        <div class="cluster-banner" id="clusterBanner" hidden></div>
       </div>
     </section>
 
@@ -188,6 +246,21 @@
     <p class="muted">合规红线写进代码：scope 枚举 + prohibited 模式拒绝 + 工具层白名单。</p>
   </footer>
 
+  <!-- RADIO-DIAL CHANNEL NAV (GT-Mechanik signature, reframed for OSINT/compliance):
+       each "channel" = a scope_type or actor; the central knob = the compliance gate
+       (green LED = gate open / compliant, magenta blinking = gate blocked a request). -->
+  <nav class="dial" id="dial" aria-label="频道导航 · 合规调谐器">
+    <div class="dial-knob" id="dialKnob" role="img" aria-label="合规闸门状态">
+      <span class="gate-led" aria-hidden="true"></span>
+    </div>
+    <div class="dial-track"><div class="dial-band" id="dialBand"></div></div>
+    <div class="dial-readout para-ui-xs" id="dialReadout">CH <b>00.0</b></div>
+  </nav>
+
+  <!-- GSAP via CDN for the scroll-driven data-wheel; app.js degrades gracefully if this
+       fails to load (offline / file://) — the wheel just stays static. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
   <script src="app.js"></script>
 </body>
 </html>

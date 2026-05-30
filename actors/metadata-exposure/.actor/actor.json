@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-metadata-exposure",
+  "title": "Ex-Ditector AUX — Metadata Exposure Scanner (EXIF/XMP/IPTC/PDF)",
+  "description": "Auxiliary actor. Downloads the SELF subject's OWN public assets (photos, PDFs) and extracts embedded metadata (EXIF GPS, camera make/model/serial, editing software, author name, embedded contact email) that leaks alongside the file. Reports each leak as a TYPED module-event (event_type/source_module/data/confidence) drawn from the frozen detector vocabulary, so the SpiderFoot-style correlation engine can cluster it with the subject's other self-exposure events. GPS is coarsened on purpose; an author email is emitted only as a k-anonymity prefix (HIBP-style), never plaintext. Scope-gated to self/public_figure ONLY via shared/scope.js; honors 401/403/429 as a STOP (no login/rate-limit evasion). NO fake data: metadata is parsed from real bytes only; a clean file yields no events.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "./Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Metadata exposure module-events",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 2048
+}

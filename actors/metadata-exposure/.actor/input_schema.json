@@ -1,0 +1,42 @@
+{
+  "title": "Ex-Ditector Metadata Exposure Scanner Input",
+  "description": "Scans the SELF subject's OWN public assets for leaked embedded metadata (EXIF GPS, device serial, software, author, contact email). Reading embedded metadata is a dual-use technique, so the scope enum intentionally omits consented/brand/safety_evidence and accepts only self/public_figure. Only logged-out, publicly-reachable URLs you own (or a public figure's public assets) are fetched; no login, captcha, or rate-limit evasion.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Embedded-metadata extraction is permitted ONLY for your own footprint (self) or a genuine public figure acting publicly. Other compliant scopes (consented/brand/safety_evidence) intentionally cannot run this actor.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (your own assets)", "Public figure"],
+      "default": "self"
+    },
+    "asset_urls": {
+      "title": "Public asset URLs to scan (yours only)",
+      "type": "array",
+      "description": "Direct https URLs to images/PDFs YOU published (or a public figure's public assets). Each file is downloaded once, logged-out, and parsed locally. Private-social hosts (Instagram/Facebook/Tinder…) are rejected by the scope gate. Files behind a login (401/403) are skipped, not bypassed.",
+      "editor": "stringList",
+      "default": []
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name). Used only for reporting.",
+      "editor": "textfield"
+    }
+  },
+  "required": ["scope_type"]
+}

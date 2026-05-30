@@ -1,0 +1,20 @@
+{
+  "_comment": "TEMPLATE — paste this into Apify Console -> actor/task -> Integrations -> Webhooks -> Payload template. It is NOT auto-deployed; this repo ships no credentials. All {{...}} tokens are Apify webhook variables resolved at dispatch time (https://docs.apify.com/platform/integrations/webhooks/actions). Register the webhook URL as https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET> so the receiver can verify the URL secret.",
+  "source": "ex-ditector",
+  "eventType": "{{eventType}}",
+  "createdAt": "{{createdAt}}",
+  "userId": "{{userId}}",
+  "resource": {
+    "id": "{{resource.id}}",
+    "actId": "{{resource.actId}}",
+    "status": "{{resource.status}}",
+    "startedAt": "{{resource.startedAt}}",
+    "finishedAt": "{{resource.finishedAt}}",
+    "defaultDatasetId": "{{resource.defaultDatasetId}}",
+    "defaultKeyValueStoreId": "{{resource.defaultKeyValueStoreId}}"
+  },
+  "eventData": {
+    "actorRunId": "{{eventData.actorRunId}}",
+    "actorId": "{{eventData.actorId}}"
+  }
+}

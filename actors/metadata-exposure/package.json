@@ -1,0 +1,18 @@
+{
+  "name": "ex-ditector-metadata-exposure",
+  "version": "1.0.0",
+  "description": "AUX metadata-exposure scanner — EXIF/XMP/IPTC/PDF leak detection on the SELF subject's own public assets, emitting typed correlation module-events for Ex-Ditector.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6",
+    "got-scraping": "^4.0.6",
+    "exifr": "^7.1.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

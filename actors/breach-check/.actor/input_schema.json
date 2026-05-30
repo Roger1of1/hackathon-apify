@@ -1,0 +1,65 @@
+{
+  "title": "Ex-Ditector Breach Exposure Check Input",
+  "description": "Checks the SELF subject's OWN credential hygiene against public breach corpora using k-anonymity. Secrets never leave the machine in full. Prohibited scopes are absent from the enum; only self/public_figure are accepted because credential enumeration is a dual-use technique restricted to those scopes.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Dual-use credential checks are permitted ONLY for your own footprint (self) or a genuine public figure acting publicly. Other compliant scopes (consented/brand/safety_evidence) intentionally cannot run this actor.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (your own credentials)", "Public figure"],
+      "default": "self"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name). Used only for reporting.",
+      "editor": "textfield"
+    },
+    "self_emails": {
+      "title": "Your own email addresses",
+      "type": "array",
+      "description": "Email addresses you OWN (or a public figure's publicly-listed contact). Each is hashed locally; only a 5-char SHA-1 prefix is sent. The full address is never transmitted or stored.",
+      "editor": "stringList",
+      "default": []
+    },
+    "candidate_passwords": {
+      "title": "Candidate passwords to test (yours only)",
+      "type": "array",
+      "description": "Passwords YOU use, to test against the Pwned Passwords corpus via k-anonymity. Only the first 5 chars of each SHA-1 hash leave the machine; the password is never transmitted, logged, or stored. Do not enter anyone else's passwords.",
+      "editor": "stringList",
+      "isSecret": true,
+      "default": []
+    },
+    "enable_account_breach_lookup": {
+      "title": "Authenticated own-account breach lookup",
+      "type": "boolean",
+      "description": "If true AND scope_type=self AND the HIBP_API_KEY env var is set, query the authenticated HIBP breachedaccount API for YOUR OWN emails. Without a key this is skipped (never faked).",
+      "editor": "checkbox",
+      "default": false
+    },
+    "checks_per_day": {
+      "title": "Checks per day (wellbeing signal)",
+      "type": "integer",
+      "editor": "number",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": ["scope_type"]
+}

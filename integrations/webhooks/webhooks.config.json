@@ -1,0 +1,48 @@
+{
+  "_comment": "TEMPLATE / SOURCE-OF-TRUTH for the webhooks this product expects. Apply via the Apify API (POST /v2/webhooks) or by mirroring these settings in Console. Nothing here is auto-deployed; <PLACEHOLDERS> must be filled with YOUR real ids/secrets. See docs/apify/webhooks.md.",
+  "receiver_url_pattern": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
+  "verification": {
+    "url_secret_env": "APIFY_WEBHOOK_SECRET",
+    "optional_hmac_secret_env": "APIFY_WEBHOOK_HMAC_SECRET",
+    "fail_closed": true,
+    "note": "Receiver rejects any request that matches neither method."
+  },
+  "webhooks": [
+    {
+      "name": "report-succeeded-output-health",
+      "description": "When the report-builder run succeeds, verify OUTPUT HEALTH (success != valid output) before telling the user the audit is ready.",
+      "condition": { "actorTaskId_or_actorId": "<EX_DITECTOR_REPORT_ACTOR_ID>" },
+      "eventTypes": ["ACTOR.RUN.SUCCEEDED"],
+      "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
+      "payloadTemplateFile": "./payload-template.json",
+      "shouldInterpolateStrings": true
+    },
+    {
+      "name": "pipeline-failed-alert",
+      "description": "Any actor in the pipeline fails -> alert.",
+      "condition": { "actorId": "<ANY_EX_DITECTOR_ACTOR_ID>" },
+      "eventTypes": ["ACTOR.RUN.FAILED"],
+      "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
+      "payloadTemplateFile": "./payload-template.json",
+      "shouldInterpolateStrings": true
+    },
+    {
+      "name": "pipeline-timed-out-alert",
+      "description": "Timeout -> alert + check whether compliance backoff was excessive.",
+      "condition": { "actorId": "<ANY_EX_DITECTOR_ACTOR_ID>" },
+      "eventTypes": ["ACTOR.RUN.TIMED_OUT"],
+      "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
+      "payloadTemplateFile": "./payload-template.json",
+      "shouldInterpolateStrings": true
+    },
+    {
+      "name": "crawler-aborted-compliance-audit",
+      "description": "Crawler ABORTED is often a compliance STOP (401/403/429). Route to human review, never as failure-to-hide.",
+      "condition": { "actorId": "<EX_DITECTOR_CRAWLER_ACTOR_ID>" },
+      "eventTypes": ["ACTOR.RUN.ABORTED"],
+      "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
+      "payloadTemplateFile": "./payload-template.json",
+      "shouldInterpolateStrings": true
+    }
+  ]
+}

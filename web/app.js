@@ -7,6 +7,25 @@
   // ---- fallback plan (used if fetch fails, e.g. opened via file:// with CSP) ----
   const FALLBACK_PLAN = window.__EX_PLAN__ || null;
 
+  /* Preloader (GT-Mechanik signature: crosshair corners + calibration sweep).
+     It is purely decorative and MUST never gate access to the real Live Compliance Gate,
+     so it self-removes on the earliest of DOMContentLoaded / load / a 1.6s safety timeout —
+     independent of plan.json loading. Offline-safe: no GSAP/network dependency. */
+  function dismissPreloader() {
+    const pre = document.getElementById("preloader");
+    if (!pre || pre.classList.contains("is-done")) return;
+    pre.classList.add("is-done");
+    // remove from the a11y/DOM tree after the fade so it never traps focus or screen readers
+    setTimeout(() => { if (pre.parentNode) pre.parentNode.removeChild(pre); }, 600);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", dismissPreloader, { once: true });
+  } else {
+    dismissPreloader();
+  }
+  window.addEventListener("load", dismissPreloader, { once: true });
+  setTimeout(dismissPreloader, 1600); // safety net: never leave the page covered
+
   /* =========================================================================
    * POLICY GATE — the genuine compliance logic (mirrors A0 / input_schema)
    * =======================================================================*/
@@ -301,6 +320,126 @@
     const scope = document.getElementById("scopeSelect").value;
     const res = runPolicyGate(txt, scope);
     renderResult(res);
+    renderInspector(res);
+    setGateLed(res.accepted);
+  }
+
+  /* =========================================================================
+   * SELF-EXPOSURE INSPECTOR (Blacklight-style privacy inspector, reframed)
+   *
+   * Borrowed pattern — The Markup's Blacklight (https://themarkup.org/blacklight):
+   * Blacklight runs a fixed battery of privacy checks against a site and renders
+   * a plain-language inventory of what that site does to a visitor (trackers,
+   * session recorders, key/fingerprint capture). Here we INVERT it: a fixed
+   * battery of self-exposure checks describing what a third party could TRIVIALLY
+   * discover about the SELF subject, in plain language, with a suggested fix.
+   *
+   * These are TEMPLATE checks (the audit schema), NOT scraped findings. No real
+   * data is fabricated. They only render for scope=self|public_figure — exactly
+   * the dual-use scopes the gate (validateScope / runPolicyGate) permits. For any
+   * other accepted scope (consented/brand/safety_evidence) the panel explains that
+   * the third-party-discovery framing does not apply and stays empty.
+   *
+   * Each check is also tagged with source_module + event_type, mirroring
+   * SpiderFoot's OSINT module/event model (shared/correlation.js, Track A), so the
+   * inspector and the correlation engine speak the same vocabulary.
+   * =======================================================================*/
+
+  const EXPOSURE_CHECKS = [
+    {
+      finding: "姓名 + 城市可被搜索引擎直接关联",
+      severity: "high",
+      module: "sfp_search", event_type: "SELF_NAME_CO_OCCURRENCE",
+      plain: "搜索你的真实姓名时，结果首页可能同时暴露你的所在城市/单位。",
+      fix: "检查并请求移除高排名的旧个人页；对仍需公开的页面统一展示口径。"
+    },
+    {
+      finding: "邮箱哈希出现在多个公开数据集",
+      severity: "high",
+      module: "sfp_emailrep", event_type: "EMAILHASH_CLUSTER",
+      plain: "同一邮箱（以哈希比对，不存明文）跨多个公开来源出现，便于第三方把账号串起来。",
+      fix: "为高敏场景使用独立邮箱；核查哪些公开页面仍在展示主邮箱。"
+    },
+    {
+      finding: "用户名在多平台可枚举到同一人",
+      severity: "med",
+      module: "sfp_accounts", event_type: "USERNAME_ENUM_SELF",
+      plain: "复用的用户名让人能从一个公开账号跳到你的其他公开账号。",
+      fix: "区隔公私用户名；这是 dual-use 枚举，仅对 self / public_figure 开放并经闸门校验。"
+    },
+    {
+      finding: "头像图片在多处公开复用",
+      severity: "med",
+      module: "sfp_imagemeta", event_type: "AVATAR_REUSE",
+      plain: "同一张头像被反向图搜可串联到你的多个公开身份。（仅做图片复用检测，绝不推断性别/性取向。）",
+      fix: "为不同公开场景使用不同头像，降低跨平台关联度。"
+    },
+    {
+      finding: "公开档案残留旧联系方式",
+      severity: "low",
+      module: "sfp_pagecontent", event_type: "STALE_CONTACT_INFO",
+      plain: "过期的电话/地址仍挂在某些公开页面上，可能被用于定位或社工。",
+      fix: "联系站点更新或下线过期信息；保留可引用快照作为已处理记录。"
+    }
+  ];
+
+  // public_figure: the discovery framing is about official/public surface only.
+  const PUBLIC_FIGURE_NOTE =
+    "scope=public_figure：只盘点该公众人物在公共领域的官方/公开表面（官网、新闻、公开声明）。" +
+    "不触碰任何私域行为，不做身份/关系推断。下列为审计 schema 的检查项模板，非抓取结果。";
+  const SELF_NOTE =
+    "以下是「第三方能轻易发现关于你什么」的检查项清单（借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审）。" +
+    "这些是审计 schema 的模板检查项，不是真实抓取结果——真实运行才会按 evidence index 填入带 URL+时间戳+哈希的条目。";
+
+  function renderInspector(res) {
+    const box = document.getElementById("inspector");
+    const list = document.getElementById("exposureList");
+    const note = document.getElementById("inspectorNote");
+    const scopeTag = document.getElementById("inspectorScope");
+    const cluster = document.getElementById("clusterBanner");
+    if (!box || !list) return;
+    list.innerHTML = "";
+    cluster.hidden = true;
+
+    const scope = res.accepted ? res.scope : null;
+    const applies = scope === "self" || scope === "public_figure";
+
+    if (!applies) {
+      box.hidden = true;
+      return;
+    }
+
+    box.hidden = false;
+    scopeTag.textContent = "scope · " + scope;
+    note.textContent = scope === "public_figure" ? PUBLIC_FIGURE_NOTE : SELF_NOTE;
+
+    EXPOSURE_CHECKS.forEach(c => {
+      const li = el("li", "exposure-item sev-" + c.severity);
+
+      const row = el("div", "exposure-row");
+      row.appendChild(el("span", "exposure-finding", esc(c.finding)));
+      const sevLabel = { high: "高暴露", med: "中暴露", low: "低暴露" }[c.severity] || c.severity;
+      row.appendChild(el("span", "exposure-sev", esc(sevLabel)));
+      row.appendChild(el("span", "exposure-module", esc(c.module)));
+      li.appendChild(row);
+
+      li.appendChild(el("p", "exposure-plain", esc(c.plain)));
+
+      const meta = el("div", "exposure-meta");
+      meta.appendChild(el("span", null, "event_type · " + esc(c.event_type)));
+      meta.appendChild(el("span", null, "模板检查项（无真实数据）"));
+      li.appendChild(meta);
+
+      li.appendChild(el("div", "exposure-fix", "<b>建议处置：</b>" + esc(c.fix)));
+      list.appendChild(li);
+    });
+
+    // Correlation hint mirrors SpiderFoot's correlation engine (Track A, shared/correlation.js):
+    // co-occurring events on the same handle / email-hash form a self-exposure cluster.
+    cluster.hidden = false;
+    cluster.textContent =
+      "关联引擎提示：上述事件中若有 ≥2 项共享同一 handle / email-hash，将被聚合为一个「自我暴露簇」" +
+      "（同 SpiderFoot 关联引擎的共现聚类）。真实运行时簇会带置信度与可引用 evidence index。";
   }
 
   function renderArch() {
@@ -484,6 +623,9 @@
       document.getElementById("scopeSelect").value = "";
       const out = document.getElementById("gateResult");
       out.innerHTML = '<div class="gate-empty"><span class="gate-empty-icon" aria-hidden="true">⌖</span><p>选择一个 scope 或输入请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行——没有假数据。</p></div>';
+      const insp = document.getElementById("inspector");
+      if (insp) insp.hidden = true;
+      setGateLed(null);
     });
     document.getElementById("requestInput").addEventListener("keydown", e => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") doRun();
@@ -495,6 +637,114 @@
       toggle.setAttribute("aria-expanded", String(open));
     });
     links.addEventListener("click", e => { if (e.target.tagName === "A") links.classList.remove("open"); });
+  }
+
+  /* =========================================================================
+   * RADIO-DIAL CHANNEL NAV (GT-Mechanik signature, reframed for OSINT/compliance)
+   * Each channel = a section that maps to a scope_type or actor; the central
+   * knob = the compliance gate (LED state reflects last gate verdict). The dial
+   * needle rotates with scroll --progress; clicking a chip tunes to that channel.
+   * =======================================================================*/
+
+  // channel id => section id; frequency is a tasteful "radio" label per channel.
+  const CHANNELS = [
+    { id: "hero",    freq: "00.0", label: "信号" },
+    { id: "gate",    freq: "01.5", label: "闸门" },
+    { id: "arch",    freq: "02.4", label: "流水线" },
+    { id: "cards",   freq: "03.3", label: "技术" },
+    { id: "report",  freq: "04.7", label: "报告" },
+    { id: "closure", freq: "05.9", label: "戒断" },
+    { id: "plan",    freq: "06.6", label: "计划" },
+    { id: "apify",   freq: "07.8", label: "真实运行" }
+  ];
+
+  function setGateLed(accepted) {
+    const knob = document.getElementById("dialKnob");
+    if (!knob) return;
+    knob.classList.remove("blocked");
+    if (accepted === false) knob.classList.add("blocked");
+    knob.setAttribute("aria-label",
+      accepted === true ? "合规闸门：已通过（绿灯）"
+      : accepted === false ? "合规闸门：已拦截（闪烁红灯）"
+      : "合规闸门：待命");
+  }
+
+  function wireDial() {
+    const dial = document.getElementById("dial");
+    const band = document.getElementById("dialBand");
+    const knob = document.getElementById("dialKnob");
+    const readout = document.getElementById("dialReadout");
+    if (!dial || !band) return;
+
+    const chips = CHANNELS.map(ch => {
+      if (!document.getElementById(ch.id)) return null;
+      const chip = el("button", "dial-chip");
+      chip.type = "button";
+      chip.dataset.target = ch.id;
+      chip.innerHTML = '<span class="freq">' + esc(ch.freq) + '</span>' + esc(ch.label);
+      chip.addEventListener("click", () => {
+        const t = document.getElementById(ch.id);
+        if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      band.appendChild(chip);
+      return { ch, chip };
+    }).filter(Boolean);
+
+    const sections = chips.map(c => ({ ...c, sec: document.getElementById(c.ch.id) }));
+
+    function tune() {
+      // total scroll progress drives the knob needle rotation (radio "dial" feel)
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const prog = max > 0 ? window.scrollY / max : 0;
+      if (knob) knob.style.setProperty("--progress", (prog * 270 - 135) + "deg");
+
+      // active channel = section nearest viewport top
+      const mid = window.scrollY + window.innerHeight * 0.35;
+      let active = sections[0];
+      for (const s of sections) {
+        if (s.sec.offsetTop <= mid) active = s;
+      }
+      sections.forEach(s => s.chip.classList.toggle("active", s === active));
+      if (active && readout) {
+        readout.innerHTML = "CH <b>" + esc(active.ch.freq) + "</b>";
+        // keep the active chip in view within the band track
+        const offset = active.chip.offsetLeft - band.parentElement.clientWidth / 2 + active.chip.clientWidth / 2;
+        band.style.transform = "translateX(" + (-Math.max(0, offset)) + "px)";
+      }
+    }
+    window.addEventListener("scroll", tune, { passive: true });
+    window.addEventListener("resize", tune);
+    tune();
+  }
+
+  /* Scroll-driven data-wheel via GSAP ScrollTrigger; graceful offline fallback:
+     if GSAP/ScrollTrigger did not load (file:// or no network), rotate the wheel
+     with a lightweight scroll listener so the signature interaction still reads. */
+  function wireWheel() {
+    const wheel = document.querySelector("[data-wheel]");
+    if (!wheel) return;
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+
+    if (window.gsap && window.ScrollTrigger) {
+      try {
+        window.gsap.registerPlugin(window.ScrollTrigger);
+        window.gsap.to(wheel, {
+          rotation: 360,
+          ease: "none",
+          scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 0.5 }
+        });
+        return;
+      } catch (e) { /* fall through to manual fallback */ }
+    }
+    // Offline fallback: manual rotation tied to scroll position.
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const prog = max > 0 ? window.scrollY / max : 0;
+      wheel.style.transform = "rotate(" + (prog * 360) + "deg)";
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
   }
 
   function boot(plan) {
@@ -509,6 +759,10 @@
     renderPlan();
     wireApify();
     wireNavAndGate();
+    wireDial();
+    // GSAP loads with defer; wait a tick so window.gsap is present before wiring.
+    if (document.readyState === "complete") wireWheel();
+    else window.addEventListener("load", wireWheel);
   }
 
   // Load plan.json; gracefully fall back so the app works even via file:// when fetch is blocked.

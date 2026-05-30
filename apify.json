@@ -1,0 +1,96 @@
+{
+  "_comment": "Root manifest for the Ex-Ditector (Self Footprint Audit Pro) Apify project. This is a descriptive manifest of the multi-actor system + the platform integrations this product wires in. It contains NO credentials and asserts NO live deployment; all usernames/ids/secrets are placeholders supplied by the operator at deploy time.",
+  "name": "ex-ditector",
+  "title": "Ex-Ditector — Self Footprint Audit Pro (compliant)",
+  "description": "Audits a user's OWN public digital footprint, preserves public evidence involving themselves, and reduces compulsive checking (Closure Mode). The opposite of an ex-stalking tool. Every run is gated by shared/scope.js (scope_type: self | consented | public_figure | brand | safety_evidence).",
+  "version": "0.2",
+  "actors": {
+    "policy-gate":   { "path": "actors/policy-gate",   "role": "A0 compliance gate (Standby + metamorph entry)" },
+    "discovery":     { "path": "actors/discovery",     "role": "A2 enumerate public sources for the vetted subject" },
+    "crawler":       { "path": "actors/crawler",       "role": "A3 adaptive crawl + evidence capture, compliance backoff" },
+    "diff-evidence": { "path": "actors/diff-evidence", "role": "A5 change diff + content/html hashing" },
+    "report-builder":{ "path": "actors/report-builder","role": "A6 compliant scoring + Closure Mode report" },
+    "breach-check":  { "path": "actors/breach-check",  "role": "self/public_figure breach-exposure check (scope-gated)" }
+  },
+  "integrations": {
+    "webhooks": {
+      "path": "integrations/webhooks",
+      "capability": "Apify run Webhooks with an OUTPUT-HEALTH receiver",
+      "summary": "Subscribes to ACTOR.RUN.SUCCEEDED/FAILED/TIMED_OUT/ABORTED and verifies that a clean 'SUCCEEDED' actually produced real, compliant output before claiming an audit is ready. Treats all-backoff runs as a COMPLIANCE STOP (human review), empty/malformed output as NOT ready. Implements the 'success != valid output' rule against the product's NO-FAKE-DATA standard.",
+      "entrypoints": {
+        "receiver": "integrations/webhooks/receiver.js",
+        "register": "integrations/webhooks/register-webhooks.js",
+        "tests": "integrations/webhooks/test-output-health.js"
+      },
+      "config": {
+        "webhooks": "integrations/webhooks/webhooks.config.json",
+        "payload_template": "integrations/webhooks/payload-template.json"
+      },
+      "env": {
+        "APIFY_TOKEN": "read-only; lets the receiver fetch dataset/OUTPUT to judge health. Without it, health = UNKNOWN (never guessed up).",
+        "APIFY_WEBHOOK_SECRET": "URL secret token; receiver verifies path /apify-webhook/<secret>.",
+        "APIFY_WEBHOOK_HMAC_SECRET": "optional HMAC-SHA256 secret over the raw body (defense in depth)."
+      },
+      "docs": "docs/apify/webhooks.md",
+      "deployed": false
+    },
+    "schedules": {
+      "path": "integrations/schedules",
+      "capability": "Apify Schedules (cron) for PACED, anti-compulsion re-audits",
+      "summary": "Recurring re-audits driven by a fail-closed policy engine (cadence-policy.js) instead of a person hitting refresh. Embodies Closure Mode in cron: there is NO high-frequency option, and a higher distress_risk_score yields a SLOWER cadence, never faster. The effective interval is always the slower of (requested cadence, distress floor). Scheduling is restricted to scope=self|public_figure (a dual-use chokepoint, fail-closed); consented/brand/safety_evidence cannot be auto-scheduled. cron is always re-derived from policy, never trusted from config (Scrapy item-pipeline drop pattern). Schedule names carry only a short non-identifying subject_token (HIBP k-anonymity stance), never an email/handle/name.",
+      "entrypoints": {
+        "policy": "integrations/schedules/cadence-policy.js",
+        "register": "integrations/schedules/register-schedules.js",
+        "tests": "integrations/schedules/test-schedules.js"
+      },
+      "config": {
+        "schedules": "integrations/schedules/schedules.config.json"
+      },
+      "env": {
+        "APIFY_TOKEN": "write token for POST /v2/schedules. Without it, register-schedules.js dry-runs and prints the exact body (never live)."
+      },
+      "platform_constraints": {
+        "cron_fields": 5,
+        "min_interval_minutes_platform": 1,
+        "product_min_interval": "daily-or-slower (anti-compulsion)",
+        "max_actors_per_schedule": 10,
+        "max_tasks_per_schedule": 10
+      },
+      "schedulable_scopes": ["self", "public_figure"],
+      "docs": "docs/apify/schedules.md",
+      "deployed": false
+    },
+    "exports": {
+      "path": "integrations/exports",
+      "capability": "Apify Dataset Views + marking-scoped Export API",
+      "summary": "Governs how audit data LEAVES the platform. Declares native dataset views (transformation+display in .actor/actor.json) and a real GET /v2/datasets/{id}/items export client (format/fields/omit/clean/flatten), both bound to a STIX/MISP-style distribution marking. Fail-closed redaction: raw locators (url/html_key/screenshot_key/note/subject_label) NEVER leave TLP:RED; shareable bands keep only content/html HASHES, coarse status, change flags and timestamps. The export fields/omit are DERIVED from policy, never trusted from the caller; an unknown marking is refused, not widened. Closure-Mode friendly: a shared summary proves THAT something changed without a clickable destination.",
+      "entrypoints": {
+        "policy": "integrations/exports/redaction-policy.js",
+        "export_client": "integrations/exports/export-client.js",
+        "sync_views": "integrations/exports/sync-dataset-views.js",
+        "tests": "integrations/exports/test-exports.js"
+      },
+      "config": {
+        "dataset_views": "integrations/exports/dataset-views.config.json"
+      },
+      "env": {
+        "APIFY_TOKEN": "read token for GET /v2/datasets/{id}/items. Without it, export-client.js DRY-RUNS and prints the exact request URL it would send (never live, never fabricated rows)."
+      },
+      "markings": ["TLP:RED", "TLP:AMBER", "TLP:GREEN"],
+      "never_share_below_red": ["url", "html_key", "screenshot_key", "note", "subject_label", "target_urls", "authorization_evidence_url", "subject_token", "email", "handle"],
+      "platform_constraints": {
+        "export_formats": ["json", "jsonl", "csv", "xlsx", "xml", "rss", "html"],
+        "clean_param": "clean=1 == skipHidden + skipEmpty",
+        "tabular_limits": "csv/xlsx/html capped at 2000 columns, column names <= 200 chars"
+      },
+      "docs": "docs/apify/exports.md",
+      "deployed": false
+    }
+  },
+  "compliance": {
+    "scope_gate": "shared/scope.js",
+    "allowed_scopes": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+    "no_fake_data": true,
+    "notes": "No private-individual tracking, no romance/intimacy/gender inference, no private-social scraping, no login/captcha/rate-limit evasion. Dual-use enumeration only for scope=self|public_figure via validateScope."
+  }
+}

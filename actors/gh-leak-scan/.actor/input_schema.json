@@ -1,0 +1,66 @@
+{
+  "title": "Ex-Ditector Public GitHub Leak Scan Input",
+  "description": "Audits the SELF subject's OWN public GitHub footprint for self-committed secrets. Prohibited scopes are absent from the enum: account/repository enumeration is a dual-use technique, so only self/public_figure are accepted (consented/brand/safety_evidence intentionally cannot run this actor). This actor reads ONLY public GitHub data via the documented REST API and never bypasses authentication.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Dual-use account/repository scanning is permitted ONLY for your own footprint (self) or a genuine public figure acting publicly. consented / brand / safety_evidence are intentionally not offered here.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (your own GitHub account)", "Public figure"],
+      "default": "self"
+    },
+    "github_handle": {
+      "title": "Your GitHub username (handle)",
+      "type": "string",
+      "description": "The GitHub login you OWN (or a public figure's publicly-listed handle). Only this account's PUBLIC profile, repos, and gists are scanned.",
+      "editor": "textfield"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name). Used only for reporting.",
+      "editor": "textfield"
+    },
+    "max_repos": {
+      "title": "Max public repos to scan",
+      "type": "integer",
+      "description": "Upper bound on how many of the account's most-recently-pushed PUBLIC repos to scan. Keeps the run bounded and rate-limit friendly.",
+      "editor": "number",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 100
+    },
+    "max_files_per_repo": {
+      "title": "Max candidate files per repo",
+      "type": "integer",
+      "description": "Upper bound on candidate text/config files inspected per repo. Only small, text-like files at the repo root tree are considered.",
+      "editor": "number",
+      "default": 25,
+      "minimum": 1,
+      "maximum": 200
+    },
+    "include_gists": {
+      "title": "Also scan public gists",
+      "type": "boolean",
+      "description": "If true, the account's PUBLIC gists are scanned in addition to repositories.",
+      "editor": "checkbox",
+      "default": true
+    }
+  },
+  "required": ["scope_type", "github_handle"]
+}

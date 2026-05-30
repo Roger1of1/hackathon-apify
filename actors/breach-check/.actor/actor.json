@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-breach-check",
+  "title": "Ex-Ditector AUX — Breach Exposure Check (k-anonymity)",
+  "description": "Auxiliary actor. Checks whether the SELF subject's OWN candidate passwords appear in the Have I Been Pwned 'Pwned Passwords' corpus using k-anonymity (only a 5-char SHA-1 prefix ever leaves the machine; Add-Padding enabled), and emits privacy-preserving email-hash probes for cross-source correlation. Scope-gated to self/public_figure ONLY via shared/scope.js. Optionally performs an authenticated own-account breach lookup when HIBP_API_KEY is set and scope=self. Emits typed module-events (event_type/source_module/data/confidence) for the SpiderFoot-style correlation engine. NO fake data: a missing key means no account lookup, never a fabricated hit.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "./Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Breach module-events",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 1024
+}

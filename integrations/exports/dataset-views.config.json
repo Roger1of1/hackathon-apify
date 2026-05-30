@@ -1,0 +1,131 @@
+{
+  "_comment": "Declarative Apify DATASET VIEWS for the Ex-Ditector evidence/capture datasets. A 'view' (transformation + display) is the post-extraction PROJECTION an actor exposes on its Console output tab and over the API (https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema). Each view here carries a STIX/MISP-style distribution `marking`; sync-dataset-views.js merges the `apify_view` block into the matching actor's .actor/actor.json storages.dataset.views, and export-client.js uses `marking` to redact API exports. NO credentials, NO deployment claim. Raw locators (url/*_key/note) appear ONLY in the TLP:RED operator views.",
+
+  "_reference_architectures": {
+    "opencti_misp_stix": "Each view = a TAXII-collection-like filtered projection bound to a marking-definition; the shareable views drop raw indicators and keep only observable hashes, mirroring MISP-STIX indicator/observable fingerprinting and OpenCTI data segregation by marking.",
+    "apify_rag_browser_wcc": "Each view mirrors how Website Content Crawler / RAG Web Browser publish a thin, stable, typed output projection (url,title,markdown,crawled_at) for downstream consumers instead of the raw DOM/record."
+  },
+
+  "datasets": [
+    {
+      "actor": "actors/crawler",
+      "title": "Crawler captures + backoff records",
+      "views": [
+        {
+          "name": "operator-evidence-red",
+          "marking": "TLP:RED",
+          "audience": "audit subject / operator only",
+          "apify_view": {
+            "title": "Evidence (operator, full)",
+            "description": "TLP:RED — full capture rows including url + storage keys. Operator-only.",
+            "transformation": {
+              "fields": ["record_type", "case_id", "url", "content_sha256", "html_sha256", "html_key", "screenshot_key", "status_code", "captured_at"]
+            },
+            "display": {
+              "component": "table",
+              "properties": {
+                "record_type": { "label": "Type", "format": "text" },
+                "url": { "label": "Public URL", "format": "link" },
+                "content_sha256": { "label": "Content sha256", "format": "text" },
+                "html_sha256": { "label": "HTML sha256", "format": "text" },
+                "status_code": { "label": "HTTP", "format": "number" },
+                "captured_at": { "label": "Captured", "format": "date" }
+              }
+            }
+          }
+        },
+        {
+          "name": "shareable-proof-green",
+          "marking": "TLP:GREEN",
+          "audience": "third party / shared link / Make-n8n-Slack",
+          "apify_view": {
+            "title": "Proof-of-change (shareable, redacted)",
+            "description": "TLP:GREEN — content hash + status + time only. NO url, NO storage keys. Proves a public page changed without leaking where.",
+            "transformation": {
+              "fields": ["record_type", "content_sha256", "status_code", "captured_at"],
+              "omit": ["url", "html_key", "screenshot_key"]
+            },
+            "display": {
+              "component": "table",
+              "properties": {
+                "content_sha256": { "label": "Content sha256", "format": "text" },
+                "status_code": { "label": "HTTP", "format": "number" },
+                "captured_at": { "label": "Captured", "format": "date" }
+              }
+            }
+          }
+        },
+        {
+          "name": "compliance-stops-amber",
+          "marking": "TLP:AMBER",
+          "audience": "human reviewer",
+          "apify_view": {
+            "title": "Compliance stops (backoff for human review)",
+            "description": "TLP:AMBER — rows where the crawler hit 401/403/429 and STOPPED instead of evading. Url/note are not shown at this marking.",
+            "transformation": {
+              "fields": ["record_type", "case_id", "status_code", "flagged_at"],
+              "omit": ["url", "note"]
+            },
+            "display": {
+              "component": "table",
+              "properties": {
+                "case_id": { "label": "Case", "format": "text" },
+                "status_code": { "label": "Blocked HTTP", "format": "number" },
+                "flagged_at": { "label": "Flagged", "format": "date" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "actor": "actors/diff-evidence",
+      "title": "Evidence index (immutable change log)",
+      "views": [
+        {
+          "name": "evidence-chain-red",
+          "marking": "TLP:RED",
+          "audience": "audit subject / operator only",
+          "apify_view": {
+            "title": "Evidence chain (operator, full)",
+            "description": "TLP:RED — immutable evidence-index entries with url + keys. The legal record.",
+            "transformation": {
+              "fields": ["record_type", "case_id", "url", "timestamp", "content_sha256", "html_sha256", "screenshot_key", "html_key", "change", "immutable"]
+            },
+            "display": {
+              "component": "table",
+              "properties": {
+                "url": { "label": "Public URL", "format": "link" },
+                "change": { "label": "Change", "format": "text" },
+                "content_sha256": { "label": "Content sha256", "format": "text" },
+                "timestamp": { "label": "Observed", "format": "date" },
+                "immutable": { "label": "Immutable", "format": "boolean" }
+              }
+            }
+          }
+        },
+        {
+          "name": "change-summary-green",
+          "marking": "TLP:GREEN",
+          "audience": "third party / shared link",
+          "apify_view": {
+            "title": "Change summary (shareable, redacted)",
+            "description": "TLP:GREEN — change flag + content hash + time. Closure-Mode friendly: shows THAT something changed, not a clickable destination.",
+            "transformation": {
+              "fields": ["record_type", "timestamp", "content_sha256", "change", "immutable"],
+              "omit": ["url", "html_key", "screenshot_key"]
+            },
+            "display": {
+              "component": "table",
+              "properties": {
+                "change": { "label": "Change", "format": "text" },
+                "content_sha256": { "label": "Content sha256", "format": "text" },
+                "timestamp": { "label": "Observed", "format": "date" }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
