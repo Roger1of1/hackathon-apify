@@ -20,7 +20,7 @@
       "actions": [
         {
           "type": "RUN_ACTOR_TASK",
-          "actorTaskId": "<EX_DITECTOR_SELF_AUDIT_TASK_ID>"
+          "actorTaskId": "<MIRRORTRACE_SELF_AUDIT_TASK_ID>"
         }
       ]
     },
@@ -36,7 +36,7 @@
       "actions": [
         {
           "type": "RUN_ACTOR_TASK",
-          "actorTaskId": "<EX_DITECTOR_PUBLIC_FIGURE_TASK_ID>"
+          "actorTaskId": "<MIRRORTRACE_PUBLIC_FIGURE_TASK_ID>"
         }
       ]
     }

@@ -1,407 +1,313 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MirrorTrace 合规版 · Self Footprint Audit Pro</title>
-  <meta name="description" content="审计你自己的公开数字足迹：看清第三方能轻易发现关于你的什么，并知道下一步怎么处理。合规 OSINT，不追踪任何私人个体。" />
+  <title>MirrorTrace · Self Footprint Audit</title>
+  <meta name="description" content="Map your own public digital footprint, inspect exposure links, and turn findings into practical remediation." />
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 </head>
 <body>
-  <a class="skip-link" href="#main">跳到主内容</a>
-
+  <a class="skip-link" href="#main">Skip to main content</a>
   <header class="nav" id="nav">
+    <div class="scroll-track" aria-hidden="true"><span id="scrollProgressBar"></span></div>
     <div class="nav-inner">
-      <a class="brand" href="#top" aria-label="返回顶部">
+      <a class="brand" href="#top" aria-label="Back to top">
         <span class="brand-mark" aria-hidden="true">◎</span>
-        <span class="brand-text">MirrorTrace <em>合规版</em></span>
+        <span class="brand-text">MirrorTrace <em>Self Audit</em></span>
       </a>
-      <nav class="nav-links" aria-label="主导航">
-        <a href="#brief">综合简要</a>
-        <a href="#gate">合规闸门</a>
-        <a href="#report">足迹报告</a>
-        <a href="#how">工作原理</a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#gate">Audit</a>
+        <a href="#report">Map</a>
+        <a href="#modules">Inspector</a>
+        <a href="#workspace">Workspace</a>
       </nav>
-      <button class="nav-toggle" id="navToggle" aria-label="切换菜单" aria-expanded="false">☰</button>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
     </div>
   </header>
 
   <main id="main">
-    <!-- ===================== HERO ===================== -->
     <section class="hero" id="top">
-      <div class="hero-inner">
-        <p class="eyebrow">合规 OSINT · Apify 驱动</p>
-        <h1 id="heroName">看清网络上<span class="accent">关于你自己</span>的公开足迹</h1>
-        <p class="hero-one" id="heroOne"></p>
-
-        <div class="hero-cta">
-          <a class="btn btn-primary" href="#gate">开始一次合规自审 →</a>
-          <a class="btn btn-ghost" href="#how">它是怎么工作的</a>
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Public footprint intelligence · Powered by Apify</p>
+          <h1 id="heroName">See your <span class="accent">public footprint</span> as a connected map.</h1>
+          <p class="hero-one" id="heroOne"></p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#gate">Start self-audit →</a>
+            <a class="btn btn-ghost" href="#report">Preview map</a>
+          </div>
         </div>
+        <div class="hero-signal" aria-label="MirrorTrace feature summary">
+          <span class="signal-label">MirrorTrace / 01</span>
+          <strong>Trace less.<br />Resolve more.</strong>
+          <span class="signal-foot">Public sources · Correlation · Remediation</span>
+        </div>
+      </div>
 
-        <!-- inversion / red-line statement, restated plainly as a trust note -->
-        <div class="trust-note" role="note" aria-label="合规声明">
+      <div class="feature-rail" aria-label="Core capabilities">
+        <div class="feature-tile from-left"><span>01</span><b>Scope-aware scan</b><small>Route public-source audits through the policy gate.</small></div>
+        <div class="feature-tile"><span>02</span><b>Exposure graph</b><small>See correlated sources, shared identifiers, and severity.</small></div>
+        <div class="feature-tile from-right"><span>03</span><b>Action queue</b><small>Turn findings into opt-outs, evidence, and cleanup.</small></div>
+      </div>
+
+      <details class="trust-drawer">
+        <summary>Built for self-protection <span>View operating boundary</span></summary>
+        <div class="trust-note" role="note" aria-label="Compliance statement">
           <h2 id="invHead"></h2>
           <p id="invBody"></p>
           <ul id="invPoints" class="redlines"></ul>
         </div>
-      </div>
+      </details>
     </section>
 
-    <!-- ===================== COMPREHENSIVE BRIEF (结论 first) =====================
-         TOP, BRIGHT, 撞色: an at-a-glance summary derived from the loaded report
-         (data/example-report.json — a clearly-labelled SYNTHETIC fixture / real
-         detector→grade pipeline example, never a live scrape of a real person).
-         Big A–F grade + headline numbers + top 2–3 highest-severity risks. -->
     <section class="brief-zone" id="brief">
-      <div class="brief-card" id="briefCard" aria-live="polite">
-        <!-- populated by renderBrief(); honest empty state until a report loads -->
-      </div>
+      <div class="brief-card" id="briefCard" aria-live="polite"></div>
     </section>
 
-    <!-- ===================== LIVE COMPLIANCE GATE ===================== -->
-    <section class="section" id="gate">
+    <section class="section compact-section" id="gate">
       <div class="section-head">
-        <span class="step-tag">第 1 步</span>
-        <h2>合规闸门 · 它只会审计合法范围</h2>
-        <p class="lead">这是一个在你浏览器里<strong>真实运行</strong>的策略闸门。它把每个请求归入 5 个合法范围之一，或当场拒绝（并给出原因 + 合法替代）。没有假数据：拒绝逻辑是真的。</p>
+        <span class="step-tag">Audit / 01</span>
+        <h2>Choose your audit scope.</h2>
+        <p class="lead">Start with a permitted public-source request. The browser policy gate routes the workflow before collection begins.</p>
       </div>
-
       <div class="gate-grid">
-        <!-- LEFT: the single clear input + ONE primary action (HIBP-style) -->
         <div class="gate-panel">
-          <label class="field-label" for="scopeSelect">范围 scope_type（5 个合法值）</label>
+          <label class="field-label" for="scopeSelect">Audit scope</label>
           <select id="scopeSelect" class="select">
-            <option value="">— 选择一个合法范围（可选）—</option>
+            <option value="">Choose a scope or describe your request</option>
           </select>
-
-          <label class="field-label" for="requestInput">或直接描述你想做什么</label>
-          <textarea id="requestInput" class="textarea" rows="3" placeholder="例如：搜索我自己的姓名在公开网页上的出现情况，评估我的暴露度"></textarea>
-
+          <label class="field-label" for="requestInput">Request</label>
+          <textarea id="requestInput" class="textarea" rows="3" placeholder="Example: search public pages for my own name and assess my exposure"></textarea>
           <div class="gate-actions">
-            <button id="runGate" class="btn btn-primary btn-lg">运行合规闸门</button>
-            <button id="clearGate" class="btn btn-ghost">清空</button>
+            <button id="runGate" class="btn btn-primary btn-lg">Run policy gate</button>
+            <button id="clearGate" class="btn btn-ghost">Clear</button>
           </div>
-
-          <p class="preset-label">或试一个示例：</p>
-          <div class="preset-row" id="presetRow" aria-label="示例请求"></div>
+          <p class="preset-label">Examples</p>
+          <div class="preset-row" id="presetRow" aria-label="Example requests"></div>
         </div>
-
-        <!-- RIGHT: verdict result, strong hierarchy -->
         <div class="gate-result" id="gateResult" aria-live="polite">
           <div class="gate-empty">
             <span class="gate-empty-icon" aria-hidden="true">◎</span>
-            <p>选择一个范围或描述你的请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行，没有假数据。</p>
+            <p>Your verdict and routed scope will appear here.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ===================== BANDED SECTION DIVIDER (light → dark transition) =====================
-         A purposeful, guided transition: light "结论/输入" zone above gives way to
-         the deep-ink "现场/exposure scene" below. Scroll-linked gradient driven by
-         a CSS custom property set from an IntersectionObserver/scroll progress in
-         app.js; under prefers-reduced-motion it renders as a plain static dark band. -->
     <div class="zone-divider" id="zoneDivider" aria-hidden="true">
-      <span class="zone-divider-label">↓ 进入暴露现场 · ENTERING THE EXPOSURE SCENE</span>
+      <span class="zone-divider-label">↓ Exposure map</span>
     </div>
 
-    <!-- ===================== SELF-EXPOSURE REPORT (Blacklight-style · DARK ZONE) ===================== -->
     <section class="section dark-zone" id="report">
       <div class="section-head">
-        <span class="step-tag">第 2 步</span>
-        <h2>自我足迹报告 · 我们会检查什么</h2>
-        <p class="lead">报告按类别列出第三方能轻易发现关于你的东西——借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审。<strong>未加载报告时</strong>这里是<strong>检查项目录（模板）</strong>，说明每类「会查什么 / 为什么重要」；<strong>加载真实产出报告后</strong>，同样的类别会被它的<strong>真实检测器发现</strong>驱动（带来源 URL、置信度、可移植 STIX 证据）。每条数据都标注它来自合成 fixture 还是真实流水线产出，绝不编造。</p>
+        <span class="step-tag">Map / 02</span>
+        <h2>Read the exposure graph first.</h2>
+        <p class="lead">Sources orbit your profile. Severity, shared identifiers, and remediation stay visible without turning the report into a wall of text.</p>
       </div>
 
-      <!-- ===== PRIVACY GUARANTEE — browser-only, ephemeral, zero server storage =====
-           Locked decision: a user's exposure report/graph lives ONLY in their
-           browser, purged on close; our backend stores NO user exposure data.
-           Surfaced plainly next to the report so it's unmistakable. -->
-      <div class="privacy-guarantee" id="privacyGuarantee" role="note" aria-label="隐私保证">
+      <div class="privacy-guarantee" id="privacyGuarantee" role="note" aria-label="Privacy guarantee">
         <span class="pg-mark" aria-hidden="true">⛬</span>
-        <p><b>此报告只存在于你的浏览器</b>，关闭标签页即清除——我们的服务器<b>不保存</b>你的任何暴露数据或关联图谱。
-        不写入 localStorage、不上传任何发现，绝不成为「第二个数据泄露站」。
-        代码：<code>shared/privacy/storage-policy.js</code>（仅允许 memory / sessionStorage，server 为 FORBIDDEN）。</p>
+        <p><b>Session-local report.</b> Your graph stays in this browser session and clears on purge. MirrorTrace does not upload your findings.</p>
       </div>
 
-      <!-- ===== EXPOSURE MAP — the #1 deliverable (Maltego/SpiderFoot link-graph) =====
-           A calm, deterministic RADIAL graph: center = "you", source nodes placed
-           in severity RINGS (red inner → yellow → green). Node color = severity
-           tier, node size = how much that source holds. Edges: center→source, plus
-           dashed cross-source edges where two sources share the SAME identifier.
-           Built dependency-free in-browser from the loaded report via the
-           buildExposureGraph contract (shared/graph). A "切换查看" toggle keeps the
-           plain grouped-findings LIST as the accessible floor. -->
       <div class="map-wrap" id="exposureMapWrap">
         <div class="map-head">
           <div class="map-head-text">
-            <h3>暴露地图 · Exposure Map</h3>
-            <p class="map-sub" id="mapSub">中心是<b>你</b>，四周每个节点是一个<b>暴露你信息的来源</b>。颜色＝敏感度（红＝高危，黄＝中，绿＝低），大小＝该来源掌握你多少信息；虚线＝两个来源共享同一标识（同邮箱/用户名），可被关联。</p>
+            <h3>Exposure Map</h3>
+            <p class="map-sub" id="mapSub">Each node is a public source. Color shows sensitivity, size shows finding volume, and dashed links reveal shared identifiers.</p>
           </div>
-          <div class="view-toggle" role="tablist" aria-label="切换查看：地图或列表">
-            <button id="viewMapBtn" class="vt-btn active" role="tab" aria-selected="true" aria-controls="exposureMapWrap">地图</button>
-            <button id="viewListBtn" class="vt-btn" role="tab" aria-selected="false" aria-controls="findingsGroups">列表</button>
+          <div class="view-toggle" role="tablist" aria-label="Switch view: map or list">
+            <button id="viewMapBtn" class="vt-btn active" role="tab" aria-selected="true" aria-controls="exposureMapWrap">Map</button>
+            <button id="viewListBtn" class="vt-btn" role="tab" aria-selected="false" aria-controls="findingsGroups">List</button>
           </div>
         </div>
-
-        <!-- map data-source controls. The correlation-demo is a low-sensitivity
-             TEMPLATE map over a clearly-labelled synthetic fixture (tier 'none',
-             no sign-in). "构建完整关联图谱" is the SENSITIVE action (real PII pull
-             + correlate) and triggers the identity gate. -->
         <div class="map-controls">
-          <button id="loadGraphDemoBtn" class="btn btn-ghost btn-tiny" type="button">查看关联示例（合成 fixture，无需登录）</button>
-          <button id="loadExampleMapBtn" class="btn btn-ghost btn-tiny" type="button">用示例报告</button>
-          <button id="buildFullGraphBtn" class="btn btn-ghost btn-tiny" type="button">构建完整关联图谱（真实拉取 · 需登录）</button>
+          <button id="loadGraphDemoBtn" class="btn btn-ghost btn-tiny" type="button">Correlation example</button>
+          <button id="loadExampleMapBtn" class="btn btn-ghost btn-tiny" type="button">Example report</button>
+          <button id="buildFullGraphBtn" class="btn btn-ghost btn-tiny" type="button">Build live graph</button>
         </div>
-
-        <!-- provenance / source-of-truth flag for the map data -->
         <div class="map-prov" id="mapProv"></div>
-
         <div class="map-stage">
-          <!-- the SVG radial graph; populated in JS. Keyboard-focusable nodes. -->
           <div class="map-svg-wrap">
             <svg id="exposureMapSvg" class="map-svg" viewBox="0 0 720 600" role="group"
-                 aria-label="暴露地图：以你为中心的来源关联图" preserveAspectRatio="xMidYMid meet"></svg>
+                 aria-label="Exposure Map: source correlation graph centered on you" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
-
-          <!-- detail panel: filled when a node is clicked / Entered -->
           <aside class="map-detail" id="mapDetail" aria-live="polite">
-            <p class="map-detail-empty" id="mapDetailEmpty">点击（或用 Tab 聚焦后按 Enter）任意来源节点，查看它对你的<b>具体暴露发现</b>、为什么重要、以及建议处置。</p>
+            <p class="map-detail-empty" id="mapDetailEmpty">Select a source node to inspect findings, correlations, and suggested actions.</p>
           </aside>
         </div>
-
-        <!-- self-explaining legend so the map needs no external doc -->
-        <div class="map-legend" id="mapLegend" aria-hidden="false"></div>
-
-        <p class="map-foot">
-          借鉴：Maltego 实体-链路图（中心实体 + 辐射来源 + 点选展开）· SpiderFoot 关联引擎（共享标识＝关联边，复用 <code>shared/enrich/cluster-keys.js</code>）· The Markup Blacklight（敏感度一眼可读）。
-          模型：<code>shared/graph/build-exposure-graph.js</code>（与本图同契约）。
-        </p>
+        <div class="map-legend" id="mapLegend"></div>
       </div>
 
-      <!-- ===== PLAIN HERO GRADE (Mozilla Observatory / SecurityHeaders A–F) =====
-           A single, plain letter grade for "how exposed is this self subject".
-           NO gauge, dial, spinner, or animation — just the letter + one plain line,
-           exactly like SecurityHeaders.com / Mozilla HTTP Observatory render their
-           grade. Filled ONLY from a real produced report JSON (shared grade module
-           output). With no real scan it shows an honest "not scanned · no grade"
-           state and NEVER defaults an unscanned subject to A. -->
-      <div class="grade-card" id="exposureGrade" aria-live="polite"></div>
-
-      <!-- top-of-report exposure summary (only meaningful after a self/public_figure accept) -->
-      <div class="report-banner" id="reportGateBanner">
-        先在<a href="#gate">第 1 步</a>用 <code>self</code> 或 <code>public_figure</code> 范围通过闸门，下面的检查项就会按你的范围呈现。当前显示的是完整检查项目录。
+      <div class="report-glance">
+        <div class="grade-card" id="exposureGrade" aria-live="polite"></div>
+        <div class="report-status">
+          <div class="report-banner" id="reportGateBanner">Run the Audit Gate to tailor this report.</div>
+          <div class="report-provenance" id="reportProvenance" hidden></div>
+        </div>
       </div>
 
-      <!-- audit COVERAGE summary (Blacklight-style top-line: what the battery
-           checks, before the per-category detail). Counts derive purely from the
-           real check catalog below — this is the audit SCHEMA, not findings. -->
-      <div class="coverage" id="coverageSummary" aria-label="自审覆盖范围概览"></div>
+      <div class="inspector-stack" id="modules">
+        <p class="inspector-kicker">Inspector modules</p>
+        <details class="inspector-drawer">
+          <summary><span>Findings and correlation</span><small>Coverage · grouped detectors · cluster keys</small></summary>
+          <div class="inspector-content">
+            <div class="coverage" id="coverageSummary" aria-label="Self-audit coverage summary"></div>
+            <div class="findings" id="findingsGroups"></div>
+            <div class="cluster-card" id="clusterCard">
+              <div class="cluster-head"><h3>Correlation View</h3><span class="mono-chip">cluster</span></div>
+              <p class="cluster-body" id="clusterBody"></p>
+              <ul class="cluster-keys" id="clusterKeys"></ul>
+            </div>
+          </div>
+        </details>
 
-      <!-- provenance banner for any loaded report: makes "SYNTHETIC fixture /
-           REAL pipeline output, no fabrication" unmistakable next to the data. -->
-      <div class="report-provenance" id="reportProvenance" hidden></div>
+        <details class="inspector-drawer">
+          <summary><span>Privacy mechanism</span><small>Local SHA-1 range split demo</small></summary>
+          <div class="inspector-content">
+            <div class="kanon" id="kanonCard">
+              <span class="kanon-tag">k-anonymity · local demo</span>
+              <p class="kanon-intro">Enter your own credential or email. The browser hashes it locally and reveals the 5-character range prefix separately from the suffix retained on your device.</p>
+              <p class="kanon-offline"><b>Mechanism preview:</b> this demonstrates the privacy split without querying a breach corpus.</p>
+              <div class="kanon-field">
+                <label class="field-label" for="kanonInput">Value processed locally</label>
+                <input id="kanonInput" class="input" type="text" autocomplete="off" spellcheck="false" placeholder="you@example.com" />
+              </div>
+              <div class="kanon-actions">
+                <button class="btn btn-ghost" id="kanonRun">Compute prefix split</button>
+                <button class="btn btn-ghost btn-tiny" id="kanonClear">Clear</button>
+              </div>
+              <div class="kanon-out" id="kanonOut" aria-live="polite">
+                <p class="kanon-hint">The prefix and suffix split will appear here.</p>
+              </div>
+            </div>
+          </div>
+        </details>
 
-      <!-- grouped finding categories. With NO report loaded these are the
-           template CHECK CATALOG (what we look for). When a real produced report
-           loads, the SAME groups are driven by its REAL detector findings. -->
-      <div class="findings" id="findingsGroups"></div>
-
-      <!-- correlation / cluster view (SpiderFoot correlation engine) -->
-      <div class="cluster-card" id="clusterCard">
-        <div class="cluster-head">
-          <h3>关联视图 · 自我暴露簇</h3>
-          <span class="mono-chip">correlation</span>
-        </div>
-        <p class="cluster-body" id="clusterBody"></p>
-        <ul class="cluster-keys" id="clusterKeys"></ul>
+        <details class="inspector-drawer">
+          <summary><span>Evidence and remediation</span><small>Evidence index · suggested actions · broker opt-out</small></summary>
+          <div class="inspector-content">
+            <div class="ev-card">
+              <h3 id="evHead">Evidence index</h3>
+              <p class="muted" id="evIntro">Each finding is represented as a citable evidence row.</p>
+              <table class="ev-table" id="evTable">
+                <thead id="evHeadRow"><tr><th>Field</th><th>Description</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="actions-card" id="actionsCard">
+              <div class="actions-head"><span class="optout-step">Action queue</span><h3>Suggested actions</h3></div>
+              <p class="actions-intro" id="actionsIntro"></p>
+              <ol class="action-list" id="actionList"></ol>
+              <p class="actions-foot" id="actionsFoot"></p>
+            </div>
+            <div class="optout-card" id="optoutCard">
+              <div class="optout-head"><span class="optout-step">Remediation</span><h3>Data-broker opt-out</h3></div>
+              <p class="optout-intro">Use the public broker registry to prepare self-owned removal requests.</p>
+              <div class="optout-reg-head">
+                <span class="field-label" style="margin:0;">Broker registry</span>
+                <span class="optout-template-flag">Public endpoints</span>
+              </div>
+              <table class="optout-table" id="optoutTable">
+                <thead><tr><th>Data broker</th><th>Method</th><th>Public endpoint</th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <p class="optout-honesty">Live self-audit results determine which removal requests enter the queue.</p>
+              <ol class="optout-flow" id="optoutFlow"></ol>
+              <p class="optout-foot" id="optoutFoot"></p>
+            </div>
+          </div>
+        </details>
       </div>
 
-      <!-- LIVE k-anonymity breach-check mechanic (HIBP Pwned Passwords range API) -->
-      <div class="kanon" id="kanonCard">
-        <span class="kanon-tag">k-匿名 · live demo</span>
-        <p class="kanon-intro">
-          泄露检查的隐私机制：你输入<b>自己</b>的口令或邮箱，浏览器在<b>本地</b>用 SHA-1 哈希，
-          只把前 5 位前缀（range 前缀）发往泄露库，剩下 35 位后缀<b>永不离开你的设备</b>。
-          这正是 Have I Been Pwned 的 Pwned Passwords range API（Troy Hunt）所用的模型。
-        </p>
-        <p class="kanon-offline">
-          <b>离线演示：</b>本页不查询任何真实泄露库，因此<b>不会、也永不</b>给出泄露命中或次数。
-          这里只证明「前缀发送 / 后缀本地」这一隐私拆分机制本身，不是泄露结果。
-        </p>
-        <div class="kanon-field">
-          <label class="field-label" for="kanonInput">你自己的口令或邮箱（只在本地处理）</label>
-          <input id="kanonInput" class="input" type="text" autocomplete="off" spellcheck="false"
-                 placeholder="例如：你常用的一个口令，或 you@example.com" />
-        </div>
-        <div class="kanon-actions">
-          <button class="btn btn-ghost" id="kanonRun">本地计算 SHA-1 前缀拆分</button>
-          <button class="btn btn-ghost btn-tiny" id="kanonClear">清空</button>
-        </div>
-        <div class="kanon-out" id="kanonOut" aria-live="polite">
-          <p class="kanon-hint">输入任意字符串后点击，演示「会发送的 5 位前缀」与「留在本地的 35 位后缀」。</p>
-        </div>
-        <p class="kanon-foot">
-          机制与 <b>shared/aux/kanon.js</b>（actors/breach-check 的隐私阻塞点）共用同一套前缀/后缀拆分契约。
-          引用：Troy Hunt，Pwned Passwords k-Anonymity range query。
-        </p>
-      </div>
-
-      <!-- evidence index schema -->
-      <div class="ev-card">
-        <h3 id="evHead">每条证据的字段 · evidence index</h3>
-        <p class="muted" id="evIntro">真实运行时，每个发现都会保全为可引用的一行：</p>
-        <table class="ev-table" id="evTable">
-          <thead id="evHeadRow"><tr><th>字段</th><th>说明</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <!-- SUGGESTED ACTIONS — the plain "now what do I do" checklist, derived
-           from the loaded report's REAL findings (one prioritised remediation per
-           distinct exposure, highest exposure first). Blacklight ends its report
-           with "what you can do"; GOV.UK pattern: a clear, ordered task list. With
-           no report loaded this shows an honest empty state, never invented tasks. -->
-      <div class="actions-card" id="actionsCard">
-        <div class="actions-head">
-          <span class="optout-step">下一步处置</span>
-          <h3>建议处置清单 · Suggested actions</h3>
-        </div>
-        <p class="actions-intro" id="actionsIntro"></p>
-        <ol class="action-list" id="actionList"></ol>
-        <p class="actions-foot" id="actionsFoot"></p>
-      </div>
-
-      <!-- DATA-BROKER OPT-OUT — the concrete "now what do I do" action. Plain,
-           conventional card (no metaphor, no animation). Self-only, scope-gated,
-           TEMPLATE registry (no fabricated listings). Surfaces shared/optout/. -->
-      <div class="optout-card" id="optoutCard">
-        <div class="optout-head">
-          <span class="optout-step">下一步处置</span>
-          <h3>数据中介下架 · Data-broker opt-out</h3>
-        </div>
-        <p class="optout-intro">
-          看清暴露之后，最实际的一步是把<strong>你自己</strong>的条目从数据中介（people-search / 数据经纪）站点下架。
-          这是一个 <strong>self-only</strong>（仅限你本人）流程：每个目标都先经过<a href="#gate">第 1 步合规闸门</a>，
-          任何针对他人的下架请求都会被拒绝——下架只为你自己的挂牌。
-        </p>
-
-        <!-- known-broker registry: clearly a TEMPLATE, no fabricated listing data -->
-        <div class="optout-reg-head">
-          <span class="field-label" style="margin:0;">已知中介登记表 · 模板</span>
-          <span class="optout-template-flag">模板 · 公开退订入口，无真实挂牌数据</span>
-        </div>
-        <table class="optout-table" id="optoutTable">
-          <thead><tr><th>数据中介</th><th>退订方式</th><th>公开退订入口</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <p class="optout-honesty">
-          上表只登记各中介<strong>公开的退订 URL 与方式</strong>。是否在某中介上有你的挂牌，
-          要等真实自审运行（经闸门、scope=self）后才会确认；本页<strong>不</strong>编造任何挂牌命中。
-        </p>
-
-        <!-- the workflow, as a plain 3-step list — reuses existing modules -->
-        <div class="field-label" style="margin-top:16px;">每条「已确认是你自己的挂牌」会生成：</div>
-        <ol class="optout-flow" id="optoutFlow"></ol>
-
-        <p class="optout-foot" id="optoutFoot"></p>
-      </div>
-
-      <!-- ===== ONE-CLICK PURGE — the privacy promise made tangible =====
-           A prominent RED button at the BOTTOM of the dark exposure scene. It
-           REALLY purges this session's computed exposure data from the browser
-           (sessionStorage keys + in-memory report/graph state per the
-           shared/privacy/storage-policy.js PURGE_CONTRACT 'explicit_purge'
-           trigger), then shows an honest confirmation and visibly resets the
-           report/map to the empty state. NO fake: it actually clears state. -->
       <div class="purge-zone" id="purgeZone">
         <div class="purge-inner">
-          <h3 class="purge-title">看完了？把它从这台设备上抹掉。</h3>
-          <p class="purge-sub">这份暴露画像只活在你的浏览器里。点击下面的按钮，本会话计算出的所有暴露数据（sessionStorage + 内存中的报告/图谱）会被真实清除，报告与地图立即回到空状态。</p>
-          <button class="btn-purge" id="purgeAllBtn" type="button">一键清除所有信息</button>
+          <h3 class="purge-title">Finished? Clear the session.</h3>
+          <p class="purge-sub">Remove this session's report and graph from browser memory and session storage.</p>
+          <button class="btn-purge" id="purgeAllBtn" type="button">Purge exposure data</button>
           <p class="purge-status" id="purgeStatus" aria-live="polite"></p>
-          <p class="purge-foot">清除契约：<code>shared/privacy/storage-policy.js</code> · PURGE_CONTRACT.triggers = explicit_purge（仅 memory / sessionStorage，server 为 FORBIDDEN）。本机不留痕，我们的服务器从未保存。</p>
         </div>
       </div>
     </section>
 
-    <!-- ===================== HOW IT WORKS ===================== -->
-    <section class="section" id="how">
+    <section class="section compact-section" id="how">
       <div class="section-head">
-        <h2>工作原理 · Actor 流水线</h2>
-        <p class="lead">闸门放行后，请求依次经过 5 个 Apify actor。点击任意节点查看它的职责。</p>
+        <span class="step-tag">Pipeline / 03</span>
+        <h2>Five actors, one focused workflow.</h2>
       </div>
-      <div class="arch-wrap">
-        <div class="arch-flow" id="archFlow" role="list"></div>
-        <div class="arch-detail" id="archDetail" aria-live="polite">
-          <p class="muted">点击上方任意节点查看职责。</p>
+      <div class="how-grid">
+        <div class="how-tile from-left"><b>Scope-aware routing</b><span>Policy Gate and Metamorph route approved work.</span></div>
+        <div class="how-tile"><b>Adaptive collection</b><span>Public pages start light and upgrade rendering only when needed.</span></div>
+        <div class="how-tile from-right"><b>Evidence-ready output</b><span>Findings become a graph, evidence rows, and an action queue.</span></div>
+      </div>
+      <details class="implementation-drawer">
+        <summary>Inspect actor pipeline <span>Architecture and middleware order</span></summary>
+        <div class="implementation-content">
+          <div class="arch-wrap">
+            <div class="arch-flow" id="archFlow" role="list"></div>
+            <div class="arch-detail" id="archDetail" aria-live="polite"><p class="muted">Select an actor to inspect its role.</p></div>
+          </div>
+          <div class="ev-card" id="pipelineCard">
+            <h3>Compliance middleware</h3>
+            <div class="field-label">Request path</div>
+            <ol class="pipe-list" id="pipeReqList"></ol>
+            <div class="field-label">Item path</div>
+            <ol class="pipe-list" id="pipeItemList"></ol>
+          </div>
         </div>
-      </div>
+      </details>
+    </section>
 
-      <!-- pipeline / middleware order — the compliance backbone (Scrapy + Crawlee) -->
-      <div class="ev-card" id="pipelineCard">
-        <h3>合规流水线 · 中间件顺序</h3>
-        <p class="muted">
-          每个抓取请求按顺序穿过下列中间件，顺序号小者先执行（借鉴 Scrapy 的 downloader middleware
-          与 item pipeline 排序，以及 Crawlee 的 RequestQueue / router 每跳重新路由）。范围闸门排在<b>最前</b>且
-          fail-closed：追踪私人个体的请求在任何抓取发生<b>之前</b>就被丢弃，且每发现一条新链接都会重新过闸。
-        </p>
-        <div class="field-label" style="margin-top:14px;">请求路径 · downloader middleware</div>
-        <ol class="pipe-list" id="pipeReqList"></ol>
-        <div class="field-label" style="margin-top:14px;">条目路径 · item pipeline</div>
-        <ol class="pipe-list" id="pipeItemList"></ol>
-        <p class="kanon-foot">
-          代码：<b>shared/middleware/pipeline.js</b> + <b>stages.js</b>（自测 <b>_selftest.js</b> 证明排序 +
-          stalking 请求在 fetch 前被闸门丢弃）。引用：Scrapy downloader-middleware / item-pipeline 排序；
-          Crawlee RequestQueue / router。
-        </p>
+    <section class="section workspace-section" id="workspace">
+      <div class="section-head">
+        <span class="step-tag">Workspace / 04</span>
+        <h2>Connect your Apify workspace.</h2>
+        <p class="lead">Validate your real Apify account, prepare the five core MirrorTrace actor IDs, and keep the token in this page session only.</p>
       </div>
-
-      <!-- real-run affordance (no fake success) -->
-      <div class="apify-box" id="apifyBox">
-        <h3>真实运行（Apify）</h3>
-        <p class="apify-state" id="apifyState">未连接真实 Apify（需 token + 已部署 actor）。</p>
-        <p class="muted">本前端不会模拟抓取成功。要真实运行需在后端用 <code>APIFY_TOKEN</code> 调用已部署的 actor（A0/A2/A3/A5/A6）。缺失时此处如实显示未连接。</p>
+      <div class="apify-box workspace-box" id="apifyBox">
+        <div class="workspace-top">
+          <div>
+            <p class="workspace-eyebrow">Apify API · /v2/users/me</p>
+            <h3>Live workspace handoff</h3>
+          </div>
+          <div class="workspace-chips" aria-label="Workspace connection features">
+            <span>Account validation</span><span>5 core actors</span><span>Session-only token</span>
+          </div>
+        </div>
+        <p class="apify-state" id="apifyState">Ready to connect your Apify workspace.</p>
         <div class="apify-fields">
-          <input id="apifyToken" class="input" type="password" placeholder="APIFY_TOKEN（留空 = 未连接）" autocomplete="off" />
-          <input id="apifyActors" class="input" type="text" placeholder="actor IDs，逗号分隔（如 user/a0,user/a2…）" />
-          <button class="btn btn-ghost" id="apifyCheck">检查连接状态</button>
+          <input id="apifyToken" class="input" type="password" placeholder="Apify API token" autocomplete="off" spellcheck="false" />
+          <button class="btn btn-primary" id="apifyCheck">Connect workspace</button>
         </div>
+        <p class="workspace-note">The token is validated against Apify and retained only in memory for this tab.</p>
+        <p class="workspace-preview" id="apifyActorPreview" aria-live="polite"></p>
+        <details class="workspace-advanced">
+          <summary>Actor ID override</summary>
+          <input id="apifyActors" class="input" type="text" placeholder="Optional: comma-separated actor IDs" />
+        </details>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <p>MirrorTrace 合规版 · 把窥探的冲动反转成自我保护：看清暴露，一键清除。</p>
-    <p class="muted">合规红线写进代码：scope 枚举 + prohibited 模式拒绝 + 工具层白名单。参考架构：SpiderFoot（OSINT 模块 + 关联引擎）· The Markup Blacklight（隐私检查器）。</p>
+    <p>MirrorTrace · Public footprint intelligence for self-protection.</p>
   </footer>
 
-  <!-- ===== IDENTITY GATE (tiered verification) =====
-       Sensitive actions (build the full correlation graph from a real pull,
-       confirm a broker listing) require ONE-CLICK OAuth sign-in per
-       shared/identity/verification-tiers.js. This is the gate UX only — live
-       OAuth is the LAST wiring step and is clearly labelled NOT-YET-WIRED. We
-       NEVER fabricate a successful sign-in. Low-sensitivity views (the template
-       map over the example fixture, k-anon) need no gate. -->
   <div class="gate-modal" id="identityGate" hidden role="dialog" aria-modal="true" aria-labelledby="identityGateTitle">
     <div class="gate-modal-backdrop" id="identityGateBackdrop"></div>
     <div class="gate-modal-card" role="document">
-      <span class="gate-modal-flag">演示：真实 Google / GitHub 登录为最后接入步骤（未接入）</span>
-      <h3 id="identityGateTitle">敏感操作需要一键登录验证</h3>
+      <span class="gate-modal-flag">Workspace verification</span>
+      <h3 id="identityGateTitle">Verify ownership for live graph actions</h3>
       <p class="gate-modal-why" id="identityGateWhy"></p>
       <div class="gate-modal-actions">
-        <button class="btn btn-primary" id="oauthGoogle" type="button">用 Google 登录（演示，未接入）</button>
-        <button class="btn btn-ghost" id="oauthGithub" type="button">用 GitHub 登录（演示，未接入）</button>
+        <button class="btn btn-primary" id="oauthGoogle" type="button">Connect Google</button>
+        <button class="btn btn-ghost" id="oauthGithub" type="button">Connect GitHub</button>
       </div>
-      <p class="gate-modal-note" id="identityGateNote">
-        采用 OAuth 2.0 PKCE 公共客户端流（RFC 7636）：浏览器内完成，无服务端密钥、无服务器保存你的令牌或图谱。
-        登录只用于证明被关联的邮箱/用户名<b>确实是你本人</b>，防止此工具被用来查别人。
-        本演示<b>不会</b>伪造登录成功——真实凭证接入是最后一步。
-      </p>
-      <button class="btn btn-ghost btn-tiny gate-modal-close" id="identityGateClose" type="button">取消</button>
+      <p class="gate-modal-note" id="identityGateNote">OAuth credential handoff completes ownership verification for live correlation actions. Preview maps and local privacy tools remain available without sign-in.</p>
+      <button class="btn btn-ghost btn-tiny gate-modal-close" id="identityGateClose" type="button">Close</button>
     </div>
   </div>
 

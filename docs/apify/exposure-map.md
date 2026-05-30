@@ -8,7 +8,7 @@ makes the exposure easier to understand.
 
 This document covers the **data layer** the Apify integration produces. Rendering
 (SVG, the calm severity-ring radial layout, subtle settle motion, `prefers-reduced-motion`
-static fallback, the "切换查看" list toggle, keyboard/aria) lives in the `web/` subtree.
+static fallback, the map/list view toggle, keyboard/aria) lives in the `web/` subtree.
 
 ---
 
@@ -17,11 +17,11 @@ static fallback, the "切换查看" list toggle, keyboard/aria) lives in the `we
 | Visual | Meaning | Source of truth |
 |---|---|---|
 | **Center node** (`id: "self"`) | You, the self subject | `opts.subjectLabel` (no PII required) |
-| **Source node** (`id: "src:<host>"`) | One site/source that exposes info about you | grouped by `source_url` host |
-| **Node colour tier** — green / yellow / red | Severity of the *worst* finding at that source | `shared/enrich/severity.js` band → 3-tier |
-| **Node size** (`finding_count`, `size_weight` 0..1) | How much info that source holds about you | count of distinct findings at the source |
+| **Source node** (`id: "host:<host>"` or `origin:<module>`) | One site/source that exposes info about you | canonical `shared/graph/build-exposure-graph.js` source key |
+| **Node severity tier** — green / yellow / red | Severity of the *worst* finding at that source | `shared/enrich/severity.js` band → 3-tier |
+| **Node size input** (`infoCount`) | How much info that source holds about you | count of distinct findings at the source |
 | **Radial edge** (`kind: "exposes"`) | center → each source | one per source |
-| **Correlation edge** (`kind: "correlates"`) | two **different** sources share the **same identifier** | `shared/enrich/cluster-keys.js` |
+| **Correlation edge** (`kind: "shared-identifier"`) | two **different** sources share the **same identifier** | `shared/graph/build-exposure-graph.js` reusing `cluster-keys.js` |
 
 **Tier mapping** (NOT a new scoring axis — derived from the canonical severity band):
 
@@ -36,10 +36,10 @@ source red. That is the honest, scary truth a first-time visitor must grasp in s
 
 ### The correlation edges are the point
 
-Cross-source `correlates` edges appear only when two **distinct** sources carry the
-**same** email-hash-prefix, handle, or leaked-secret fingerprint. This is the
+Cross-source `shared-identifier` edges appear only when two **distinct** sources carry the
+**same** email-hash-prefix or handle. This is the
 Maltego/SpiderFoot "this is all the same person" picture — the most valuable insight
-Part 2 delivers. The edge records the identifier **kind** (`shared: "email_prefix"`),
+Part 2 delivers. The edge records the identifier **kind** (`via: "email"|"handle"`),
 **never the value** (no plaintext email/phone ever touches an edge).
 
 ---
@@ -57,7 +57,7 @@ Part 2 delivers. The edge records the identifier **kind** (`shared: "email_prefi
         ▼   ⟵ fired BY THE BROWSER with the USER'S OWN Apify token
  rowsToGraph(plan, rows)                              integrations/exposure-map/feed-policy.js
    → ingestRowsToBundle  (REAL rows → module_events, host re-assert, STIX)
-   → buildExposureGraph  (events → nodes + edges)     integrations/exposure-map/exposure-graph.js
+   → buildExposureGraph  (events → canonical ExposureGraphV1)     integrations/exposure-map/exposure-graph.js
         ▼
  EXPOSURE MAP graph  — assembled IN THE BROWSER, rendered by web/
 ```
@@ -80,10 +80,13 @@ The product must **not** become a second data-leak site. Therefore:
   anywhere. That is what makes "lives only in the browser, purged on close"
   enforceable rather than a promise.
 
-`exposure-graph.js` is dual-loadable so the *same* tested code runs in both places:
-- **Node**: `const { buildExposureGraph } = require('.../exposure-graph.js')`
-- **Browser** `<script>` (file://-safe, no bundler/CDN): sets
-  `window.MirrorTrace.buildExposureGraph`.
+`shared/graph/build-exposure-graph.js` is the source of truth. The Apify feed
+adapter in `integrations/exposure-map/exposure-graph.js` accepts `module_event[]`
+and returns the same canonical `ExposureGraphV1` shape (`center`, source-only
+`nodes`, `edges`, `legend`, `meta`) plus a browser-only privacy banner. The web
+layer keeps a file://-safe client topology projection. Regression tests lock the
+canonical integration contract byte-for-byte and the browser projection on every
+UI-relevant topology field.
 
 ---
 
@@ -118,10 +121,14 @@ self subject's own findings — never for a third party. `scope_type` enum is
 
 | File | Role |
 |---|---|
-| `integrations/exposure-map/exposure-graph.js` | Pure events → graph (nodes/edges). Node + browser. |
+| `shared/graph/build-exposure-graph.js` | Canonical report → ExposureGraphV1 contract. |
+| `integrations/exposure-map/exposure-graph.js` | Thin module_event[] → canonical ExposureGraphV1 adapter for Apify feed rows. |
 | `integrations/exposure-map/feed-policy.js` | Scope+identity-gated feed planner; `rowsToGraph` transform. |
 | `integrations/exposure-map/exposure-map.config.json` | Browser-only data-flow + tier-mapping + sensitivity contract. |
 | `integrations/exposure-map/_selftest.js` | Proves nodes/tiers/sizes/edges/correlation + gating. |
+| `test/regression/exposure-map-contract-parity_selftest.js` | Proves integration output stays byte-for-byte canonical. |
+| `test/regression/web-exposure-map-projection-parity_selftest.js` | Proves the file:// web mirror stays aligned on UI-relevant topology fields. |
+| `test/regression/web-english-only_selftest.js` | Prevents non-English text from returning to the web surface. |
 
 ## 6. Reference architectures (cited, borrowed)
 

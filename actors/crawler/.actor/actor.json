@@ -14,5 +14,8 @@
     }
   },
   "minMemoryMbytes": 2048,
-  "maxMemoryMbytes": 4096
+  "maxMemoryMbytes": 4096,
+  "environmentVariables": {
+    "DIFF_ACTOR_ID": "roger_1of1/mirrortrace-diff-evidence"
+  }
 }

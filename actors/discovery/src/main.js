@@ -23,8 +23,8 @@ const { Actor, log } = require('apify');
 const { validateScope } = require('../../../shared/scope.js');
 const { makeDiscoveryRecord } = require('../../../shared/schemas.js');
 
-// HUMAN CONFIG: set CRAWLER_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-crawler".
-const CRAWLER_ACTOR_ID = process.env.CRAWLER_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-crawler';
+// HUMAN CONFIG: set CRAWLER_ACTOR_ID to "roger_1of1/mirrortrace-crawler".
+const CRAWLER_ACTOR_ID = process.env.CRAWLER_ACTOR_ID || 'roger_1of1/mirrortrace-crawler';
 
 Actor.main(async () => {
   // Input arrives either from the Policy Gate metamorph (INPUT-METAMORPH-1, read

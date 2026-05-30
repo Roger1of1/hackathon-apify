@@ -28,7 +28,7 @@ integrations/fixtures/self-audit-fixture.json   (SYNTHETIC / TEMPLATE input)
         ▼  integrations/grade/exposure-grade.js (read-only)  ← real A–F grade
         ▼  shape report
         ├─► web/data/example-report.json   (the file web/app.js already fetches)
-        ├─► web/data/example-report.js     (file:// fallback → window.__EX_REPORT__)
+        ├─► web/data/example-report.js     (file:// fallback → window.__MIRRORTRACE_REPORT__)
         ├─► integrations/storage/key_value_stores/default/INPUT.json   (Apify KVS)
         └─► integrations/storage/datasets/default/00000000N.json       (Crawlee rows)
 ```

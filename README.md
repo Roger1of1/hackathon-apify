@@ -33,7 +33,7 @@
    通过 `https://mcp.apify.com?tools=...` 只把 **合规 actor** 暴露给 AI agent。私域抓取类 actor **根本不在工具列表里**，所以 agent **物理上无法调用**。详见 [`mcp/configurator-notes.md`](mcp/configurator-notes.md)。
 
 3. **input_schema enum = compliance-as-code**
-   `scope_type` 是一个 **枚举**：`self | consented | public_figure | brand | safety_evidence`。没有 "ex"、没有 "private_individual"。非法 scope 在 schema 校验阶段就被 Apify 平台拒绝，连 actor 代码都进不去。
+   `scope_type` 是一个 **枚举**：`self | consented | public_figure | brand | safety_evidence`。没有 `private_person_tracking`、没有 `private_individual`。非法 scope 在 schema 校验阶段就被 Apify 平台拒绝，连 actor 代码都进不去。
 
 4. **AdaptivePlaywrightCrawler（A3 crawler）**
    抓取层用 Crawlee 的 `AdaptivePlaywrightCrawler`：能用纯 HTTP 就用 HTTP（快、省），需要渲染才升级到 Playwright 浏览器。自动适配，省算力也省钱。
@@ -145,7 +145,7 @@ cd actors/policy-gate && apify push  # 对 5 个 actor 各执行一次
 # ...discovery / crawler / diff-evidence / report-builder 同理
 ```
 
-> **诚实声明**：真实抓取、Schedule、Webhook 都需要 **你自己的真实 Apify 账号和 `APIFY_TOKEN`**。本仓库不内置任何凭据，所有 token / username 均为占位符（`YOUR_USERNAME` / `<APIFY_TOKEN>`）。
+> **诚实声明**：真实抓取、Schedule、Webhook 都需要 **你自己的真实 Apify 账号和 `APIFY_TOKEN`**。本仓库不内置任何凭据。当前 workspace 用户名为 `roger_1of1`；`<APIFY_TOKEN>` 仍是占位符，真实 token 不入库。
 
 ---
 
@@ -202,7 +202,7 @@ cd actors/policy-gate && apify push  # 对 5 个 actor 各执行一次
 触发一个会返回 `429` 的源。展示 crawler **指数退避 + 尊重 Retry-After + 降并发**，并在报告里 **如实写"被限流，已退避"**。对比说明：我们 **不** 换指纹、不绕验证码。被拒绝就如实记录。
 
 **[1:10–1:30] MCP Demo（工具层白名单）**
-展示 `mcp/client-config.example.json`：MCP 客户端只连到 `mirrortrace-policy-gate` + `mirrortrace-report` + `docs`。让 AI agent 尝试调用"私域抓取 actor"——它 **在工具列表里根本不存在**，agent 物理上调不到。合规作为工具边界。收尾回到合规反转主题。
+展示 `mcp/client-config.example.json`：MCP 客户端只连到 `mirrortrace-policy-gate` + `mirrortrace-report-builder` + `docs`。让 AI agent 尝试调用"私域抓取 actor"——它 **在工具列表里根本不存在**，agent 物理上调不到。合规作为工具边界。收尾回到合规反转主题。
 
 ---
 

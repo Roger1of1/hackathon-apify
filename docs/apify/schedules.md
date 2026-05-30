@@ -112,7 +112,7 @@ never the identity.
 - `timezone: "UTC"`, `isExclusive: true` (no overlapping re-audit runs).
 
 ## Setup (operator)
-1. Fill `schedules.config.json`: replace `<EX_DITECTOR_*_TASK_ID>` with your real
+1. Fill `schedules.config.json`: replace `<MIRRORTRACE_*_TASK_ID>` with your real
    Actor **task** ids and `<SUBJECT_TOKEN>` with a short non-identifying token.
 2. Register:
    ```bash

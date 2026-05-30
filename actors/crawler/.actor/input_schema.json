@@ -9,7 +9,13 @@
       "type": "string",
       "description": "Compliant scope only. Prohibited scopes are absent.",
       "editor": "select",
-      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+      "enum": [
+        "self",
+        "consented",
+        "public_figure",
+        "brand",
+        "safety_evidence"
+      ],
       "enumTitles": [
         "Self",
         "Consented",
@@ -22,13 +28,15 @@
     "case_id": {
       "title": "Case ID",
       "type": "string",
-      "editor": "textfield"
+      "editor": "textfield",
+      "description": "Case identifier issued by the Policy Gate for this audit chain."
     },
     "case_store_name": {
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "mirrortrace-case"
+      "default": "mirrortrace-case",
+      "description": "Named key-value store carrying the immutable case record across the actor chain."
     },
     "queue_name": {
       "title": "Frontier queue name",
@@ -42,7 +50,8 @@
       "editor": "number",
       "default": 50,
       "minimum": 1,
-      "maximum": 1000
+      "maximum": 1000,
+      "description": "Maximum number of pages processed during this bounded audit run."
     },
     "checks_per_day": {
       "title": "Checks per day (wellbeing signal)",
@@ -50,8 +59,12 @@
       "editor": "number",
       "default": 0,
       "minimum": 0,
-      "maximum": 100
+      "maximum": 100,
+      "description": "Wellbeing pacing signal used to shape Closure Mode recommendations."
     }
   },
-  "required": ["scope_type", "queue_name"]
+  "required": [
+    "scope_type",
+    "queue_name"
+  ]
 }

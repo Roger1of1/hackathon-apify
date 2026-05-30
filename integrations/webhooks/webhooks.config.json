@@ -11,8 +11,12 @@
     {
       "name": "report-succeeded-output-health",
       "description": "When the report-builder run succeeds, verify OUTPUT HEALTH (success != valid output) before telling the user the audit is ready.",
-      "condition": { "actorTaskId_or_actorId": "<EX_DITECTOR_REPORT_ACTOR_ID>" },
-      "eventTypes": ["ACTOR.RUN.SUCCEEDED"],
+      "condition": {
+        "actorTaskId_or_actorId": "roger_1of1/mirrortrace-report-builder"
+      },
+      "eventTypes": [
+        "ACTOR.RUN.SUCCEEDED"
+      ],
       "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
       "payloadTemplateFile": "./payload-template.json",
       "shouldInterpolateStrings": true
@@ -20,8 +24,12 @@
     {
       "name": "pipeline-failed-alert",
       "description": "Any actor in the pipeline fails -> alert.",
-      "condition": { "actorId": "<ANY_EX_DITECTOR_ACTOR_ID>" },
-      "eventTypes": ["ACTOR.RUN.FAILED"],
+      "condition": {
+        "actorId": "<ANY_MIRRORTRACE_ACTOR_ID>"
+      },
+      "eventTypes": [
+        "ACTOR.RUN.FAILED"
+      ],
       "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
       "payloadTemplateFile": "./payload-template.json",
       "shouldInterpolateStrings": true
@@ -29,8 +37,12 @@
     {
       "name": "pipeline-timed-out-alert",
       "description": "Timeout -> alert + check whether compliance backoff was excessive.",
-      "condition": { "actorId": "<ANY_EX_DITECTOR_ACTOR_ID>" },
-      "eventTypes": ["ACTOR.RUN.TIMED_OUT"],
+      "condition": {
+        "actorId": "<ANY_MIRRORTRACE_ACTOR_ID>"
+      },
+      "eventTypes": [
+        "ACTOR.RUN.TIMED_OUT"
+      ],
       "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
       "payloadTemplateFile": "./payload-template.json",
       "shouldInterpolateStrings": true
@@ -38,8 +50,12 @@
     {
       "name": "crawler-aborted-compliance-audit",
       "description": "Crawler ABORTED is often a compliance STOP (401/403/429). Route to human review, never as failure-to-hide.",
-      "condition": { "actorId": "<EX_DITECTOR_CRAWLER_ACTOR_ID>" },
-      "eventTypes": ["ACTOR.RUN.ABORTED"],
+      "condition": {
+        "actorId": "roger_1of1/mirrortrace-crawler"
+      },
+      "eventTypes": [
+        "ACTOR.RUN.ABORTED"
+      ],
       "requestUrl": "https://YOUR_HOST/apify-webhook/<APIFY_WEBHOOK_SECRET>",
       "payloadTemplateFile": "./payload-template.json",
       "shouldInterpolateStrings": true

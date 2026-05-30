@@ -1,0 +1,144 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MirrorTrace Policy Gate",
+    "version": "1.0.0",
+    "description": "Standby pre-flight endpoint for scope-aware public-footprint audits."
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Readiness probe",
+        "responses": {
+          "200": {
+            "description": "Policy Gate is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ready"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Validate an audit scope",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditScope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scope accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Decision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Scope rejected with alternatives",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Decision"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Ready": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ready"
+          },
+          "service": {
+            "type": "string",
+            "example": "mirrortrace-policy-gate"
+          }
+        }
+      },
+      "AuditScope": {
+        "type": "object",
+        "required": [
+          "scope_type"
+        ],
+        "properties": {
+          "scope_type": {
+            "type": "string",
+            "enum": [
+              "self",
+              "consented",
+              "public_figure",
+              "brand",
+              "safety_evidence"
+            ]
+          },
+          "target_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "subject_label": {
+            "type": "string"
+          },
+          "authorization_evidence_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Decision": {
+        "type": "object",
+        "required": [
+          "allowed"
+        ],
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "scope_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "violated_red_lines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "alternatives": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

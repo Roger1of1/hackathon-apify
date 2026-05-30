@@ -9,7 +9,13 @@
       "type": "string",
       "description": "What kind of audit this is. Only compliant scopes exist. Prohibited scopes (private-person tracking, romance/dating inference) are intentionally not present and cannot be selected.",
       "editor": "select",
-      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+      "enum": [
+        "self",
+        "consented",
+        "public_figure",
+        "brand",
+        "safety_evidence"
+      ],
       "enumTitles": [
         "Self — audit my own public footprint",
         "Consented — a person who gave me written authorization",
@@ -30,7 +36,9 @@
       "type": "array",
       "description": "Public, logged-out URLs to audit/monitor. Login-walled private social hosts (Instagram, Facebook, Tinder, etc.) are blocked.",
       "editor": "stringList",
-      "prefill": ["https://example.com/your-public-profile"]
+      "prefill": [
+        "https://example.com/your-public-profile"
+      ]
     },
     "authorization_evidence_url": {
       "title": "Authorization evidence URL (required for 'consented')",
@@ -57,5 +65,8 @@
       "maximum": 100
     }
   },
-  "required": ["scope_type", "target_urls"]
+  "required": [
+    "scope_type",
+    "target_urls"
+  ]
 }

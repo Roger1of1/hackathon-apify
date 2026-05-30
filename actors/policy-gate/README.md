@@ -24,7 +24,7 @@ The mandatory front door of MirrorTrace. No crawl runs without passing here.
     422 reject). **Never crawls, never metamorphs** — a cheap pre-flight check.
 
 ## Human config required
-- `DISCOVERY_ACTOR_ID` env var → set to `YOUR_USERNAME/mirrortrace-discovery`.
+- `DISCOVERY_ACTOR_ID` env var → set to `roger_1of1/mirrortrace-discovery`.
 - Provide a real `APIFY_TOKEN` in the platform (or `apify login`) to run.
 
 ## Try the rejection locally

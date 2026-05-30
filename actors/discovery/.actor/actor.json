@@ -14,5 +14,8 @@
     }
   },
   "minMemoryMbytes": 256,
-  "maxMemoryMbytes": 1024
+  "maxMemoryMbytes": 1024,
+  "environmentVariables": {
+    "CRAWLER_ACTOR_ID": "roger_1of1/mirrortrace-crawler"
+  }
 }

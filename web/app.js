@@ -1,8 +1,8 @@
-/* MirrorTrace 合规版 — app.js
+/* MirrorTrace — app.js
  *
  * Clarity-first dashboard. The Policy Gate is REAL logic, not a simulation.
  * No preloader, no radio-dial/channel nav, no scroll-driven wheel — those were
- * removed because they violated the hard clarity red line ("明了,不要花哨让人疑惑").
+ * removed because they violated the hard clarity red line ("clear, not flashy or confusing").
  *
  * The self-exposure report is modelled on TWO reference architectures:
  *   - The Markup Blacklight (themarkup.org/blacklight): a privacy inspector that
@@ -36,55 +36,55 @@
   const PROHIBITED = [
     {
       id: "romance_inference",
-      label: "恋爱 / 暧昧 / 出轨推断",
-      reason: "请求涉及对私人关系的恋爱 / 暧昧 / 出轨推断。本工具不做任何关系性推断。",
+      label: "Romance / intimacy / infidelity inference",
+      reason: "The request asks for romance, intimacy, or infidelity inference about a private relationship. MirrorTrace does not infer relationships.",
       patterns: [
-        /暧昧|出轨|劈腿|约会|约炮|恋爱|喜欢(我|他|她|对方)|是不是单身|有没有对象|有没有男(朋)?友|有没有女(朋)?友|脚踏两(只|条)船/i,
+        /\u66a7\u6627|\u51fa\u8f68|\u5288\u817f|\u7ea6\u4f1a|\u7ea6\u70ae|\u604b\u7231|\u559c\u6b22(\u6211|\u4ed6|\u5979|\u5bf9\u65b9)|\u662f\u4e0d\u662f\u5355\u8eab|\u6709\u6ca1\u6709\u5bf9\u8c61|\u6709\u6ca1\u6709\u7537(\u670b)?\u53cb|\u6709\u6ca1\u6709\u5973(\u670b)?\u53cb|\u811a\u8e0f\u4e24(\u53ea|\u6761)\u8239/i,
         /affair|cheat(ing)?|dating life|is .* single|has a (boy|girl)friend|romantic|crush|love interest/i
       ]
     },
     {
       id: "gender_from_image",
-      label: "从头像 / 图像推断性别或性取向",
-      reason: "请求要求从头像 / 图像推断性别或性取向。本工具不做任何基于图像的身份推断。",
+      label: "Infer gender or sexual orientation from an avatar / image",
+      reason: "The request asks to infer gender or sexual orientation from an avatar or image. MirrorTrace does not infer identity from images.",
       patterns: [
-        /(头像|照片|图片|长相|外貌|样子|脸).{0,8}(性别|男的还是女的|是男是女|性取向|gay|同性恋|直男|直女)/i,
-        /(性别|性取向|gay|是不是同性恋|是不是直).{0,8}(头像|照片|图片|长相|外貌|脸)/i,
+        /(\u5934\u50cf|\u7167\u7247|\u56fe\u7247|\u957f\u76f8|\u5916\u8c8c|\u6837\u5b50|\u8138).{0,8}(\u6027\u522b|\u7537\u7684\u8fd8\u662f\u5973\u7684|\u662f\u7537\u662f\u5973|\u6027\u53d6\u5411|gay|\u540c\u6027\u604b|\u76f4\u7537|\u76f4\u5973)/i,
+        /(\u6027\u522b|\u6027\u53d6\u5411|gay|\u662f\u4e0d\u662f\u540c\u6027\u604b|\u662f\u4e0d\u662f\u76f4).{0,8}(\u5934\u50cf|\u7167\u7247|\u56fe\u7247|\u957f\u76f8|\u5916\u8c8c|\u8138)/i,
         /(infer|guess|detect|determine).{0,20}(gender|sex|sexual orientation).{0,20}(avatar|photo|image|picture|face)/i,
         /(avatar|photo|image|picture|face).{0,20}(gender|sexual orientation|is .* (gay|straight))/i
       ]
     },
     {
       id: "dating_app_presence",
-      label: "探测交友 App 活跃情况",
-      reason: "请求要求探测某人是否在交友 / 约会 App 上活跃。这属于私域行为追踪，被禁止。",
+      label: "Detect dating-app activity",
+      reason: "The request asks whether someone is active on a dating app. That is private-behavior tracking and is prohibited.",
       patterns: [
-        /(tinder|bumble|探探|陌陌|soul|hinge|okcupid|grindr|交友(软件|app)|约会(软件|app)|相亲(软件|app))/i,
-        /(在不在|有没有(用|注册)|是否(注册|活跃|刷)).{0,12}(交友|约会|相亲|tinder|bumble|探探|陌陌)/i,
+        /(tinder|bumble|\u63a2\u63a2|\u964c\u964c|soul|hinge|okcupid|grindr|\u4ea4\u53cb(\u8f6f\u4ef6|app)|\u7ea6\u4f1a(\u8f6f\u4ef6|app)|\u76f8\u4eb2(\u8f6f\u4ef6|app))/i,
+        /(\u5728\u4e0d\u5728|\u6709\u6ca1\u6709(\u7528|\u6ce8\u518c)|\u662f\u5426(\u6ce8\u518c|\u6d3b\u8dc3|\u5237)).{0,12}(\u4ea4\u53cb|\u7ea6\u4f1a|\u76f8\u4eb2|tinder|bumble|\u63a2\u63a2|\u964c\u964c)/i,
         /(swipe|likes|matches|followers|comments).{0,18}(tinder|bumble|instagram|ig|facebook|fb)/i,
-        /(tinder|bumble|instagram|ig|facebook|fb|微博|抖音|小红书)\s*(的)?\s*(followers?|likes?|comments?|matches|粉丝|关注|点赞|评论)/i
+        /(tinder|bumble|instagram|ig|facebook|fb|\u5fae\u535a|\u6296\u97f3|\u5c0f\u7ea2\u4e66)\s*(\u7684)?\s*(followers?|likes?|comments?|matches|\u7c89\u4e1d|\u5173\u6ce8|\u70b9\u8d5e|\u8bc4\u8bba)/i
       ]
     },
     {
       id: "private_person_tracking",
-      label: "追踪具名私人个体",
-      reason: "请求指向追踪 / 监控某个私人个体（私人个体 / 暗恋对象 / 同事 / 陌生人等）。本工具只服务于你自己及合法授权 / 公开实体。",
+      label: "Track a named private person",
+      reason: "The request asks to track or monitor a private person. This tool serves only you, properly authorized subjects, and public entities.",
       patterns: [
-        /(私人个体|前男友|前女友|前夫|前妻|分手|复合)/i,
+        /(\u79c1\u4eba\u4e2a\u4f53|\u524d\u7537\u53cb|\u524d\u5973\u53cb|\u524d\u592b|\u524d\u59bb|\u5206\u624b|\u590d\u5408)/i,
         /\b(ex[-\s]?(boyfriend|girlfriend|husband|wife|partner)?)\b/i,
-        /(暗恋|心仪|喜欢的(那个)?(人|男生|女生)|那个(女生|男生|妹子|小哥))/i,
-        /(跟踪|蹲点|监控|偷偷查|查一下(他|她)|扒一下(他|她)|人肉|起底)(?!.*(我自己|本人|品牌|公司|公众人物))/i,
-        /(同事|邻居|室友|陌生人|那个(人|男的|女的)|某(人|个人)).{0,10}(住(在)?哪|在哪|电话|地址|行踪|每天)/i,
+        /(\u6697\u604b|\u5fc3\u4eea|\u559c\u6b22\u7684(\u90a3\u4e2a)?(\u4eba|\u7537\u751f|\u5973\u751f)|\u90a3\u4e2a(\u5973\u751f|\u7537\u751f|\u59b9\u5b50|\u5c0f\u54e5))/i,
+        /(\u8ddf\u8e2a|\u8e72\u70b9|\u76d1\u63a7|\u5077\u5077\u67e5|\u67e5\u4e00\u4e0b(\u4ed6|\u5979)|\u6252\u4e00\u4e0b(\u4ed6|\u5979)|\u4eba\u8089|\u8d77\u5e95)(?!.*(\u6211\u81ea\u5df1|\u672c\u4eba|\u54c1\u724c|\u516c\u53f8|\u516c\u4f17\u4eba\u7269))/i,
+        /(\u540c\u4e8b|\u90bb\u5c45|\u5ba4\u53cb|\u964c\u751f\u4eba|\u90a3\u4e2a(\u4eba|\u7537\u7684|\u5973\u7684)|\u67d0(\u4eba|\u4e2a\u4eba)).{0,10}(\u4f4f(\u5728)?\u54ea|\u5728\u54ea|\u7535\u8bdd|\u5730\u5740|\u884c\u8e2a|\u6bcf\u5929)/i,
         /(stalk|track|monitor|spy on|dig up|locate)\s+(my|that|the|a|his|her)?\s*(coworker|colleague|neighbor|roommate|stranger|crush|guy|girl|person|him|her)/i,
         /(home address|where .* lives?|phone number|daily routine|whereabouts) of (my|a|that|the|his|her)/i
       ]
     }
   ];
 
-  const SELF_SIGNALS = /(我自己|我本人|本人|我的(姓名|名字|名誉|足迹|信息)|关于我的|针对我(本人|的))/i;
-  const PUBLIC_SIGNALS = /(公众人物|政治人物|官员|名人|品牌|公司|机构|企业|官网|新闻报道|公开(报道|声明|新闻|页面|资料)|召回|声誉)/i;
-  const SAFETY_SIGNALS = /(诽谤|骚扰|诈骗|名誉(权)?|证据|保全|侵权|网暴|谣言)/i;
-  const CONSENT_SIGNALS = /(授权|书面同意|委托|同意书|代为(审计|监控))/i;
+  const SELF_SIGNALS = /(\u6211\u81ea\u5df1|\u6211\u672c\u4eba|\u672c\u4eba|\u6211\u7684(\u59d3\u540d|\u540d\u5b57|\u540d\u8a89|\u8db3\u8ff9|\u4fe1\u606f)|\u5173\u4e8e\u6211\u7684|\u9488\u5bf9\u6211(\u672c\u4eba|\u7684))/i;
+  const PUBLIC_SIGNALS = /(\u516c\u4f17\u4eba\u7269|\u653f\u6cbb\u4eba\u7269|\u5b98\u5458|\u540d\u4eba|\u54c1\u724c|\u516c\u53f8|\u673a\u6784|\u4f01\u4e1a|\u5b98\u7f51|\u65b0\u95fb\u62a5\u9053|\u516c\u5f00(\u62a5\u9053|\u58f0\u660e|\u65b0\u95fb|\u9875\u9762|\u8d44\u6599)|\u53ec\u56de|\u58f0\u8a89)/i;
+  const SAFETY_SIGNALS = /(\u8bfd\u8c24|\u9a9a\u6270|\u8bc8\u9a97|\u540d\u8a89(\u6743)?|\u8bc1\u636e|\u4fdd\u5168|\u4fb5\u6743|\u7f51\u66b4|\u8c23\u8a00)/i;
+  const CONSENT_SIGNALS = /(\u6388\u6743|\u4e66\u9762\u540c\u610f|\u59d4\u6258|\u540c\u610f\u4e66|\u4ee3\u4e3a(\u5ba1\u8ba1|\u76d1\u63a7))/i;
 
   function runPolicyGate(freeText, scope) {
     const text = (freeText || "").trim();
@@ -94,7 +94,7 @@
       return {
         accepted: false,
         category: "schema_violation",
-        reason: `scope_type "${scope}" 不在合法枚举内（self / consented / public_figure / brand / safety_evidence），input_schema 校验拒绝。`,
+        reason: `scope_type "${scope}" is outside the permitted enum (self / consented / public_figure / brand / safety_evidence); input_schema validation refused it.`,
         matched: [],
         alternatives: defaultAlternatives()
       };
@@ -111,7 +111,7 @@
         return {
           accepted: false,
           category: hits[0].id,
-          reason: hits[0].reason + (scope ? `（即使标注为 scope=${scope}，合法 scope 也不能为越界请求洗白。）` : ""),
+          reason: hits[0].reason + (scope ? ` (A legal-looking scope=${scope} cannot launder an out-of-bounds request.)` : ""),
           matched: hits.map(h => ({ id: h.id, label: h.label })),
           alternatives: alternativesFor(hits[0].id)
         };
@@ -122,7 +122,7 @@
       return {
         accepted: false,
         category: "empty",
-        reason: "未提供 scope_type，也未输入请求内容。请至少选择一个合法 scope 或描述你的请求。",
+        reason: "No scope_type or request text was provided. Choose a permitted scope or describe your request.",
         matched: [],
         alternatives: defaultAlternatives()
       };
@@ -141,7 +141,7 @@
       return {
         accepted: false,
         category: "unscoped",
-        reason: "无法确认该请求落入任一合法 scope（self / consented / public_figure / brand / safety_evidence）。闸门采用 fail-closed：无法证明合法即拒绝。请明确这是关于你自己、已授权对象、公众人物、品牌，还是涉及你本人的安全证据。",
+        reason: "The request cannot be assigned to a permitted scope (self / consented / public_figure / brand / safety_evidence). The gate fails closed: if permission cannot be established, it refuses. State whether this concerns you, an authorized subject, a public figure, a brand, or safety evidence involving you.",
         matched: [],
         alternatives: defaultAlternatives()
       };
@@ -152,55 +152,55 @@
       category: "accepted",
       scope: effectiveScope,
       reason: scope
-        ? `请求落入合法 scope "${effectiveScope}"，未命中任何 prohibited 模式。`
-        : `从请求文本推断为合法 scope "${effectiveScope}"，未命中任何 prohibited 模式。`,
+        ? `The request falls within permitted scope "${effectiveScope}" and matches no prohibited pattern.`
+        : `The request text implies permitted scope "${effectiveScope}" and matches no prohibited pattern.`,
       pipeline: pipelineFor(effectiveScope)
     };
   }
 
   function pipelineFor(scope) {
     const subject = {
-      self: "你自己的公开足迹",
-      consented: "已书面授权对象的公开足迹",
-      public_figure: "该公众人物在公共领域的公开言论/报道",
-      brand: "该品牌/机构的公开声誉信息",
-      safety_evidence: "涉及你本人的公开证据"
+      self: "your own public footprint",
+      consented: "the public footprint of a subject with written authorization",
+      public_figure: "public statements and reporting about this public figure",
+      brand: "public reputation information about this brand or organization",
+      safety_evidence: "public safety evidence involving you"
     }[scope];
     return [
-      { step: "A0", text: `通过合规闸门：scope=${scope}，记录到合规审计日志（仅元数据）。` },
-      { step: "A2", text: `Metamorph 把任务路由到白名单内的公开数据源 actor，目标=${subject}。` },
-      { step: "A3", text: "AdaptivePlaywrightCrawler 仅抓取公开页面；遇登录/验证码/封禁即合规退避并如实记录。" },
-      { step: "A5", text: "结构化证据，计算 exposure / evidence_quality / actionability 三项分数，建立可引用 evidence index。" },
-      { step: "A6", text: "生成自我足迹报告（暴露地图为核心），并给出 opt-out 下架 / takedown 等可执行处置。" }
+      { step: "A0", text: `Passed policy gate: scope=${scope}; record compliance audit metadata only.` },
+      { step: "A2", text: `Metamorph routes the task to an allowlisted public-source actor; target=${subject}.` },
+      { step: "A3", text: "AdaptivePlaywrightCrawler fetches public pages only; it stops and records the event when it meets a login wall, CAPTCHA, or block." },
+      { step: "A5", text: "Structure evidence, compute exposure / evidence_quality / actionability scores, and build a citable evidence index." },
+      { step: "A6", text: "Generate the self-footprint report centered on the Exposure Map, with actionable opt-out and takedown steps." }
     ];
   }
 
   const ALT_LIBRARY = {
     private_person_tracking: [
-      "审计「我自己」的公开足迹：看看公开网络上能搜到关于我的哪些信息。",
-      "保全涉及我本人的公开骚扰/诽谤内容作为证据（scope=safety_evidence）。",
-      "监控某公众人物的公开新闻报道（scope=public_figure）。"
+      "Audit my own public footprint: show what public pages reveal about me.",
+      "Preserve public harassment or defamation involving me as evidence (scope=safety_evidence).",
+      "Monitor public news coverage about a public figure (scope=public_figure)."
     ],
     romance_inference: [
-      "审计「我自己」在公开网页上的名誉相关提及（scope=self）。",
-      "保全一条针对我本人的公开诽谤帖作为证据（scope=safety_evidence）。"
+      "Audit reputation-related mentions of me on public pages (scope=self).",
+      "Preserve a public defamatory post targeting me as evidence (scope=safety_evidence)."
     ],
     gender_from_image: [
-      "审计我自己的公开头像在哪些公开页面被使用（scope=self）。",
-      "监控某品牌官方账号的公开视觉资产（scope=brand）。"
+      "Audit which public pages use my own public avatar (scope=self).",
+      "Monitor public visual assets from a brand's official accounts (scope=brand)."
     ],
     dating_app_presence: [
-      "审计我自己的公开账号在搜索引擎中的可见度（scope=self）。",
-      "在书面授权下审计某品牌的公开提及（scope=consented）。"
+      "Audit the search-engine visibility of my own public accounts (scope=self).",
+      "Audit public mentions of a brand under written authorization (scope=consented)."
     ]
   };
   function alternativesFor(id) { return ALT_LIBRARY[id] || defaultAlternatives(); }
   function defaultAlternatives() {
     return [
-      "审计「我自己」的公开数字足迹（scope=self）。",
-      "保全涉及我本人的公开证据：骚扰/诽谤/诈骗（scope=safety_evidence）。",
-      "监控某公众人物的公开报道（scope=public_figure）。",
-      "在书面授权下监控某品牌的公开声誉（scope=brand / consented）。"
+      "Audit my own public digital footprint (scope=self).",
+      "Preserve public evidence involving me: harassment, defamation, or fraud (scope=safety_evidence).",
+      "Monitor public reporting about a public figure (scope=public_figure).",
+      "Monitor a brand's public reputation under written authorization (scope=brand / consented)."
     ];
   }
 
@@ -239,15 +239,15 @@
   function renderPresets() {
     const row = document.getElementById("presetRow");
     const presets = [
-      { t: "追踪某个私人个体", txt: "帮我追踪某个私人个体最近在干嘛，并推断其亲密关系", kind: "reject" },
-      { t: "暧昧推断", txt: "看看这个人和我同事是不是有暧昧", kind: "reject" },
-      { t: "头像猜性别", txt: "根据这个头像判断对方是男是女", kind: "reject" },
-      { t: "交友 App 活跃", txt: "查他是不是在用 Tinder、Bumble", kind: "reject" },
-      { t: "蹲点同事行踪", txt: "track my coworker's daily whereabouts and home address", kind: "reject" },
-      { t: "审计我自己", txt: "搜索我自己的姓名在公开网页上的出现情况，评估我的暴露度", kind: "accept" },
-      { t: "保全诽谤证据", txt: "保全一条公开发布的、针对我本人的诽谤帖子作为证据", kind: "accept" },
-      { t: "监控公众人物", txt: "汇总某位政治人物的公开新闻报道与官方声明", kind: "accept" },
-      { t: "品牌声誉", txt: "监控某品牌在公开新闻与官网上的产品召回信息", kind: "accept" }
+      { t: "Track a private person", txt: "Track what a private person has been doing lately and infer their intimate relationships", kind: "reject" },
+      { t: "Infer romance", txt: "Check whether this person and my coworker are romantically involved", kind: "reject" },
+      { t: "Guess gender from an avatar", txt: "Determine whether this person is a man or a woman from their avatar", kind: "reject" },
+      { t: "Check dating-app activity", txt: "Check whether this person uses Tinder or Bumble", kind: "reject" },
+      { t: "Track a coworker", txt: "Track my coworker's daily whereabouts and home address", kind: "reject" },
+      { t: "Audit my footprint", txt: "Search public pages for my own name and assess my exposure", kind: "accept" },
+      { t: "Preserve defamation evidence", txt: "Preserve a public defamatory post targeting me as evidence", kind: "accept" },
+      { t: "Monitor a public figure", txt: "Summarize public reporting and official statements about a political figure", kind: "accept" },
+      { t: "Monitor brand reputation", txt: "Monitor public news and official pages for a brand recall", kind: "accept" }
     ];
     presets.forEach(p => {
       const b = el("button", "preset " + p.kind, esc(p.t));
@@ -273,7 +273,7 @@
     // a first-time visitor reads big word → what it means → why.
     const head = el("div", "verdict-head");
     const mark = el("span", "verdict-mark", res.accepted ? "✓" : "⊘");
-    const word = el("span", "verdict-word", res.accepted ? "可以做" : "已拒绝");
+    const word = el("span", "verdict-word", res.accepted ? "Permitted" : "Refused");
     head.appendChild(mark);
     head.appendChild(word);
     head.appendChild(el("span", "verdict-badge", res.accepted ? "compliant" : "blocked"));
@@ -282,16 +282,16 @@
     // one-line "what this means" — plain language, no jargon
     v.appendChild(el("p", "verdict-meaning",
       res.accepted
-        ? "这个请求落入合法范围，闸门放行，可以进入自审流水线。"
-        : "这个请求越过了合规红线，闸门当场拦下，不会进行任何抓取。"));
+        ? "This request falls within a permitted scope. The gate allows it into the self-audit pipeline."
+        : "This request crosses a compliance red line. The gate refuses it immediately; no crawl runs."));
 
     // technical reason, labelled so it reads as the supporting detail
-    v.appendChild(el("p", "verdict-why-label", res.accepted ? "判定依据" : "为什么被拒"));
+    v.appendChild(el("p", "verdict-why-label", res.accepted ? "Decision basis" : "Why it was refused"));
     v.appendChild(el("p", "verdict-reason", esc(res.reason)));
 
     if (res.accepted) {
       v.appendChild(el("span", "scope-tag", "scope_type = " + esc(res.scope)));
-      v.appendChild(el("p", "verdict-sub", "流水线将执行（合规路径）"));
+      v.appendChild(el("p", "verdict-sub", "Pipeline execution (compliant path)"));
       const ul = el("ul", "pipe-list");
       res.pipeline.forEach(s => {
         const li = el("li");
@@ -303,11 +303,11 @@
     } else {
       if (res.matched && res.matched.length) {
         const wrap = el("div");
-        wrap.appendChild(el("p", "verdict-sub", "命中 prohibited 类别"));
+        wrap.appendChild(el("p", "verdict-sub", "Matched prohibited categories"));
         res.matched.forEach(m => wrap.appendChild(el("span", "matched-tag", esc(m.label))));
         v.appendChild(wrap);
       }
-      v.appendChild(el("p", "verdict-sub", "改做这些合法任务 →"));
+      v.appendChild(el("p", "verdict-sub", "Safer alternatives →"));
       const ul = el("ul", "alt-list");
       (res.alternatives || []).forEach(a => {
         const li = el("li"); li.appendChild(el("span", null, esc(a))); ul.appendChild(li);
@@ -329,7 +329,7 @@
    * SELF-EXPOSURE REPORT — grouped finding categories (Blacklight-style),
    * categories + event types from shared/detectors/event-types.js (SpiderFoot
    * module/event model). These are TEMPLATE checks (the audit schema), each
-   * clearly flagged "模板检查项（无真实数据）". No scraped result is fabricated.
+   * clearly flagged "template checks (no live data)". No scraped result is fabricated.
    *
    * The categories below mirror, 1:1, the detector modules that actually exist
    * in shared/detectors/* and the EVENT_TYPES they emit, so the UI and the
@@ -340,83 +340,86 @@
     {
       id: "pii",
       icon: "◐",
-      title: "公开 PII · 你自己发布的可识别信息",
+      title: "Public PII · Identifiable information you published",
       module: "sfp_pii  ·  pii-detector.js",
-      desc: "你在自己控制的公开页面上发布的、可直接识别你的信息（邮箱 / 电话 / 地址 / 用户名 / 粗略位置）。检测，不推断。",
+      desc: "Directly identifying information published on pages you control: email, phone number, address, handle, or coarse location. Detect, never infer.",
       items: [
-        { name: "公开邮箱出现在你的页面上", event: "PII_EMAIL_PUBLIC", sev: "high", vis: "indexed",
-          why: "搜索引擎可索引的邮箱便于第三方把你的多个账号串起来，也是垃圾邮件/钓鱼的入口。",
-          fix: "用专用邮箱替换高敏页面上的主邮箱；核查哪些公开页面仍在展示它。" },
-        { name: "公开电话号码", event: "PII_PHONE_PUBLIC", sev: "high", vis: "indexed",
-          why: "公开电话可被用于社工、撞库找回与定位。", fix: "下线或改为联系表单；保留快照作为已处理记录。" },
-        { name: "公开邮寄/家庭地址文本", event: "PII_POSTAL_PUBLIC", sev: "high", vis: "linked",
-          why: "公开地址直接关系到人身安全。", fix: "联系站点移除；优先处理高排名页面。" },
-        { name: "复用的公开用户名", event: "PII_HANDLE_PUBLIC", sev: "medium", vis: "indexed",
-          why: "同一用户名让人从一个公开账号跳到你的其他公开账号。", fix: "区隔公私用户名，降低跨平台关联。" },
-        { name: "自述的粗略位置（城市/单位）", event: "PII_GEO_HINT_PUBLIC", sev: "low", vis: "indexed",
-          why: "粗略位置文本（非实时定位）与姓名同时出现会缩小你的可定位范围。", fix: "评估是否必须公开；统一对外展示口径。" }
+        { name: "Public email on your page", event: "PII_EMAIL_PUBLIC", sev: "high", vis: "indexed",
+          why: "An indexed email helps third parties link your public accounts and creates a spam or phishing entry point.",
+          fix: "Replace your primary email on high-sensitivity pages with a dedicated address and review every page that still exposes it." },
+        { name: "Public phone number", event: "PII_PHONE_PUBLIC", sev: "high", vis: "indexed",
+          why: "A public phone number can be used for social engineering, account recovery abuse, and location discovery.",
+          fix: "Remove it or replace it with a contact form. Preserve a snapshot as a remediation record." },
+        { name: "Public postal or home-address text", event: "PII_POSTAL_PUBLIC", sev: "high", vis: "linked",
+          why: "A public address creates a direct personal-safety risk.",
+          fix: "Ask the site to remove it and prioritize highly ranked pages." },
+        { name: "Reused public handle", event: "PII_HANDLE_PUBLIC", sev: "medium", vis: "indexed",
+          why: "A reused handle lets someone jump from one public account to your other public accounts.",
+          fix: "Separate public and private handles to reduce cross-platform correlation." },
+        { name: "Self-described coarse location", event: "PII_GEO_HINT_PUBLIC", sev: "low", vis: "indexed",
+          why: "A city or organization shown with your name narrows the area in which you can be located.",
+          fix: "Decide whether it needs to be public and standardize what you disclose." }
       ]
     },
     {
       id: "tracker",
       icon: "◉",
-      title: "第三方追踪器 · 你自己网站上的隐私泄露面",
+      title: "Third-party trackers · Privacy leakage on your site",
       module: "sfp_tracker  ·  tracker-detector.js",
-      desc: "这是 Blacklight 的核心检查项：你控制的站点上有哪些第三方追踪器，会泄露访客（也包括你）的信息。",
+      desc: "A Blacklight-inspired check for third-party trackers on sites you control. These scripts may disclose visitor activity, including your own.",
       items: [
-        { name: "第三方追踪器脚本", event: "TRACKER_THIRD_PARTY", sev: "medium", vis: "indexed",
-          why: "第三方脚本把访客行为回传给广告/数据中介。", fix: "审查并移除非必要的第三方脚本与标签。" },
-        { name: "浏览器指纹采集", event: "TRACKER_FINGERPRINTING", sev: "high", vis: "indexed",
-          why: "指纹采集即使禁用 Cookie 也能跨站识别访客。", fix: "移除指纹库；改用合规的隐私友好分析。" },
-        { name: "会话录制（键鼠回放）", event: "TRACKER_SESSION_RECORDING", sev: "high", vis: "indexed",
-          why: "会话录制可能连同表单内容一起被采集。", fix: "停用会话录制或严格脱敏。" },
-        { name: "键盘记录式表单监听", event: "TRACKER_KEYLOGGING", sev: "high", vis: "indexed",
-          why: "提交前即捕获输入会泄露未提交的敏感内容。", fix: "移除提交前监听的第三方表单脚本。" },
-        { name: "第三方 Cookie", event: "COOKIE_THIRD_PARTY", sev: "low", vis: "indexed",
-          why: "第三方 Cookie 用于跨站追踪访客。", fix: "限制为必要的第一方 Cookie。" },
-        { name: "Referrer 泄露身份", event: "LEAK_REFERRER", sev: "medium", vis: "indexed",
-          why: "URL/Referrer 可能把你的身份带给第三方域。", fix: "设置 referrer policy，避免在 URL 暴露标识。" }
+        { name: "Third-party tracking script", event: "TRACKER_THIRD_PARTY", sev: "medium", vis: "indexed",
+          why: "Third-party scripts can send visitor behavior to advertising or data intermediaries.", fix: "Review and remove unnecessary third-party scripts and tags." },
+        { name: "Browser fingerprinting", event: "TRACKER_FINGERPRINTING", sev: "high", vis: "indexed",
+          why: "Fingerprinting can recognize visitors across sites even when cookies are disabled.", fix: "Remove fingerprinting libraries and use privacy-friendly analytics." },
+        { name: "Session recording", event: "TRACKER_SESSION_RECORDING", sev: "high", vis: "indexed",
+          why: "Session recording may capture form contents along with mouse and keyboard activity.", fix: "Disable session recording or enforce strict redaction." },
+        { name: "Keystroke-style form listener", event: "TRACKER_KEYLOGGING", sev: "high", vis: "indexed",
+          why: "Capturing input before submission can leak sensitive content.", fix: "Remove third-party form scripts that listen before submission." },
+        { name: "Third-party cookie", event: "COOKIE_THIRD_PARTY", sev: "low", vis: "indexed",
+          why: "Third-party cookies are used to track visitors across sites.", fix: "Restrict cookies to necessary first-party use." },
+        { name: "Identity leaked through referrer", event: "LEAK_REFERRER", sev: "medium", vis: "indexed",
+          why: "A URL or referrer can carry your identifier to a third-party domain.", fix: "Set a referrer policy and avoid exposing identifiers in URLs." }
       ]
     },
     {
       id: "secret",
       icon: "◈",
-      title: "密钥泄露 · 你自己误发的凭证",
+      title: "Secret leakage · Credentials you accidentally published",
       module: "sfp_secret  ·  secret-leak-detector.js",
-      desc: "你在自己控制的页面/仓库里误发的 API key / token / 私钥 / .env 赋值——安全卫生问题，应当轮换。借鉴 secret-scanning（TruffleHog / GitHub secret scanning），方向为自审。",
+      desc: "API keys, tokens, private keys, or .env assignments accidentally published on your pages or repositories. This self-audit hygiene check is inspired by secret scanning.",
       items: [
-        { name: "公开页面/仓库中的密钥", event: "SECRET_LEAK_PUBLIC", sev: "high", vis: "indexed",
-          why: "公开的凭证可被直接滥用，应立即轮换。这是关于你自己的凭证，绝不涉及第三方密钥。",
-          fix: "立即轮换凭证；从历史记录中清除；改用密钥管理。" }
+        { name: "Credential in a public page or repository", event: "SECRET_LEAK_PUBLIC", sev: "high", vis: "indexed",
+          why: "A public credential can be abused immediately. This check concerns only your own credentials, never a third party's.",
+          fix: "Rotate the credential immediately, remove it from history, and adopt secret management." }
       ]
     },
     {
       id: "breach",
       icon: "◍",
-      title: "泄露库命中（k-匿名）· 你自己凭证的已知泄露",
+      title: "Breach-corpus match · Known exposure of your credential",
       module: "sfp_breach  ·  breach-range-detector.js",
-      desc: "用 HIBP 式 k-匿名 range 比对你自己的凭证是否出现在已知泄露中——我们绝不传输或存储完整明文，只比对哈希前缀范围。",
+      desc: "Use an HIBP-style k-anonymous range lookup to check whether your own credential appears in a known breach corpus. MirrorTrace never transmits or stores plaintext credentials.",
       items: [
-        { name: "凭证命中泄露范围", event: "BREACH_RANGE_HIT", sev: "high", vis: "private",
-          why: "出现在已知泄露中的凭证应停用并改密码。比对在 k-匿名桶内完成，桶内候选 ≥ k 才返回，不暴露具体后缀。",
-          fix: "停用该凭证、改用唯一强密码、开启两步验证。" }
+        { name: "Credential matched a breach range", event: "BREACH_RANGE_HIT", sev: "high", vis: "private",
+          why: "A credential found in a known breach corpus should be retired. Matching happens locally within a k-anonymous bucket without exposing the suffix.",
+          fix: "Retire the credential, use a unique strong password, and enable multi-factor authentication." }
       ]
     },
     {
       id: "surface",
       icon: "◎",
-      title: "可见账号与表面 · 你控制并暴露的入口",
-      module: "sfp_accounts  ·  username-enum-detector.js（dual-use，仅 self/public_figure 经闸门校验）",
-      desc: "你自己控制并公开暴露的档案 URL 与用户名。用户名枚举是 dual-use 技术，仅对 self / public_figure 开放，且必须经过合规闸门。",
+      title: "Visible accounts and surfaces · Entrypoints you expose",
+      module: "sfp_accounts  ·  username-enum-detector.js (dual use; gate permits self/public_figure only)",
+      desc: "Public profile URLs and handles you control. Handle enumeration is dual use, so it is available only for self or public_figure scopes after the policy gate.",
       items: [
-        { name: "公开档案 URL", event: "SELF_PROFILE_URL", sev: "low", vis: "indexed",
-          why: "盘点你已知公开的档案入口，便于统一管理与处置。", fix: "整理对外档案清单；下线不再使用的旧档案。" },
-        { name: "可枚举的公开用户名", event: "SELF_USERNAME", sev: "medium", vis: "indexed",
-          why: "复用用户名提高了跨平台关联度。", fix: "区隔公私用户名；这是经闸门校验的 dual-use 枚举。" }
+        { name: "Public profile URL", event: "SELF_PROFILE_URL", sev: "low", vis: "indexed",
+          why: "Inventory your known public profile entrypoints so you can manage and remediate them.", fix: "Maintain a public-profile inventory and retire old profiles you no longer use." },
+        { name: "Enumerable public handle", event: "SELF_USERNAME", sev: "medium", vis: "indexed",
+          why: "A reused handle increases cross-platform correlation.", fix: "Separate public and private handles. This dual-use enumeration is gate checked." }
       ]
     }
   ];
-
   // The latest REAL produced report (synthetic-fixture or live pipeline output),
   // or null when none has loaded. When set, the report view renders its REAL
   // detector findings; when null, the view shows the honest template catalog.
@@ -440,16 +443,16 @@
 
   // Per-finding evidence-quality note (mirrors shared/enrich/evidence-quality.js +
   // k-anonymity.js framing): template checks have no real evidence yet.
-  const SEV_LABEL = { high: "高", medium: "中", low: "低", info: "提示" };
-  const VIS_LABEL = { indexed: "可被搜索引擎索引", linked: "顺链接可达", private: "通常不应外露" };
+  const SEV_LABEL = { high: "High", medium: "Medium", low: "Low", info: "Info" };
+  const VIS_LABEL = { indexed: "search-engine indexed", linked: "reachable by link", private: "normally should not be exposed" };
 
   // The "why this is a template, not a finding" banner copy.
   const SELF_NOTE =
-    "scope=self：以下按类别列出第三方能轻易发现关于你的什么。这些是审计 schema 的模板检查项，" +
-    "不是真实抓取结果——真实运行才会按 evidence index 填入带 URL+时间戳+哈希的条目。";
+    "scope=self: the categories below show what third parties can easily find about you. These are audit-schema template checks, " +
+    "not scraped results. A live run fills evidence-index rows with URL, timestamp, and hash.";
   const PUBLIC_FIGURE_NOTE =
-    "scope=public_figure：只盘点该公众人物在公共领域的官方/公开表面（官网、新闻、公开声明）。" +
-    "不触碰任何私域行为，不做身份/关系推断。以下为审计 schema 的模板检查项。";
+    "scope=public_figure: inventory only official or public surfaces in the public domain, such as official sites, news, and public statements. " +
+    "Never touch private behavior or infer identity or relationships. The items below are audit-schema template checks.";
 
   /* -------------------------------------------------------------------------
    * LIVE k-ANONYMITY DEMONSTRATOR (Have I Been Pwned "Pwned Passwords" range API)
@@ -494,20 +497,20 @@
   function kAnonPanel() {
     const panel = el("div", "kanon");
 
-    panel.appendChild(el("div", "kanon-tag", "实时演示 · HIBP k-匿名 range 机制"));
+    panel.appendChild(el("div", "kanon-tag", "Live demo · HIBP k-anonymous range mechanism"));
     panel.appendChild(el("p", "kanon-intro",
-      "在浏览器本地把你<b>自己</b>的一个凭证（密码或邮箱）做 SHA-1，然后看清楚：" +
-      "<b>哪 5 个字符会被发出</b>、<b>哪 35 个字符永远留在本地</b>。" +
-      "这复刻 Have I Been Pwned「Pwned Passwords」range API 的隐私机制，" +
-      "也与后端 <code>shared/aux/kanon.js</code> 的 prefix/suffix 切分契约逐字一致。"));
+      "Hash <b>your own</b> credential locally in the browser with SHA-1 and inspect exactly: " +
+      "<b>which 5 characters would be sent</b> and <b>which 35 characters always stay local</b>. " +
+      "This mirrors the Have I Been Pwned Pwned Passwords range API privacy mechanism, " +
+      "and matches the prefix/suffix split contract in <code>shared/aux/kanon.js</code>."));
 
     const warn = el("p", "kanon-offline");
-    warn.innerHTML = "⊘ 离线模式不会查询任何泄露库 —— 本面板证明的是<b>隐私机制</b>（什么离开设备、什么留在本地），" +
-      "<b>不是</b>泄露结果。绝不会显示任何伪造的泄露命中或次数。";
+    warn.innerHTML = "⊘ Offline mode never queries a breach corpus. This panel demonstrates the <b>privacy mechanism</b>: what leaves your device and what stays local. " +
+      "It is <b>not</b> a breach result and never displays a fabricated hit or count.";
     panel.appendChild(warn);
 
     const field = el("div", "kanon-field");
-    const label = el("label", "field-label", "你自己的凭证（仅在本机哈希，不会上传）");
+    const label = el("label", "field-label", "Your own credential (hashed locally, never uploaded)");
     label.setAttribute("for", "kanonInput");
     field.appendChild(label);
     const input = el("input", "input");
@@ -516,12 +519,12 @@
     input.autocomplete = "off";
     input.spellcheck = false;
     input.setAttribute("autocapitalize", "off");
-    input.placeholder = "例如：你自己的一个旧密码或邮箱（本机 SHA-1，永不离开浏览器）";
+    input.placeholder = "Example: one of your old passwords or your email (local SHA-1 only)";
     field.appendChild(input);
     const actions = el("div", "kanon-actions");
-    const runBtn = el("button", "btn btn-ghost btn-tiny", "本地哈希并切分");
+    const runBtn = el("button", "btn btn-ghost btn-tiny", "Hash and split locally");
     runBtn.type = "button";
-    const clrBtn = el("button", "btn btn-ghost btn-tiny", "清空");
+    const clrBtn = el("button", "btn btn-ghost btn-tiny", "Clear");
     clrBtn.type = "button";
     actions.appendChild(runBtn);
     actions.appendChild(clrBtn);
@@ -538,15 +541,15 @@
     async function run() {
       const secret = input.value;
       if (!secret) {
-        out.innerHTML = '<p class="kanon-hint">输入一个字符串后再哈希。空输入不发送、不哈希。</p>';
+        out.innerHTML = '<p class="kanon-hint">Enter a string before hashing. Empty input is neither sent nor hashed.</p>';
         return;
       }
       let hash;
       try {
         hash = await sha1HexBrowser(secret);
       } catch (e) {
-        out.innerHTML = '<p class="kanon-hint kanon-err">此环境不提供 Web Crypto（SubtleCrypto 仅在安全上下文，如 file:// 或 https:// 可用）。' +
-          '请用 file:// 直接打开本页，或通过 https 访问。后端 <code>kanon.js</code> 用 Node crypto 做同样的 SHA-1。</p>';
+        out.innerHTML = '<p class="kanon-hint kanon-err">Web Crypto is unavailable in this environment. SubtleCrypto requires a secure context such as file:// or https://. ' +
+          'Open this page directly with file:// or serve it over https://. The backend <code>kanon.js</code> performs the same SHA-1 operation with Node crypto.</p>';
         return;
       }
       const k = kAnonSplit(hash);
@@ -556,31 +559,31 @@
       // The split, shown unambiguously: prefix (sent) highlighted vs suffix (local).
       const split = el("div", "kanon-split");
       const pre = el("span", "kanon-prefix", esc(k.prefix));
-      pre.title = "会被发往 range 端点的 5 个字符";
+      pre.title = "The 5 characters sent to the range endpoint";
       const suf = el("span", "kanon-suffix", esc(k.suffix));
-      suf.title = "永远留在本地、本地比对的 35 个字符";
+      suf.title = "The 35 characters that always stay local for matching";
       split.appendChild(pre);
       split.appendChild(suf);
       out.appendChild(split);
 
       const legend = el("div", "kanon-legend");
       const sent = el("div", "kanon-leg-row");
-      sent.innerHTML = '<span class="kanon-chip sent">会发出 · prefix</span>' +
+      sent.innerHTML = '<span class="kanon-chip sent">Sent · prefix</span>' +
         '<code class="kanon-mono">GET range/<b>' + esc(k.prefix) + "</b></code>" +
-        '<span class="kanon-leg-note">5 个十六进制字符 → 1,048,576 个桶之一，服务器无法分辨你查的是哪个。</span>';
+        '<span class="kanon-leg-note">5 hexadecimal characters select 1 of 1,048,576 buckets; the server cannot tell which credential you checked.</span>';
       const local = el("div", "kanon-leg-row");
-      local.innerHTML = '<span class="kanon-chip local">留本地 · suffix</span>' +
+      local.innerHTML = '<span class="kanon-chip local">Stays local · suffix</span>' +
         '<code class="kanon-mono">' + esc(k.suffix) + "</code>" +
-        '<span class="kanon-leg-note">35 个字符在你设备上与桶内候选逐一比对；明文凭证从不离开浏览器。</span>';
+        '<span class="kanon-leg-note">The 35-character suffix is matched against bucket candidates on your device. Plaintext credentials never leave the browser.</span>';
       legend.appendChild(sent);
       legend.appendChild(local);
       out.appendChild(legend);
 
       const foot = el("p", "kanon-foot");
-      foot.innerHTML = "完整 SHA-1（仅展示，不发送）：<code class=\"kanon-mono\">" + esc(k.hash) + "</code><br>" +
-        "下一步在真实运行中：后端只用 <code>" + esc(k.prefix) + "</code> 向 HIBP range 端点取回该桶的所有后缀+次数，" +
-        "在本地匹配 <code>suffix</code>，并按 HIBP padding 指南把 count=0 的填充行当作「未命中」。" +
-        "离线此处<b>到此为止</b>——不查询、不返回、不伪造任何泄露结果。";
+      foot.innerHTML = "Full SHA-1 (displayed only, never sent): <code class=\"kanon-mono\">" + esc(k.hash) + "</code><br>" +
+        "In a live run, the backend uses only <code>" + esc(k.prefix) + "</code> to retrieve suffixes and counts for that bucket from the HIBP range endpoint, " +
+        "matches the <code>suffix</code> locally, and treats padding rows with count=0 as not matched, following HIBP guidance. " +
+        "Offline mode <b>stops here</b>: no query, no returned corpus data, and no fabricated breach result.";
       out.appendChild(foot);
     }
 
@@ -705,16 +708,16 @@
 
     const summary = el("summary", "stix-summary");
     summary.appendChild(el("span", "stix-summary-label",
-      "可移植证据 · STIX 2.1 Observed Data（OpenCTI / MISP 互通）"));
+      "Portable evidence · STIX 2.1 Observed Data (OpenCTI / MISP interoperable)"));
     summary.appendChild(el("span", "stix-cat-chip", esc(cat)));
     wrap.appendChild(summary);
 
     const note = el("p", "stix-note");
     note.innerHTML =
-      "把这条发现导出为 OASIS <b>STIX 2.1 Observed Data</b> 对象（含 " +
-      "<code>first_observed</code> / <code>last_observed</code> / 内容哈希 / observable 类别），" +
-      "可直接交给下架请求、SIEM 或 OpenCTI / MISP。下面是真实运行会填充的 JSON 形状——" +
-      "本离线模板里所有取值字段均为占位串，<b>不是</b>抓取数据。";
+      "Export this finding as an OASIS <b>STIX 2.1 Observed Data</b> object with " +
+      "<code>first_observed</code>, <code>last_observed</code>, content hash, and observable category. " +
+      "Hand it directly to a removal request, SIEM, OpenCTI, or MISP. The JSON shape below is populated by a live run. " +
+      "Every value field in this offline template is a placeholder, <b>not</b> scraped data.";
     wrap.appendChild(note);
 
     const pre = el("pre", "stix-json");
@@ -722,23 +725,23 @@
     wrap.appendChild(pre);
 
     const actions = el("div", "stix-actions");
-    const copyBtn = el("button", "btn btn-primary btn-tiny", "复制 STIX JSON");
+    const copyBtn = el("button", "btn btn-primary btn-tiny", "Copy STIX JSON");
     copyBtn.type = "button";
     copyBtn.addEventListener("click", function () {
       const text = JSON.stringify(od, null, 2);
-      const done = function () { copyBtn.textContent = "已复制 ✓"; setTimeout(function () { copyBtn.textContent = "复制 STIX JSON"; }, 1600); };
+      const done = function () { copyBtn.textContent = "Copied ✓"; setTimeout(function () { copyBtn.textContent = "Copy STIX JSON"; }, 1600); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
       } else { fallbackCopy(text); done(); }
     });
     actions.appendChild(copyBtn);
-    actions.appendChild(el("span", "stix-template-flag", "模板 · 无真实数据"));
+    actions.appendChild(el("span", "stix-template-flag", "Template · no live data"));
     wrap.appendChild(actions);
 
     const ref = el("p", "stix-ref");
     ref.innerHTML =
-      "代码：<b>shared/enrich/stix-evidence.js</b>（toObservedData / toBundle，与此处同字段）。" +
-      "引用：OASIS STIX 2.1 Observed Data SDO + Indicator pattern；OpenCTI / MISP STIX 2.1 互通映射。";
+      "Code: <b>shared/enrich/stix-evidence.js</b> (toObservedData / toBundle, same fields as this panel). " +
+      "References: OASIS STIX 2.1 Observed Data SDO + Indicator pattern; OpenCTI / MISP STIX 2.1 interoperability mapping.";
     wrap.appendChild(ref);
 
     return wrap;
@@ -787,14 +790,14 @@
     const wrap = el("details", "stix-ev");
     const summary = el("summary", "stix-summary");
     summary.appendChild(el("span", "stix-summary-label",
-      "可移植证据 · STIX 2.1 Observed Data（OpenCTI / MISP 互通）"));
+      "Portable evidence · STIX 2.1 Observed Data (OpenCTI / MISP interoperable)"));
     summary.appendChild(el("span", "stix-cat-chip", esc(cat)));
     wrap.appendChild(summary);
 
     const note = el("p", "stix-note");
     note.innerHTML =
-      "本对象由<b>真实检测器发现</b>填充（event_type / source_url / confidence / risk / source_module 来自加载的报告）。" +
-      "时间戳与内容哈希等字段在合成 fixture 上以占位串呈现——指向真实经闸门的抓取即会写入真实哈希，绝不编造。";
+      "This object is populated from a <b>real detector finding</b>: event_type, source_url, confidence, risk, and source_module come from the loaded report. " +
+      "Timestamp and content-hash fields remain placeholders in a synthetic fixture. A real gate-approved crawl writes real hashes; MirrorTrace never fabricates them.";
     wrap.appendChild(note);
 
     const pre = el("pre", "stix-json");
@@ -802,24 +805,24 @@
     wrap.appendChild(pre);
 
     const actions = el("div", "stix-actions");
-    const copyBtn = el("button", "btn btn-primary btn-tiny", "复制 STIX JSON");
+    const copyBtn = el("button", "btn btn-primary btn-tiny", "Copy STIX JSON");
     copyBtn.type = "button";
     copyBtn.addEventListener("click", function () {
       const text = JSON.stringify(od, null, 2);
-      const done = function () { copyBtn.textContent = "已复制 ✓"; setTimeout(function () { copyBtn.textContent = "复制 STIX JSON"; }, 1600); };
+      const done = function () { copyBtn.textContent = "Copied ✓"; setTimeout(function () { copyBtn.textContent = "Copy STIX JSON"; }, 1600); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
       } else { fallbackCopy(text); done(); }
     });
     actions.appendChild(copyBtn);
     actions.appendChild(el("span", "stix-template-flag",
-      (report && /SYNTHETIC|TEMPLATE/i.test(String(report.__label || ""))) ? "合成 fixture · 真实检测器产出" : "真实流水线产出"));
+      (report && /SYNTHETIC|TEMPLATE/i.test(String(report.__label || ""))) ? "Synthetic fixture · real detector output" : "Live pipeline output"));
     wrap.appendChild(actions);
 
     const ref = el("p", "stix-ref");
     ref.innerHTML =
-      "代码：<b>shared/enrich/stix-evidence.js</b>（toObservedData，与此处同字段）。" +
-      "引用：OASIS STIX 2.1 Observed Data SDO；OpenCTI / MISP STIX 2.1 互通映射。";
+      "Code: <b>shared/enrich/stix-evidence.js</b> (toObservedData, same fields as this panel). " +
+      "References: OASIS STIX 2.1 Observed Data SDO; OpenCTI / MISP STIX 2.1 interoperability mapping.";
     wrap.appendChild(ref);
     return wrap;
   }
@@ -844,7 +847,7 @@
    * detail. Sharpens the report hierarchy: coverage → categories → findings.
    *
    * NO FAKE DATA: every number here is COUNTED from the real FINDING_GROUPS check
-   * catalog rendered below — it describes the audit SCHEMA ("会检查什么"), never a
+   * catalog rendered below — it describes the audit SCHEMA ("what it checks"), never a
    * scraped result. Labels make that explicit so it can't be read as findings. */
   /* =========================================================================
    * SELF-EXPOSURE GRADE  (A+…F)  —  plain hero letter, no gauge/dial/animation.
@@ -861,7 +864,7 @@
    *
    * NO FAKE DATA: the letter is rendered ONLY from a REAL produced report JSON
    * (the Node grade-module output). With no real scan we render the module's own
-   * EMPTY-IN ⇒ NO GRADE semantics ("尚未扫描 · 暂无评分"), and NEVER default an
+   * EMPTY-IN ⇒ NO GRADE semantics ("Not scanned · no grade yet"), and NEVER default an
    * unscanned subject to A. The web does not invent a score from template checks.
    * =======================================================================*/
   const GRADE_BANDS = [
@@ -878,11 +881,11 @@
   }
   // plain-language one-liner per band family (Observatory-style "what it means")
   const GRADE_MEANING = {
-    A: "暴露面很小：第三方很难轻易拼出关于你的画像。保持现状即可。",
-    B: "暴露面较小：有少量公开痕迹可清理，但整体可控。",
-    C: "中等暴露：存在若干公开信息点，建议按下方清单逐条处置。",
-    D: "暴露偏高：多处公开痕迹可被串联，建议尽快处理高暴露项。",
-    F: "暴露很高：关键个人信息公开可得，应优先处置高暴露与密钥泄露项。"
+    A: "Very small exposure surface: third parties cannot easily assemble a profile about you. Maintain the current posture.",
+    B: "Small exposure surface: a few public traces can be cleaned up, but the overall picture is manageable.",
+    C: "Moderate exposure: several public information points should be remediated using the checklist below.",
+    D: "Elevated exposure: several public traces can be correlated. Address high-exposure items promptly.",
+    F: "High exposure: key personal information is publicly available. Prioritize high-exposure and secret-leak items."
   };
   function gradeFamily(letter) {
     if (!letter) return "none";
@@ -925,21 +928,21 @@
     if (!vm || vm.graded === false) {
       const letter = el("div", "grade-letter g-none", "—");
       letter.setAttribute("role", "img");
-      letter.setAttribute("aria-label", "尚未扫描，暂无评分");
+      letter.setAttribute("aria-label", "Not scanned, no grade yet");
       const body = el("div", "grade-body");
-      body.appendChild(el("p", "grade-eyebrow", "暴露评分 · EXPOSURE GRADE"));
-      body.appendChild(el("p", "grade-meaning", "尚未扫描 · 暂无评分"));
+      body.appendChild(el("p", "grade-eyebrow", "Exposure grade · EXPOSURE GRADE"));
+      body.appendChild(el("p", "grade-meaning", "Not scanned · no grade yet"));
       body.appendChild(el("p", "grade-detail",
-        "评分只在一次真实自审运行后给出。未扫描的对象不会被默认评为 A——「没有数据」就如实显示为「无评分」，绝不编造分数。"));
+        "A grade appears only after a live self-audit. An unscanned subject is never defaulted to A. No data means no grade; MirrorTrace never invents a score."));
       // GOV.UK Design System: an empty/zero state should tell the user what they
       // can DO next, not just state absence. Point to Step 1 (the gate) so the
       // no-grade card is an actionable starting point, not a dead end.
       const next = el("p", "grade-next");
       next.innerHTML =
-        "下一步：到<a href=\"#gate\">第 1 步 · 合规闸门</a>用 <code>self</code> 范围通过，再运行一次真实自审即可得到评分。";
+        "Next: pass the <a href=\"#gate\">Step 1 · Policy Gate</a> with <code>self</code> scope, then run a live self-audit to calculate a grade.";
       body.appendChild(next);
       body.appendChild(el("p", "grade-note",
-        "评分模型：Mozilla HTTP Observatory / SecurityHeaders 式 A–F（基线 100 减去加权扣分）。代码：integrations/grade/exposure-grade.js。"));
+        "Grade model: Mozilla HTTP Observatory / SecurityHeaders-style A–F scoring (baseline 100 minus weighted deductions). Code: integrations/grade/exposure-grade.js."));
       wrap.appendChild(letter);
       wrap.appendChild(body);
       return;
@@ -950,17 +953,17 @@
     const fam = gradeFamily(letter);
     const letterEl = el("div", "grade-letter g-" + fam, esc(letter));
     letterEl.setAttribute("role", "img");
-    letterEl.setAttribute("aria-label", "暴露评分 " + letter + (vm.score != null ? "，分数 " + vm.score + " / 100" : ""));
+    letterEl.setAttribute("aria-label", "Exposure grade " + letter + (vm.score != null ? ", score " + vm.score + " / 100" : ""));
 
     const body = el("div", "grade-body");
-    body.appendChild(el("p", "grade-eyebrow", "暴露评分 · EXPOSURE GRADE"));
-    body.appendChild(el("p", "grade-meaning", GRADE_MEANING[fam.toUpperCase()] || ("评分 " + letter)));
+    body.appendChild(el("p", "grade-eyebrow", "Exposure grade · EXPOSURE GRADE"));
+    body.appendChild(el("p", "grade-meaning", GRADE_MEANING[fam.toUpperCase()] || ("Grade " + letter)));
 
     const bits = [];
-    if (vm.score != null) bits.push("分数 " + vm.score + " / 100");
-    if (vm.total_deduction != null) bits.push("总扣分 " + vm.total_deduction);
-    if (vm.counted_event_count != null) bits.push("计分发现 " + vm.counted_event_count + " 条");
-    if (vm.severity_band) bits.push("最严重等级 " + vm.severity_band);
+    if (vm.score != null) bits.push("Score " + vm.score + " / 100");
+    if (vm.total_deduction != null) bits.push("Total deduction " + vm.total_deduction);
+    if (vm.counted_event_count != null) bits.push("Counted findings " + vm.counted_event_count + "");
+    if (vm.severity_band) bits.push("Highest severity " + vm.severity_band);
     if (bits.length) body.appendChild(el("p", "grade-detail", esc(bits.join(" · "))));
 
     // compact A–F scale strip, current band highlighted (Observatory legend, no dial)
@@ -973,9 +976,9 @@
     body.appendChild(scale);
 
     const note = el("p", "grade-note", null);
-    const src = vm.source ? "来源：" + esc(vm.source) + "（合成/模板 fixture 经真实检测器流水线产出，非编造抓取结果）。 " : "";
+    const src = vm.source ? "Source: " + esc(vm.source) + " (synthetic or template fixture produced by the real detector pipeline, not a fabricated scrape). " : "";
     note.innerHTML = src +
-      "评分模型：Mozilla HTTP Observatory / SecurityHeaders 式 A–F（基线 100 减加权扣分）。代码：<code>integrations/grade/exposure-grade.js</code>。";
+      "Grade model: Mozilla HTTP Observatory / SecurityHeaders-style A–F scoring (baseline 100 minus weighted deductions). Code: <code>integrations/grade/exposure-grade.js</code>.";
     body.appendChild(note);
 
     wrap.appendChild(letterEl);
@@ -997,8 +1000,8 @@
     // one plain top-line stat row (HIBP/Blacklight: lead with the count)
     const stats = el("div", "cov-stats");
     [
-      { n: cats, label: "暴露类别" },
-      { n: checks, label: "检查项" }
+      { n: cats, label: "Exposure categories" },
+      { n: checks, label: "Checks" }
     ].forEach(s => {
       const cell = el("div", "cov-stat");
       cell.appendChild(el("span", "cov-num", String(s.n)));
@@ -1008,12 +1011,12 @@
 
     // severity-weight distribution of the checks (not findings) — a labelled bar
     const distWrap = el("div", "cov-dist");
-    distWrap.appendChild(el("span", "cov-dist-label", "检查项按暴露等级分布"));
+    distWrap.appendChild(el("span", "cov-dist-label", "Checks by exposure level"));
     const bar = el("div", "cov-bar", null);
     bar.setAttribute("role", "img");
     bar.setAttribute("aria-label",
-      "高暴露 " + sev.high + " 项，中暴露 " + sev.medium + " 项，低暴露 " + sev.low + " 项");
-    [["high", "高"], ["medium", "中"], ["low", "低"]].forEach(([k]) => {
+      "High exposure " + sev.high + " items, Medium exposure " + sev.medium + " items, Low exposure " + sev.low + " items");
+    [["high", "High"], ["medium", "Medium"], ["low", "Low"]].forEach(([k]) => {
       if (!sev[k]) return;
       const seg = el("div", "cov-seg " + k);
       seg.style.flexGrow = String(sev[k]);
@@ -1021,12 +1024,12 @@
     });
     distWrap.appendChild(bar);
     const legend = el("div", "cov-legend");
-    [["high", "高暴露", sev.high], ["medium", "中暴露", sev.medium], ["low", "低暴露", sev.low]]
+    [["high", "High exposure", sev.high], ["medium", "Medium exposure", sev.medium], ["low", "Low exposure", sev.low]]
       .forEach(([k, name, n]) => {
         if (!n) return;
         const li = el("span", "cov-leg-item");
         li.appendChild(el("span", "cov-leg-dot " + k));
-        li.appendChild(el("span", null, name + " " + n + " 项"));
+        li.appendChild(el("span", null, name + " " + n + " items"));
         legend.appendChild(li);
       });
     distWrap.appendChild(legend);
@@ -1036,8 +1039,8 @@
 
     // honesty line: this is coverage/schema, not findings
     wrap.appendChild(el("p", "cov-note",
-      "以上是本次自审「会检查什么」的覆盖范围（审计 schema），不是抓取结果。" +
-      "真实运行经闸门、scope=self 后，命中的条目才会带 URL+时间戳+哈希填入下方各类别。"));
+      "This is the audit-schema coverage: what the self-audit checks, not scraped results. " +
+      "After a gate-approved live run with scope=self, matched items fill the categories below with URL, timestamp, and hash."));
   }
 
   // Pull the REAL findings array out of a produced report (the detector output).
@@ -1061,12 +1064,12 @@
     if (!report) { wrap.hidden = true; return; }
     wrap.hidden = false;
     wrap.className = "report-provenance " + (isSynthetic(report) ? "synthetic" : "live");
-    const tag = el("span", "prov-tag", isSynthetic(report) ? "合成 fixture · 真实检测器→评分流水线" : "真实流水线产出");
+    const tag = el("span", "prov-tag", isSynthetic(report) ? "Synthetic fixture · real detector-to-grade pipeline" : "Live pipeline output");
     wrap.appendChild(tag);
     if (report.__label) wrap.appendChild(el("p", "prov-label", esc(report.__label)));
     if (report.__notice) wrap.appendChild(el("p", "prov-notice", esc(report.__notice)));
     const src = [];
-    if (report.generated_at) src.push("生成时间 " + report.generated_at);
+    if (report.generated_at) src.push("Generated at " + report.generated_at);
     if (report.provenance && report.provenance.fixture) src.push("fixture " + report.provenance.fixture);
     if (src.length) wrap.appendChild(el("p", "prov-src", esc(src.join(" · "))));
   }
@@ -1110,7 +1113,7 @@
       titleWrap.appendChild(el("div", "fg-title", esc(g.title)));
       titleWrap.appendChild(el("div", "fg-module", esc(g.module)));
       head.appendChild(titleWrap);
-      head.appendChild(el("span", "fg-count real " + worst, list.length + " 条发现"));
+      head.appendChild(el("span", "fg-count real " + worst, list.length + " findings"));
       card.appendChild(head);
 
       const body = el("div", "fg-body");
@@ -1122,7 +1125,7 @@
         const row = el("div", "fi-row");
         row.appendChild(el("span", "fi-name", esc(meta.name || f.event_type)));
         const risk = f.risk || meta.sev || "low";
-        row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + "暴露")));
+        row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + " exposure")));
         const vis = f.visibility || meta.vis;
         if (vis) row.appendChild(el("span", "vis-badge", esc(VIS_LABEL[vis] || vis)));
         row.appendChild(el("span", "event-chip", esc(f.event_type)));
@@ -1130,20 +1133,20 @@
 
         // real evidence one-liner: source URL + confidence + source module
         const facts = el("p", "fi-facts");
-        const conf = (f.confidence != null) ? "置信度 " + f.confidence : "";
-        const urlTxt = f.source_url ? f.source_url : "（无公开 URL — 如 k-匿名泄露比对）";
+        const conf = (f.confidence != null) ? "Confidence " + f.confidence : "";
+        const urlTxt = f.source_url ? f.source_url : "(no public URL, such as a k-anonymous breach lookup)";
         facts.innerHTML =
-          "<b>来源：</b>" + esc(urlTxt) +
+          "<b>Source:</b> " + esc(urlTxt) +
           (conf ? " · " + esc(conf) : "") +
           (f.source_module ? " · " + esc(f.source_module) : "");
         item.appendChild(facts);
 
         if (meta.why) {
           const why = el("p", "fi-why");
-          why.innerHTML = "<b>为什么重要：</b>" + esc(meta.why);
+          why.innerHTML = "<b>Why it matters:</b>" + esc(meta.why);
           item.appendChild(why);
         }
-        if (meta.fix) item.appendChild(el("p", "fi-fix", "建议处置：" + esc(meta.fix)));
+        if (meta.fix) item.appendChild(el("p", "fi-fix", "Suggested action: " + esc(meta.fix)));
 
         item.appendChild(stixEvidenceBlockReal(f, report));
         body.appendChild(item);
@@ -1161,10 +1164,10 @@
       const head = el("div", "fg-head");
       head.appendChild(el("span", "fg-icon", "◌"));
       const tw = el("div");
-      tw.appendChild(el("div", "fg-title", "其他检测器发现"));
-      tw.appendChild(el("div", "fg-module", "未在前端目录中的 event_type"));
+      tw.appendChild(el("div", "fg-title", "Other detector findings"));
+      tw.appendChild(el("div", "fg-module", "event_type not listed in the front-end catalog"));
       head.appendChild(tw);
-      head.appendChild(el("span", "fg-count real low", orphans.length + " 条发现"));
+      head.appendChild(el("span", "fg-count real low", orphans.length + " findings"));
       card.appendChild(head);
       const body = el("div", "fg-body");
       orphans.forEach(f => {
@@ -1172,9 +1175,9 @@
         const row = el("div", "fi-row");
         row.appendChild(el("span", "fi-name", esc(f.event_type)));
         const risk = f.risk || "low";
-        row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + "暴露")));
+        row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + " exposure")));
         item.appendChild(row);
-        if (f.source_url) item.appendChild(el("p", "fi-facts", "来源：" + esc(f.source_url)));
+        if (f.source_url) item.appendChild(el("p", "fi-facts", "Source: " + esc(f.source_url)));
         item.appendChild(stixEvidenceBlockReal(f, report));
         body.appendChild(item);
       });
@@ -1197,7 +1200,7 @@
       titleWrap.appendChild(el("div", "fg-title", esc(g.title)));
       titleWrap.appendChild(el("div", "fg-module", esc(g.module)));
       head.appendChild(titleWrap);
-      head.appendChild(el("span", "fg-count", g.items.length + " 项检查"));
+      head.appendChild(el("span", "fg-count", g.items.length + "  checks"));
       card.appendChild(head);
 
       const body = el("div", "fg-body");
@@ -1213,21 +1216,21 @@
         const item = el("div", "finding-item");
         const row = el("div", "fi-row");
         row.appendChild(el("span", "fi-name", esc(it.name)));
-        row.appendChild(el("span", "sev-badge " + it.sev, esc((SEV_LABEL[it.sev] || it.sev) + "暴露")));
+        row.appendChild(el("span", "sev-badge " + it.sev, esc((SEV_LABEL[it.sev] || it.sev) + " exposure")));
         row.appendChild(el("span", "vis-badge", esc(VIS_LABEL[it.vis] || it.vis)));
         row.appendChild(el("span", "event-chip", esc(it.event)));
         item.appendChild(row);
 
         const why = el("p", "fi-why");
-        why.innerHTML = "<b>为什么重要：</b>" + esc(it.why);
+        why.innerHTML = "<b>Why it matters:</b>" + esc(it.why);
         item.appendChild(why);
 
-        item.appendChild(el("p", "fi-fix", "建议处置：" + esc(it.fix)));
+        item.appendChild(el("p", "fi-fix", "Suggested action: " + esc(it.fix)));
 
         const q = el("div", "fi-quality");
         q.appendChild(el("span", "q-dot"));
-        q.appendChild(el("span", null, "evidence_quality：待真实运行（来源权威性 + 时间戳 + 完整性）"));
-        q.appendChild(el("span", "fi-template-flag", "模板检查项 · 无真实数据"));
+        q.appendChild(el("span", null, "evidence_quality: pending live run (source authority + timestamp + integrity)"));
+        q.appendChild(el("span", "fi-template-flag", "Template check · no live data"));
         item.appendChild(q);
 
         // Portable evidence detail — the existing module's STIX 2.1 Observed
@@ -1262,7 +1265,7 @@
    *
    * LAYOUT: a calm DETERMINISTIC radial — severity rings (red inner, yellow mid,
    * green outer), NOT a physics hairball. Long low-risk tail folds into one
-   * "+N 低风险" node so the map never becomes a hairball.
+   * "+N low-risk" node so the map never becomes a hairball.
    *
    * Refs: Maltego entity-link graph; SpiderFoot 4.0 correlation engine;
    * The Markup Blacklight (severity read at a glance). Prefer dependency-free SVG
@@ -1274,8 +1277,8 @@
   const MAP_RISK_TO_BAND = { high: "high", medium: "medium", low: "low", info: "info" };
   const MAP_TIER_RANK = { green: 0, yellow: 1, red: 2 };
   const MAP_ORIGIN_LABELS = {
-    breach_range_detector: "泄露库（k-匿名）",
-    breach_detector: "泄露库"
+    breach_range_detector: "Breach database (k-anonymity)",
+    breach_detector: "Breach database"
   };
   function mapTierForBand(band) { return MAP_BAND_TO_TIER[band] || "green"; }
 
@@ -1330,7 +1333,7 @@
    * report.findings so the detail panel renders the EXACT real finding. */
   function buildExposureGraphClient(report, opts) {
     opts = opts || {};
-    const selfLabel = (typeof opts.selfLabel === "string" && opts.selfLabel) || "你";
+    const selfLabel = (typeof opts.selfLabel === "string" && opts.selfLabel) || "You";
     const center = { id: "self", label: selfLabel };
     const findings = (report && Array.isArray(report.findings)) ? report.findings : [];
 
@@ -1411,7 +1414,7 @@
   /* ---- Radial SVG renderer ------------------------------------------------
    * Calm deterministic layout. Sources sit in three severity RINGS (red inner,
    * yellow middle, green outer). The low-risk (green) long tail beyond a cap
-   * folds into ONE "+N 低风险" node so the map never becomes a hairball.
+   * folds into ONE "+N low-risk" node so the map never becomes a hairball.
    * Subtle one-shot ease-in only; honors prefers-reduced-motion (static). */
   const SVGNS = "http://www.w3.org/2000/svg";
   const MAP_GREEN_CAP = 4;     // show at most this many green nodes; fold the rest
@@ -1422,7 +1425,7 @@
   }
   const TIER_FILL = { red: "#b3203f", yellow: "#9a6a00", green: "#0b6b00" };
   const TIER_RING_R = { red: 115, yellow: 175, green: 232 };
-  const TIER_WORD = { red: "红色高危", yellow: "黄色中等", green: "绿色低危" };
+  const TIER_WORD = { red: "red high sensitivity", yellow: "yellow medium sensitivity", green: "green low sensitivity" };
   function nodeRadius(infoCount) {
     // size = how much info that source holds; clamped so it stays legible.
     return Math.max(13, Math.min(34, 11 + infoCount * 4));
@@ -1436,7 +1439,7 @@
     return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  // Fold the green long tail into a synthetic "+N 低风险" node so the map stays
+  // Fold the green long tail into a synthetic "+N low-risk" node so the map stays
   // readable. Returns the visible node list (real nodes + optional fold node).
   function foldLowRiskTail(nodes) {
     const reds = nodes.filter(function (n) { return n.severityTier === "red"; });
@@ -1447,7 +1450,7 @@
     const folded = greens.slice(MAP_GREEN_CAP);
     const foldNode = {
       id: "fold:lowrisk",
-      label: "+" + folded.length + " 低风险来源",
+      label: "+" + folded.length + " low-risk sources",
       kind: "fold",
       severityTier: "green",
       infoCount: folded.reduce(function (s, n) { return s + n.infoCount; }, 0),
@@ -1494,7 +1497,7 @@
     if (!report || !reportFindings(report).length) {
       if (prov) {
         prov.className = "map-prov empty";
-        prov.innerHTML = "尚未加载报告 · 暂无来源节点。运行一次真实自审（经第 1 步闸门、scope=self）后，这里会按来源画出你的暴露地图。";
+        prov.innerHTML = "No report loaded · no source nodes yet. After a live self-audit passes Step 1 with scope=self, this map shows your exposure by source.";
       }
       renderMapCenterOnly(svg);
       renderMapLegend({ tally: { red: 0, yellow: 0, green: 0 } });
@@ -1502,16 +1505,16 @@
       return;
     }
 
-    const graph = buildExposureGraphClient(report, { selfLabel: "你" });
+    const graph = buildExposureGraphClient(report, { selfLabel: "You" });
     MAP_GRAPH = graph;
 
     if (prov) {
       prov.className = "map-prov " + (isSynthetic(report) ? "synthetic" : "live");
       prov.innerHTML =
-        (isSynthetic(report) ? "合成 fixture · 真实 buildExposureGraph 契约产出" : "真实流水线产出") +
-        " · " + graph.meta.source_count + " 个来源 · " + graph.meta.finding_count + " 条发现 · " +
-        graph.meta.shared_identifier_links + " 条跨来源关联（同邮箱/用户名）。" +
-        "此图在你浏览器内临时构建，不上传、关闭即清除。";
+        (isSynthetic(report) ? "Synthetic fixture · real buildExposureGraph contract output" : "Live pipeline output") +
+        " · " + graph.meta.source_count + " sources · " + graph.meta.finding_count + " findings · " +
+        graph.meta.shared_identifier_links + " cross-source links (same email or handle). " +
+        "This graph is built temporarily in your browser, never uploaded, and cleared when the tab closes.";
     }
     if (sub) {
       // keep the static explainer; nothing to change per-report
@@ -1576,7 +1579,7 @@
         "data-edge-from": e.from, "data-edge-to": e.to
       });
       const title = svgEl("title");
-      title.textContent = "共享同一" + (e.via === "email" ? "邮箱" : "用户名") + " → 可被关联";
+      title.textContent = "Shared " + (e.via === "email" ? "email" : "handle") + " → correlatable";
       line.appendChild(title);
       edgeLayer.appendChild(line);
     });
@@ -1587,10 +1590,10 @@
       cx: layout.cx, cy: layout.cy, r: 30, fill: "#1a1a17", stroke: "#0b6b00", "stroke-width": "2.5"
     }));
     const ct = svgEl("text", { x: layout.cx, y: layout.cy + 5, "text-anchor": "middle", class: "map-center-text", fill: "#fff" });
-    ct.textContent = "你";
+    ct.textContent = "You";
     centerG.appendChild(ct);
     const ctTitle = svgEl("title");
-    ctTitle.textContent = "你 — 本次自审的对象（中心）";
+    ctTitle.textContent = "You — subject of this self-audit (center)";
     centerG.appendChild(ctTitle);
     svg.appendChild(centerG);
 
@@ -1611,10 +1614,10 @@
         "data-node": n.id,
         transform: "translate(" + p.x.toFixed(1) + "," + p.y.toFixed(1) + ")"
       });
-      // aria-label per the brief: "source example.com, 红色高危, 3 项暴露"
+      // aria-label per the brief: "source example.com, red high sensitivity, 3 exposures"
       const aria = n.kind === "fold"
-        ? ("折叠：" + n.label + "，绿色低危，合计 " + n.infoCount + " 项暴露，按 Enter 展开明细")
-        : ("来源 " + n.label + "，" + TIER_WORD[n.severityTier] + "，" + n.infoCount + " 项暴露");
+        ? ("Folded: " + n.label + ", green low sensitivity, total " + n.infoCount + " exposures, press Enter to expand details")
+        : ("Source " + n.label + ", " + TIER_WORD[n.severityTier] + ", " + n.infoCount + " exposures");
       g.setAttribute("aria-label", aria);
 
       const circle = svgEl("circle", {
@@ -1685,7 +1688,7 @@
     const g = svgEl("g", { class: "map-center" });
     g.appendChild(svgEl("circle", { cx: cx, cy: cy, r: 30, fill: "#1a1a17", stroke: "#0b6b00", "stroke-width": "2.5" }));
     const t = svgEl("text", { x: cx, y: cy + 5, "text-anchor": "middle", class: "map-center-text", fill: "#fff" });
-    t.textContent = "你";
+    t.textContent = "You";
     g.appendChild(t);
     svg.appendChild(g);
   }
@@ -1696,21 +1699,21 @@
     wrap.innerHTML = "";
     const tally = (legend && legend.tally) || { red: 0, yellow: 0, green: 0 };
     [
-      ["red", "红 · 敏感暴露（泄露级，或邮箱/电话/地址）", tally.red],
-      ["yellow", "黄 · 中等暴露", tally.yellow],
-      ["green", "绿 · 仅低风险/公开琐碎", tally.green]
+      ["red", "Red · sensitive exposures (breach-level, email, phone, or address)", tally.red],
+      ["yellow", "Yellow · medium exposure", tally.yellow],
+      ["green", "Green · low-risk public traces only", tally.green]
     ].forEach(function (row) {
       const item = el("span", "ml-item");
       item.appendChild(el("span", "ml-dot " + row[0]));
-      item.appendChild(el("span", null, esc(row[1]) + (row[2] ? "（" + row[2] + "）" : "")));
+      item.appendChild(el("span", null, esc(row[1]) + (row[2] ? " (" + row[2] + ")" : "")));
       wrap.appendChild(item);
     });
     const size = el("span", "ml-item ml-meta");
-    size.appendChild(el("span", null, "节点越大＝该来源掌握你越多信息"));
+    size.appendChild(el("span", null, "Larger nodes mean a source holds more information about you"));
     wrap.appendChild(size);
     const dash = el("span", "ml-item ml-meta");
     dash.appendChild(el("span", "ml-dash"));
-    dash.appendChild(el("span", null, "虚线＝两来源共享同一标识，可被关联"));
+    dash.appendChild(el("span", null, "Dashed line = two sources share an identifier and can be correlated"));
     wrap.appendChild(dash);
   }
 
@@ -1720,7 +1723,7 @@
     detail.innerHTML = "";
     const empty = el("p", "map-detail-empty");
     empty.id = "mapDetailEmpty";
-    empty.innerHTML = "点击（或用 Tab 聚焦后按 Enter）任意来源节点，查看它对你的<b>具体暴露发现</b>、为什么重要、以及建议处置。";
+    empty.innerHTML = "Click any source node, or focus it with Tab and press Enter, to inspect its <b>specific exposure findings</b>, why they matter, and suggested actions.";
     detail.appendChild(empty);
   }
 
@@ -1752,13 +1755,13 @@
     head.appendChild(el("span", "md-dot " + node.severityTier));
     const ht = el("div");
     ht.appendChild(el("div", "md-title", esc(node.label)));
-    ht.appendChild(el("div", "md-sub", esc(TIER_WORD[node.severityTier] + " · " + node.infoCount + " 项暴露")));
+    ht.appendChild(el("div", "md-sub", esc(TIER_WORD[node.severityTier] + " · " + node.infoCount + " exposures")));
     head.appendChild(ht);
     detail.appendChild(head);
 
     if (foldedFrom) {
       detail.appendChild(el("p", "md-fold-note",
-        "这是被折叠的 " + foldedFrom.length + " 个低风险来源的合并视图。下面按来源列出它们的具体发现。"));
+        "This combines " + foldedFrom.length + " merged low-risk sources. Their specific findings are grouped by source below."));
       foldedFrom.forEach(function (sub) {
         detail.appendChild(el("div", "md-fold-src", esc(sub.label)));
         sub.findingRefs.forEach(function (ref) {
@@ -1775,11 +1778,11 @@
         const other = links.map(function (e) {
           const oid = e.from === node.id ? e.to : e.from;
           const on = MAP_GRAPH.nodes.filter(function (n) { return n.id === oid; })[0];
-          return (on ? on.label : oid) + "（同" + (e.via === "email" ? "邮箱" : "用户名") + "）";
+          return (on ? on.label : oid) + " (same " + (e.via === "email" ? "email" : "handle") + ")";
         });
         const corr = el("p", "md-corr");
-        corr.innerHTML = "⚲ <b>关联：</b>此来源与 " + esc(Array.from(new Set(other)).join("、")) +
-          " 共享同一标识——第三方可据此把你的多个公开痕迹串成一份画像。";
+        corr.innerHTML = "⚲ <b>Correlation:</b> This source and " + esc(Array.from(new Set(other)).join("、")) +
+          " shared identifiers, allowing third parties to correlate your public traces into one profile.";
         detail.appendChild(corr);
       }
       node.findingRefs.forEach(function (ref) {
@@ -1798,21 +1801,21 @@
     const row = el("div", "fi-row");
     row.appendChild(el("span", "fi-name", esc(meta.name || f.event_type)));
     const risk = f.risk || meta.sev || "low";
-    row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + "暴露")));
+    row.appendChild(el("span", "sev-badge " + risk, esc((SEV_LABEL[risk] || risk) + " exposure")));
     const vis = f.visibility || meta.vis;
     if (vis) row.appendChild(el("span", "vis-badge", esc(VIS_LABEL[vis] || vis)));
     row.appendChild(el("span", "event-chip", esc(f.event_type)));
     item.appendChild(row);
 
     const facts = el("p", "fi-facts");
-    const conf = (f.confidence != null) ? "置信度 " + f.confidence : "";
-    const urlTxt = f.source_url ? f.source_url : "（无公开 URL — 如 k-匿名泄露比对）";
-    facts.innerHTML = "<b>来源：</b>" + esc(urlTxt) + (conf ? " · " + esc(conf) : "") +
+    const conf = (f.confidence != null) ? "Confidence " + f.confidence : "";
+    const urlTxt = f.source_url ? f.source_url : "(no public URL, such as a k-anonymous breach lookup)";
+    facts.innerHTML = "<b>Source:</b> " + esc(urlTxt) + (conf ? " · " + esc(conf) : "") +
       (f.source_module ? " · " + esc(f.source_module) : "");
     item.appendChild(facts);
 
-    if (meta.why) { const w = el("p", "fi-why"); w.innerHTML = "<b>为什么重要：</b>" + esc(meta.why); item.appendChild(w); }
-    if (meta.fix) item.appendChild(el("p", "fi-fix", "建议处置：" + esc(meta.fix)));
+    if (meta.why) { const w = el("p", "fi-why"); w.innerHTML = "<b>Why it matters:</b>" + esc(meta.why); item.appendChild(w); }
+    if (meta.fix) item.appendChild(el("p", "fi-fix", "Suggested action: " + esc(meta.fix)));
     item.appendChild(stixEvidenceBlockReal(f, MAP_REPORT));
     return item;
   }
@@ -1862,13 +1865,13 @@
    * correlate) and must pass the identity gate; with no real verified identity it
    * cannot proceed and we honestly say so — never a fabricated success. */
   function loadGraphDemo() {
-    if (window.__EX_GRAPH_DEMO__) { applyGraphDemo(window.__EX_GRAPH_DEMO__); return; }
+    if (window.__MIRRORTRACE_GRAPH_DEMO__) { applyGraphDemo(window.__MIRRORTRACE_GRAPH_DEMO__); return; }
     const s = document.createElement("script");
     s.src = "data/example-graph-demo.js";
-    s.onload = function () { if (window.__EX_GRAPH_DEMO__) applyGraphDemo(window.__EX_GRAPH_DEMO__); };
+    s.onload = function () { if (window.__MIRRORTRACE_GRAPH_DEMO__) applyGraphDemo(window.__MIRRORTRACE_GRAPH_DEMO__); };
     s.onerror = function () {
       const prov = document.getElementById("mapProv");
-      if (prov) { prov.className = "map-prov empty"; prov.textContent = "关联演示 fixture 未能加载（data/example-graph-demo.js 缺失）。"; }
+      if (prov) { prov.className = "map-prov empty"; prov.textContent = "Correlation-demo fixture could not load (data/example-graph-demo.js is missing)."; }
     };
     document.head.appendChild(s);
   }
@@ -1892,18 +1895,18 @@
     if (fullBtn) fullBtn.addEventListener("click", function () {
       // SENSITIVE: build_correlation_graph requires sign_in (verification-tiers.js).
       requireVerification("build_correlation_graph", function () {
-        // Only reached with a REAL verified identity (never fabricated). With live
-        // OAuth NOT-YET-WIRED, this branch does not run; the gate explains why.
+        // Only reached with a real verified identity. The deployment credential
+        // handoff controls when this live branch becomes available.
       });
     });
   }
 
   /* =========================================================================
    * IDENTITY GATE UX — tiered verification (shared/identity/verification-tiers.js).
-   * Sensitive actions show a REAL one-click-sign-in gate, clearly labelled
-   * "演示：真实 Google/GitHub 登录为最后接入步骤". We NEVER fabricate a signed-in
-   * success: the OAuth buttons honestly report not-yet-wired. Low-sensitivity
-   * actions (template map over the example fixture, k-anon) require no gate.
+   * Sensitive actions show an explicit ownership-verification handoff. A live
+   * branch opens only after deployment provides a real verified identity.
+   * Low-sensitivity actions (template map over the example fixture, k-anon)
+   * remain available without that handoff.
    * =======================================================================*/
 
   // Client mirror of ACTION_POLICY tiers (policy only; no OAuth, no token).
@@ -1911,13 +1914,13 @@
     public_search: { tier: "none", sensitive: false },
     kanon_breach_check: { tier: "none", sensitive: false },
     pull_pii: { tier: "sign_in", sensitive: true,
-      rationale: "把你的 PII 汇集起来属于高敏操作。需经 OAuth 2.0 PKCE 验证的邮箱/用户名，证明被汇集的 PII 确实是登录者本人，防止被用于第三方。" },
+      rationale: "Collecting your PII is sensitive. OAuth 2.0 PKCE must verify an email or handle to prove the collected PII belongs to the signed-in user and prevent third-party lookups." },
     build_correlation_graph: { tier: "sign_in", sensitive: true,
-      rationale: "跨来源关联会生成一份预先组装的画像——本产品最敏感的产物。任何关联发生前，需用一键 OAuth 登录证明你对这些标识的所有权。" },
+      rationale: "Cross-source correlation creates a preassembled profile, the product's most sensitive output. One-click OAuth sign-in must prove ownership before correlation occurs." },
     confirm_broker_listing: { tier: "sign_in", sensitive: true,
-      rationale: "把某条数据中介挂牌确认为你本人，会把真实世界记录绑定到对象上；须经验证身份，避免替别人确认挂牌。" },
+      rationale: "Confirming that a data-broker listing belongs to you binds a real-world record to a subject. Verified identity prevents confirmation on someone else's behalf." },
     enable_monitoring: { tier: "sign_in", sensitive: true,
-      rationale: "持续监控是对某对象足迹的长期能力，必须绑定已验证账号，确保只监控已验证的本人。" }
+      rationale: "Continuous monitoring is a long-lived capability. It must be bound to a verified account and monitor only the verified user." }
   };
   // No real verified identity is ever fabricated. Until live OAuth is wired this
   // stays null, so sensitive actions cannot proceed past the gate.
@@ -1942,8 +1945,8 @@
     const modal = document.getElementById("identityGate");
     const why = document.getElementById("identityGateWhy");
     if (!modal) return false;
-    const p = VERIFICATION_POLICY[action] || { rationale: "未识别的操作——按 fail-closed 需要登录验证。" };
-    if (why) why.textContent = p.rationale || "此操作需要验证身份。";
+    const p = VERIFICATION_POLICY[action] || { rationale: "Unknown action: fail closed and require sign-in." };
+    if (why) why.textContent = p.rationale || "This action requires identity verification.";
     modal.removeAttribute("hidden");
     modal.dataset.pendingAction = action;
     // focus the first action for keyboard users
@@ -1963,16 +1966,17 @@
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && !modal.hasAttribute("hidden")) close();
     });
-    // OAuth buttons: HONESTLY report not-yet-wired. NEVER set VERIFIED_IDENTITY.
+    // OAuth credential handoff remains explicit: sensitive actions stay paused
+    // until the deployment has a real verified identity.
     ["oauthGoogle", "oauthGithub"].forEach(function (id) {
       const b = document.getElementById(id);
       if (!b) return;
       b.addEventListener("click", function () {
         const note = document.getElementById("identityGateNote");
         if (note) {
-          note.innerHTML = "<b>未接入：</b>真实 " + (id === "oauthGoogle" ? "Google" : "GitHub") +
-            " OAuth 2.0 PKCE 登录是最后一步接入（与 Apify 账号同样最后接），本演示<b>不会伪造</b>登录成功，因此该敏感操作暂不能继续。" +
-            "策略来源：<code>shared/identity/verification-tiers.js</code>。";
+          note.innerHTML = "<b>Credential handoff:</b> add the " + (id === "oauthGoogle" ? "Google" : "GitHub") +
+            " OAuth 2.0 PKCE client in deployment settings to activate ownership verification. The live action stays paused until verification completes. " +
+            "Policy source: <code>shared/identity/verification-tiers.js</code>.";
           note.classList.add("flash");
         }
       });
@@ -1984,10 +1988,10 @@
     const keys = document.getElementById("clusterKeys");
     if (!body || !keys) return;
     body.textContent =
-      "关联引擎（同 SpiderFoot 关联引擎，对应 shared/enrich/cluster-keys.js）会把共享同一关联键的事件聚合成一个「自我暴露簇」。" +
-      "例如多个 PII / 账号事件共享同一 handle 或同一 email-hash 时，会被聚合并给出置信度。真实运行时簇会附带可引用的 evidence index。";
+      "The SpiderFoot-style correlation engine in shared/enrich/cluster-keys.js groups events that share correlation keys into one self-exposure cluster. " +
+      "For example, PII and account events sharing a handle or email hash are grouped with confidence. Live clusters include a citable evidence index.";
     keys.innerHTML = "";
-    ["normalizeHandle(用户名)", "email-hash 前缀", "hostOf(同一站点)"].forEach(k => {
+    ["normalizeHandle(handle)", "email-hash prefix", "hostOf(same site)"].forEach(k => {
       keys.appendChild(el("li", null, esc(k)));
     });
   }
@@ -2000,13 +2004,13 @@
     const applies = scope === "self" || scope === "public_figure";
     if (applies) {
       banner.className = "report-banner applies";
-      banner.innerHTML = "✓ 闸门已放行 <code>" + esc(scope) + "</code>。" + esc(scope === "public_figure" ? PUBLIC_FIGURE_NOTE : SELF_NOTE);
+      banner.innerHTML = "✓ Gate permitted <code>" + esc(scope) + "</code>. " + esc(scope === "public_figure" ? PUBLIC_FIGURE_NOTE : SELF_NOTE);
     } else if (res && res.accepted) {
       banner.className = "report-banner";
-      banner.innerHTML = "闸门放行了 <code>" + esc(res.scope) + "</code>，但「第三方能发现你什么」的自审框架只适用于 <code>self</code> / <code>public_figure</code>。下面显示的是完整检查项目录。";
+      banner.innerHTML = "The gate permitted <code>" + esc(res.scope) + "</code>, but the self-audit framework for what third parties can find applies only to <code>self</code> or <code>public_figure</code>. The full check catalog is shown below.";
     } else {
       banner.className = "report-banner";
-      banner.innerHTML = '先在<a href="#gate">第 1 步</a>用 <code>self</code> 或 <code>public_figure</code> 范围通过闸门，下面的检查项就会按你的范围呈现。当前显示的是完整检查项目录。';
+      banner.innerHTML = 'Pass the <a href="#gate">Step 1</a> gate with <code>self</code> or <code>public_figure</code> scope to tailor the catalog below. The full check catalog is shown for now.';
     }
   }
 
@@ -2088,7 +2092,7 @@
     out.innerHTML = "";
     const trimmed = (secret || "").trim();
     if (!trimmed) {
-      const h = el("p", "kanon-hint kanon-err", "请输入任意字符串（你自己的口令或邮箱）再计算。");
+      const h = el("p", "kanon-hint kanon-err", "Enter any string, using only your own credential or email, before calculating.");
       out.appendChild(h);
       return;
     }
@@ -2102,24 +2106,24 @@
     const legend = el("div", "kanon-legend");
 
     const rowSent = el("div", "kanon-leg-row");
-    rowSent.appendChild(el("span", "kanon-chip sent", "会发送"));
+    rowSent.appendChild(el("span", "kanon-chip sent", "Sent"));
     rowSent.appendChild(el("code", "kanon-mono", esc(pair.prefix)));
     rowSent.appendChild(el("span", "kanon-leg-note",
-      "5 位十六进制前缀 = 1 个 range 桶（16^5 ≈ 104 万桶），成千上万哈希共享，服务器无法分辨你查的是哪一个。"));
+      "A 5-character hexadecimal prefix selects 1 range bucket out of 16^5, about 1.04 million buckets. Many hashes share it, so the server cannot tell which credential you checked."));
     legend.appendChild(rowSent);
 
     const rowLocal = el("div", "kanon-leg-row");
-    rowLocal.appendChild(el("span", "kanon-chip local", "留在本地"));
+    rowLocal.appendChild(el("span", "kanon-chip local", "Stays local"));
     rowLocal.appendChild(el("code", "kanon-mono", esc(pair.suffix)));
     rowLocal.appendChild(el("span", "kanon-leg-note",
-      "35 位后缀永不离开你的设备；真实查询时只在本地把它和返回桶里的候选比对。"));
+      "The 35-character suffix never leaves your device. A live query matches it locally against candidates in the returned bucket."));
     legend.appendChild(rowLocal);
 
     out.appendChild(legend);
 
     const note = el("p", "kanon-hint");
-    note.innerHTML = "离线演示：<b>没有查询任何真实泄露库</b>，因此这里不显示任何泄露命中或次数——"
-      + "这证明的是隐私拆分机制，不是泄露结果。真实判定由 actors/breach-check 经 HIBP range API 完成。";
+    note.innerHTML = "Offline demo: <b>no live breach corpus is queried</b>, so this panel displays no hit or count. "
+      + "This proves the privacy split, not a breach result. Live determination is performed by actors/breach-check through the HIBP range API.";
     out.appendChild(note);
   }
 
@@ -2133,7 +2137,7 @@
     if (clearBtn) clearBtn.addEventListener("click", () => {
       input.value = "";
       const out = document.getElementById("kanonOut");
-      if (out) out.innerHTML = '<p class="kanon-hint">输入任意字符串后点击，演示「会发送的 5 位前缀」与「留在本地的 35 位后缀」。</p>';
+      if (out) out.innerHTML = '<p class="kanon-hint">Enter any string to demonstrate the 5-character prefix that is sent and the 35-character suffix that stays local.</p>';
     });
   }
 
@@ -2145,19 +2149,19 @@
 
   const PIPE_REQUEST = [
     { ord: "100", name: "scopeGate",
-      desc: "重新运行 shared/scope.js 校验：非 self/consented/public_figure/brand/safety_evidence，或带追踪私人个体意图，立即 IgnoreRequest 丢弃（fail-closed，在 fetch 前）。" },
+      desc: "Run shared/scope.js validation again. Reject scopes outside self/consented/public_figure/brand/safety_evidence and any private-person tracking intent with IgnoreRequest, fail closed before fetch." },
     { ord: "200", name: "robotsTos",
-      desc: "尊重 robots.txt / ToS，丢弃登录墙 / 私域社交主机；绝不绕过登录、验证码或封禁。" },
+      desc: "Respect robots.txt and Terms of Service. Drop login walls and private-social hosts; never bypass login, CAPTCHA, or blocks." },
     { ord: "300", name: "rateLimit",
-      desc: "按主机最小间隔礼貌限速，超额则重新排队延后，不冲击服务器、不规避限速或封禁。" },
+      desc: "Apply a polite per-host minimum interval. Requeue excess work for later; never hammer a server or evade rate limits or blocks." },
     { ord: "900", name: "fetchTerminal",
-      desc: "真实 actor 在此抓取；纯流水线返回明确标注的 TEMPLATE 占位（template:true），绝不伪造抓取数据。" }
+      desc: "A live actor fetches here. The pure pipeline returns an explicitly labelled TEMPLATE placeholder (template:true) and never fabricates scraped data." }
   ];
   const PIPE_ITEM = [
     { ord: "100", name: "scopeReassertItem",
-      desc: "防御性复核：产出条目必须带合法 scope_type，否则 DropItem，不入库。" },
+      desc: "Defense in depth: output items must carry a permitted scope_type or DropItem prevents storage." },
     { ord: "500", name: "evidenceHash",
-      desc: "用 shared/hashing.js 计算 content/html SHA-256，使每条保全证据可被引用、防篡改。" }
+      desc: "Use shared/hashing.js to compute content/html SHA-256 so each preserved item is citable and tamper-evident." }
   ];
 
   function renderPipelinePanel() {
@@ -2192,12 +2196,12 @@
 
     const findings = reportFindings(LOADED_REPORT);
     if (findings.length) {
-      if (head) head.textContent = "证据索引 · 真实检测器发现（每行一条）";
+      if (head) head.textContent = "Evidence index · live detector findings (one row each)";
       if (intro) intro.innerHTML = isSynthetic(LOADED_REPORT)
-        ? "下表每行是<b>真实检测器</b>在合成 fixture 上产出的一条发现（非编造）。展开上方各条的「可移植证据」可得 STIX JSON。"
-        : "下表每行是真实流水线产出的一条发现。";
+        ? "Each row below is a finding produced by <b>live detector code</b> over a synthetic fixture, not fabricated data. Expand a portable-evidence section above to obtain STIX JSON."
+        : "Each row below is live pipeline output.";
       if (headRow) headRow.innerHTML =
-        "<tr><th>event_type</th><th>来源 URL</th><th>置信度</th><th>可见性</th><th>风险</th><th>来源模块</th></tr>";
+        "<tr><th>event_type</th><th>Source URL</th><th>Confidence</th><th>Visibility</th><th>Risk</th><th>Source module</th></tr>";
       findings
         .slice()
         .sort((a, b) => (RISK_RANK[b.risk] || 0) - (RISK_RANK[a.risk] || 0))
@@ -2226,9 +2230,9 @@
     }
 
     // no report: honest evidence-index SCHEMA
-    if (head) head.textContent = "每条证据的字段 · evidence index";
-    if (intro) intro.textContent = "真实运行时，每个发现都会保全为可引用的一行：";
-    if (headRow) headRow.innerHTML = "<tr><th>字段</th><th>说明</th></tr>";
+    if (head) head.textContent = "Fields for each evidence row · evidence index";
+    if (intro) intro.textContent = "In a live run, each finding is preserved as a citable row:";
+    if (headRow) headRow.innerHTML = "<tr><th>Field</th><th>Description</th></tr>";
     (PLAN.report.evidenceIndexFields || []).forEach(f => {
       const tr = el("tr");
       tr.appendChild(el("td", null, esc(f.field)));
@@ -2252,10 +2256,10 @@
     const findings = reportFindings(LOADED_REPORT);
     if (!findings.length) {
       if (intro) intro.textContent =
-        "尚未加载报告 · 暂无处置清单。运行一次真实自审后，这里会按「最高暴露优先」列出每类可执行的下一步。";
+        "No report loaded · no remediation checklist yet. After a live self-audit, executable next steps appear here in highest-exposure-first order.";
       if (foot) foot.innerHTML =
-        "处置文案与上方各发现的「建议处置」同源（FINDING_GROUPS.fix）。绝不为未扫描对象编造任务。";
-      const li = el("li", "action-empty", "（无发现 → 无建议动作。这是诚实的空状态，不编造任务。）");
+        "Remediation copy comes from the same FINDING_GROUPS.fix metadata as each finding above. No tasks are invented for an unscanned subject.";
+      const li = el("li", "action-empty", "(No findings means no suggested actions. This is an honest empty state.)");
       list.appendChild(li);
       return;
     }
@@ -2274,28 +2278,28 @@
       (RISK_RANK[b.worst] || 0) - (RISK_RANK[a.worst] || 0) || b.count - a.count);
 
     if (intro) intro.innerHTML = isSynthetic(LOADED_REPORT)
-      ? "按<b>最高暴露优先</b>排序，逐条处置（来自真实检测器在合成 fixture 上的发现）："
-      : "按<b>最高暴露优先</b>排序，逐条处置：";
+      ? "Ordered by <b>highest exposure first</b>, using findings produced by live detector code over a synthetic fixture:"
+      : "Ordered by <b>highest exposure first</b>:";
 
     actions.forEach(a => {
       const meta = EVENT_META[a.event] || {};
       const li = el("li", "action-item");
       const head = el("div", "action-head");
-      head.appendChild(el("span", "sev-badge " + a.worst, esc((SEV_LABEL[a.worst] || a.worst) + "暴露")));
+      head.appendChild(el("span", "sev-badge " + a.worst, esc((SEV_LABEL[a.worst] || a.worst) + " exposure")));
       head.appendChild(el("span", "action-title", esc(meta.name || a.event)));
-      head.appendChild(el("span", "action-count", a.count + " 处"));
+      head.appendChild(el("span", "action-count", a.count + " locations"));
       li.appendChild(head);
-      li.appendChild(el("p", "action-do", esc(meta.fix || "审查该公开痕迹并评估是否下线/收敛。")));
+      li.appendChild(el("p", "action-do", esc(meta.fix || "Review this public trace and decide whether to remove or narrow it.")));
       if (a.sample) {
         const ref = el("p", "action-ref");
-        ref.innerHTML = "示例来源：" + esc(a.sample);
+        ref.innerHTML = "Example source: " + esc(a.sample);
         li.appendChild(ref);
       }
       list.appendChild(li);
     });
 
     if (foot) foot.innerHTML =
-      "处置文案与上方各发现的「建议处置」同源。下方<a href=\"#optoutCard\">数据中介下架</a>是其中最常见的一类具体动作。";
+      "Remediation copy comes from the same suggested-action metadata as the findings above. <a href=\"#optoutCard\">Data-broker opt-out</a> is a common concrete action.";
   }
 
   /* =========================================================================
@@ -2319,12 +2323,12 @@
   // TEMPLATE registry: PUBLIC opt-out entry points only. Each broker's opt-out
   // URL/method is itself public policy info — NOT a claim that the user is listed.
   const BROKER_REGISTRY = [
-    { name: "Spokeo", method: "网页表单 + 邮箱确认", url: "https://www.spokeo.com/optout" },
-    { name: "Whitepages", method: "条目移除表单", url: "https://www.whitepages.com/suppression-requests" },
-    { name: "BeenVerified", method: "网页表单 + 邮箱确认", url: "https://www.beenverified.com/app/optout/search" },
-    { name: "Intelius", method: "网页表单", url: "https://www.intelius.com/opt-out" },
-    { name: "Radaris", method: "管理资料后移除", url: "https://radaris.com/page/how-to-remove" },
-    { name: "Acxiom", method: "GDPR/CCPA 数据主体请求", url: "https://www.acxiom.com/optout/" }
+    { name: "Spokeo", method: "Web form + email confirmation", url: "https://www.spokeo.com/optout" },
+    { name: "Whitepages", method: "Listing-removal form", url: "https://www.whitepages.com/suppression-requests" },
+    { name: "BeenVerified", method: "Web form + email confirmation", url: "https://www.beenverified.com/app/optout/search" },
+    { name: "Intelius", method: "Web form", url: "https://www.intelius.com/opt-out" },
+    { name: "Radaris", method: "Remove after profile management", url: "https://radaris.com/page/how-to-remove" },
+    { name: "Acxiom", method: "GDPR/CCPA data-subject request", url: "https://www.acxiom.com/optout/" }
   ];
 
   function renderOptout() {
@@ -2346,10 +2350,10 @@
     const flow = document.getElementById("optoutFlow");
     if (flow) {
       const steps = [
-        { tag: "闸门", text: "先过合规闸门：scope=self（或 consented）才放行。针对他人的下架请求当场拒绝——这是 self-only 流程。" },
-        { tag: "STIX", text: "为该挂牌生成一条 STIX 2.1 Observed Data 证据对象（复用 shared/enrich/stix-evidence.js，与上面报告里的形状一致），记录 URL + 首次/最后观测 + 内容哈希。" },
-        { tag: "请求信", text: "套用一封可直接发送的删除/退订请求（复用 shared/aux/takedown-letter.js，GDPR Art.17 / CCPA 口径），按该中介的公开退订方式投递。" },
-        { tag: "复检", text: "排一个 Apify Schedule + Webhook 周期复检：若已下架的挂牌重新出现，自动重新标记。复检沿用现有 WCC / RAG 抓取路径重新读取该中介页面。" }
+        { tag: "Gate", text: "Pass the policy gate first: scope=self or consented is required. Opt-out requests for someone else are refused immediately; this is a self-only workflow." },
+        { tag: "STIX", text: "Generate a STIX 2.1 Observed Data evidence object for the listing using shared/enrich/stix-evidence.js, with URL, first and last observation, and content hash." },
+        { tag: "Request letter", text: "Prepare a send-ready removal request using shared/aux/takedown-letter.js with GDPR Art. 17 or CCPA wording, then submit it through the broker's public opt-out method." },
+        { tag: "Recheck", text: "Schedule an Apify Schedule + Webhook recheck. If a removed listing reappears, flag it again using the existing WCC / RAG ingestion path." }
       ];
       steps.forEach(s => {
         const li = el("li", "optout-flow-item");
@@ -2362,10 +2366,10 @@
     const foot = document.getElementById("optoutFoot");
     if (foot) {
       foot.innerHTML =
-        "代码：<b>shared/optout/</b>（input-builder，先过 <b>shared/scope.js</b> 闸门、self-only 拒绝他人）" +
-        " · 复用 <b>shared/enrich/stix-evidence.js</b> + <b>shared/aux/takedown-letter.js</b>" +
-        " · 复检 <b>integrations/schedules</b> + <b>integrations/webhooks</b>。" +
-        "引用：OASIS STIX 2.1 Observed Data（OpenCTI / MISP 互通）；Apify Website Content Crawler + RAG Web Browser 复检抓取。";
+        "Code: <b>shared/optout/</b> (input-builder passes <b>shared/scope.js</b> first and refuses third-party requests)" +
+        " · reuses <b>shared/enrich/stix-evidence.js</b> + <b>shared/aux/takedown-letter.js</b>" +
+        " · rechecks through <b>integrations/schedules</b> + <b>integrations/webhooks</b>. " +
+        "References: OASIS STIX 2.1 Observed Data (OpenCTI / MISP interoperable); Apify Website Content Crawler + RAG Web Browser recheck ingestion.";
     }
   }
 
@@ -2404,17 +2408,66 @@
     });
   }
 
+  let APIFY_SESSION = null;
+  function coreApifyActorIds(username) {
+    return [
+      "mirrortrace-policy-gate",
+      "mirrortrace-discovery",
+      "mirrortrace-crawler",
+      "mirrortrace-diff-evidence",
+      "mirrortrace-report-builder"
+    ].map(function (actor) { return username + "/" + actor; });
+  }
+
   function wireApify() {
     const state = document.getElementById("apifyState");
-    document.getElementById("apifyCheck").addEventListener("click", () => {
-      const token = document.getElementById("apifyToken").value.trim();
-      const actors = document.getElementById("apifyActors").value.trim();
-      if (token && actors) {
+    const button = document.getElementById("apifyCheck");
+    const tokenInput = document.getElementById("apifyToken");
+    const actorsInput = document.getElementById("apifyActors");
+    const preview = document.getElementById("apifyActorPreview");
+    if (!state || !button || !tokenInput || !actorsInput) return;
+
+    button.addEventListener("click", async function () {
+      const token = tokenInput.value.trim();
+      if (!token) {
+        state.className = "apify-state attention";
+        state.textContent = "Enter an Apify API token to validate your workspace.";
+        tokenInput.focus();
+        return;
+      }
+
+      button.disabled = true;
+      state.className = "apify-state checking";
+      state.textContent = "Validating your Apify workspace...";
+
+      try {
+        const response = await fetch("https://api.apify.com/v2/users/me", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (!response.ok) throw new Error("Apify account validation returned " + response.status);
+        const payload = await response.json();
+        const account = payload && payload.data ? payload.data : payload;
+        const username = account && (account.username || account.id);
+        if (!username) throw new Error("Apify account response did not include a workspace identifier");
+
+        const actorIds = actorsInput.value.trim()
+          ? actorsInput.value.split(",").map(function (id) { return id.trim(); }).filter(Boolean)
+          : coreApifyActorIds(username);
+        APIFY_SESSION = { username: username, token: token, actorIds: actorIds };
+        tokenInput.value = "";
+        actorsInput.value = actorIds.join(", ");
         state.className = "apify-state connected";
-        state.textContent = "已检测到 token 与 actor 配置。真实运行需由后端用此凭证调用已部署 actor —— 本前端不会伪造抓取结果。";
-      } else {
-        state.className = "apify-state";
-        state.textContent = "未连接真实 Apify（需 token + 已部署 actor）。" + (token ? "缺少 actor IDs。" : actors ? "缺少 APIFY_TOKEN。" : "");
+        state.textContent = "Connected to Apify workspace @" + username + ".";
+        if (preview) preview.textContent = actorIds.length + " actor IDs prepared: " + actorIds.join(" · ");
+        button.textContent = "Workspace connected";
+      } catch (error) {
+        APIFY_SESSION = null;
+        state.className = "apify-state attention";
+        state.textContent = "Workspace validation needs attention. Check the token and try again.";
+        if (preview) preview.textContent = "";
+        console.warn(error);
+      } finally {
+        button.disabled = false;
       }
     });
   }
@@ -2425,7 +2478,7 @@
       document.getElementById("requestInput").value = "";
       document.getElementById("scopeSelect").value = "";
       const out = document.getElementById("gateResult");
-      out.innerHTML = '<div class="gate-empty"><span class="gate-empty-icon" aria-hidden="true">◎</span><p>选择一个范围或描述你的请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行，没有假数据。</p></div>';
+      out.innerHTML = '<div class="gate-empty"><span class="gate-empty-icon" aria-hidden="true">◎</span><p>Choose a scope or describe your request, then run the gate.<br/>The logic really executes in your browser. No fake data.</p></div>';
       updateReportForScope(null);
     });
     document.getElementById("requestInput").addEventListener("keydown", e => {
@@ -2442,7 +2495,7 @@
 
   /* Load a REAL produced report JSON (the e2e self-audit output) and surface its
    * grade. Tries data/example-report.json; on file:// (fetch blocked) falls back
-   * to an injected window.__EX_REPORT__ from data/example-report.js. If neither
+   * to an injected window.__MIRRORTRACE_REPORT__ from data/example-report.js. If neither
    * exists yet, we stay in the honest "no grade" state — we never invent one. */
   function applyReport(report) {
     if (!report || typeof report !== "object") return;
@@ -2458,7 +2511,7 @@
     const vm = gradeFromReport(report);
     if (vm) renderExposureGrade(vm);
     // re-drive the whole report view from the REAL produced report
-    renderBrief(report);         // 结论 first: top-of-page comprehensive brief
+    renderBrief(report);         // conclusion first: top-of-page comprehensive brief
     renderProvenance(report);
     renderExposureMap(report);   // the #1 deliverable — radial exposure map
     renderFindings();
@@ -2517,23 +2570,23 @@
       const res = purgeExposureData();
       btn.classList.add("purged");
       btn.disabled = true;
-      btn.textContent = "已清除 ✓";
+      btn.textContent = "Purged ✓";
       if (status) {
         status.className = "purge-status done";
-        status.textContent = "已清除 · 本机不留痕，我们的服务器从未保存（清了 " + res.clearedKeys + " 项会话缓存 + 内存中的报告/图谱）。";
+        status.textContent = "Purged · no local trace remains and our servers never stored it (cleared " + res.clearedKeys + "  session-cache items plus the in-memory report and graph).";
       }
       // let the user re-load the synthetic example afterward (honest, not auto).
       window.setTimeout(function () {
         btn.disabled = false;
         btn.classList.remove("purged");
-        btn.textContent = "重新载入示例报告";
+        btn.textContent = "Reload example report";
         btn.onclick = function () { btn.onclick = null; location.reload(); };
       }, 2200);
     });
   }
 
   /* =========================================================================
-   * COMPREHENSIVE BRIEF (结论 first) — bright 撞色 at-a-glance summary derived
+   * COMPREHENSIVE BRIEF (conclusion first) — bright high-contrast at-a-glance summary derived
    * ONLY from the loaded report. Big A–F grade (count-up on reveal), headline
    * numbers (sources / sensitive exposures), top 2–3 highest-severity risks.
    * Honest empty state until a report loads — never invents a conclusion.
@@ -2546,15 +2599,15 @@
     const findings = reportFindings(report);
     if (!report || !findings.length) {
       wrap.className = "brief-card empty";
-      wrap.appendChild(el("p", "brief-eyebrow", "综合简要报告 · COMPREHENSIVE BRIEF"));
+      wrap.appendChild(el("p", "brief-eyebrow", "Comprehensive brief"));
       wrap.appendChild(el("p", "brief-empty",
-        "尚未加载报告 · 暂无结论。运行一次真实自审（经第 1 步闸门、scope=self）后，这里会给出 A–F 暴露评分与最高风险摘要。绝不为未扫描对象编造结论。"));
+        "No report loaded · no conclusion yet. After a live self-audit passes Step 1 with scope=self, this panel shows an A–F exposure grade and the highest-priority risks. No conclusion is invented for an unscanned subject."));
       return;
     }
 
     wrap.className = "brief-card" + (isSynthetic(report) ? " synthetic" : " live");
     const vm = gradeFromReport(report);
-    const graph = buildExposureGraphClient(report, { selfLabel: "你" });
+    const graph = buildExposureGraphClient(report, { selfLabel: "You" });
 
     // headline numbers
     const sourceCount = graph.meta.source_count;
@@ -2566,9 +2619,9 @@
 
     // --- header: label + provenance flag ---
     const top = el("div", "brief-top");
-    top.appendChild(el("span", "brief-eyebrow", "综合简要报告 · 结论先行"));
+    top.appendChild(el("span", "brief-eyebrow", "Comprehensive brief · conclusion first"));
     top.appendChild(el("span", "brief-prov " + (isSynthetic(report) ? "synthetic" : "live"),
-      isSynthetic(report) ? "合成 fixture · 真实流水线" : "真实流水线产出"));
+      isSynthetic(report) ? "Synthetic fixture · real pipeline" : "Live pipeline output"));
     wrap.appendChild(top);
 
     // --- grade block (count-up) ---
@@ -2577,10 +2630,10 @@
     const fam = vm && vm.graded ? gradeFamily(String(vm.grade)) : "none";
     const letter = el("div", "brief-letter bg-" + fam, vm && vm.graded ? esc(String(vm.grade)) : "—");
     letter.setAttribute("role", "img");
-    letter.setAttribute("aria-label", "暴露评分 " + (vm && vm.graded ? vm.grade : "未知"));
+    letter.setAttribute("aria-label", "Exposure grade " + (vm && vm.graded ? vm.grade : "Unknown"));
     gradeWrap.appendChild(letter);
     const gradeMeta = el("div", "brief-grade-meta");
-    gradeMeta.appendChild(el("span", "brief-grade-label", "暴露评分"));
+    gradeMeta.appendChild(el("span", "brief-grade-label", "Exposure grade"));
     const scoreEl = el("span", "brief-score", vm && vm.score != null ? "0" : "—");
     if (vm && vm.score != null) scoreEl.dataset.target = String(vm.score);
     gradeMeta.appendChild(scoreEl);
@@ -2591,9 +2644,9 @@
     // --- headline stat chips ---
     const stats = el("div", "brief-stats");
     [
-      { n: sourceCount, label: "暴露来源" },
-      { n: sensitive, label: "敏感暴露" },
-      { n: sharedLinks, label: "跨源关联" }
+      { n: sourceCount, label: "Exposure sources" },
+      { n: sensitive, label: "Sensitive exposures" },
+      { n: sharedLinks, label: "Cross-source links" }
     ].forEach(function (s) {
       const chip = el("div", "brief-stat");
       const num = el("span", "brief-stat-num", "0");
@@ -2624,7 +2677,7 @@
     });
     if (picked.length) {
       const risks = el("div", "brief-risks");
-      risks.appendChild(el("p", "brief-risks-label", "最高风险 · 优先处理"));
+      risks.appendChild(el("p", "brief-risks-label", "Highest-priority risks"));
       const ul = el("ul", "brief-risk-list");
       picked.forEach(function (f) {
         const meta = EVENT_META[f.event_type] || {};
@@ -2643,11 +2696,11 @@
 
     // --- jump CTA into the dark exposure scene ---
     const cta = el("div", "brief-cta");
-    const go = el("a", "btn-brief-go", "查看完整暴露地图 ↓");
+    const go = el("a", "btn-brief-go", "View full Exposure Map ↓");
     go.href = "#report";
     cta.appendChild(go);
     cta.appendChild(el("span", "brief-cta-note",
-      isSynthetic(report) ? "下面的数据来自真实检测器在合成 fixture 上的产出（非编造）。" : "下面是真实流水线产出。"));
+      isSynthetic(report) ? "The data below comes from live detector code running over a synthetic fixture, not fabricated data." : "The data below is live pipeline output."));
     wrap.appendChild(cta);
 
     // count-up the grade score + stat chips once on reveal (honors reduced-motion).
@@ -2674,6 +2727,24 @@
       }
       requestAnimationFrame(frame);
     });
+  }
+
+  function wireScrollProgress() {
+    const bar = document.getElementById("scrollProgressBar");
+    if (!bar) return;
+    let ticking = false;
+    function update() {
+      ticking = false;
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const progress = Math.max(0, Math.min(1, window.scrollY / max));
+      bar.style.transform = "scaleX(" + progress.toFixed(4) + ")";
+      document.documentElement.style.setProperty("--scroll", progress.toFixed(4));
+    }
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
   }
 
   /* =========================================================================
@@ -2733,7 +2804,8 @@
     const targets = document.querySelectorAll(
       ".section-head, .map-wrap, .grade-card, .coverage, .finding-group, " +
       ".cluster-card, .kanon, .ev-card, .actions-card, .optout-card, " +
-      ".arch-wrap, .apify-box, .purge-zone, .brief-card");
+      ".arch-wrap, .apify-box, .purge-zone, .brief-card, .feature-tile, " +
+      ".how-tile, .inspector-drawer, .implementation-drawer");
     targets.forEach(function (t, i) {
       if (t.classList.contains("reveal")) return;
       t.classList.add("reveal");
@@ -2742,17 +2814,17 @@
     });
   }
   function loadExampleReport() {
-    if (window.__EX_REPORT__) { applyReport(window.__EX_REPORT__); return; }
+    if (window.__MIRRORTRACE_REPORT__) { applyReport(window.__MIRRORTRACE_REPORT__); return; }
     let done = false;
     fetch("data/example-report.json")
       .then(r => { if (!r.ok) throw new Error("no report"); return r.json(); })
       .then(rep => { done = true; applyReport(rep); })
       .catch(() => {
-        if (done || window.__EX_REPORT__) { if (window.__EX_REPORT__) applyReport(window.__EX_REPORT__); return; }
+        if (done || window.__MIRRORTRACE_REPORT__) { if (window.__MIRRORTRACE_REPORT__) applyReport(window.__MIRRORTRACE_REPORT__); return; }
         // file:// fallback: try the JS-wrapped copy, mirroring the plan loader.
         const s = document.createElement("script");
         s.src = "data/example-report.js";
-        s.onload = function () { if (window.__EX_REPORT__) applyReport(window.__EX_REPORT__); };
+        s.onload = function () { if (window.__MIRRORTRACE_REPORT__) applyReport(window.__MIRRORTRACE_REPORT__); };
         s.onerror = function () { /* no produced report yet — stay in honest no-grade state */ };
         document.head.appendChild(s);
       });
@@ -2783,6 +2855,7 @@
     wireMapControls();
     wireIdentityGate();
     wirePurge();                 // one-click real purge (sessionStorage + memory)
+    wireScrollProgress();         // compact instrument-panel scroll feedback
     wireSceneGradient();         // scroll-linked light → dark scene gradient
     observeReveal();             // subtle scroll-enter fade+rise (reduced-motion safe)
     updateReportForScope(null);
@@ -2793,17 +2866,22 @@
     .then(boot)
     .catch(() => {
       if (FALLBACK_PLAN) { boot(FALLBACK_PLAN); return; }
-      console.warn("plan.json 加载失败（可能是 file:// 限制）。注入内置数据。");
+      console.warn("plan.json failed to load, possibly because of file:// restrictions. Injecting bundled data.");
       var s = document.createElement("script");
       s.src = "data/plan.js";
       s.onload = function () { if (window.__MIRRORTRACE_PLAN__) boot(window.__MIRRORTRACE_PLAN__); };
       s.onerror = function () {
         var ho = document.getElementById("heroOne");
-        if (ho) ho.textContent = "（plan.json 未能加载；请用本地服务器打开，或确认 data/plan.json 存在。合规闸门仍可独立使用。）";
+        if (ho) ho.textContent = "plan.json could not load. Serve the page locally or confirm data/plan.json exists. The policy gate still works independently.";
       };
       document.head.appendChild(s);
     });
 
-  // Expose gate for quick console testing / verification
-  window.MirrorTrace = { runPolicyGate: runPolicyGate, LEGAL_SCOPES: LEGAL_SCOPES };
+  // Expose gate for quick console testing / verification without overwriting
+  // browser-safe modules loaded before app.js.
+  window.MirrorTrace = Object.assign(window.MirrorTrace || {}, {
+    runPolicyGate: runPolicyGate,
+    LEGAL_SCOPES: LEGAL_SCOPES,
+    buildExposureGraphFromReport: buildExposureGraphClient
+  });
 })();

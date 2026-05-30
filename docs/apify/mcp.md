@@ -1,13 +1,13 @@
 # Apify MCP tool-server — the gate-enforcing AI-agent surface
 
-**Capability wired this round:** a real, runnable **Apify MCP (Model Context
-Protocol) tool-server** (`mcp/server.js`) that exposes the product's existing
+**Capability wired this round:** a real, tested **MCP tool registry/dispatcher**
+(`mcp/server.js`) that exposes the product's existing
 compliance planners to AI agents as a small set of tools — and forces every one
 of those tools through the same canonical scope gate that guards the web and
 actor paths. It is the one untouched first-class Apify surface, now wired with
 **zero duplication and zero new subsystem**.
 
-- Server: [`mcp/server.js`](../../mcp/server.js)
+- Registry/dispatcher: [`mcp/server.js`](../../mcp/server.js)
 - Self-test (auto-discovered by `npm run test:modules`): [`mcp/server_selftest.js`](../../mcp/server_selftest.js)
 - Remote client config (whitelist): [`mcp/client-config.example.json`](../../mcp/client-config.example.json)
 - Configurator notes: [`mcp/configurator-notes.md`](../../mcp/configurator-notes.md)

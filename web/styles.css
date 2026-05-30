@@ -1,6 +1,6 @@
-/* MirrorTrace 合规版 — styles.css
+/* MirrorTrace — styles.css
  * A clean, conventional, scannable dashboard. No radio-dial/channel metaphors,
- * no scroll-driven wheels, no decorative spinners — clarity first ("明了,不要花哨让人疑惑").
+ * no scroll-driven wheels, no decorative spinners — clarity first ("clear, not flashy or confusing").
  *
  * Reference patterns borrowed (legible, proven):
  *   - The Markup Blacklight (themarkup.org/blacklight): a privacy INSPECTOR that
@@ -854,15 +854,15 @@ a { color: var(--heading); }
 }
 
 /* =========================================================================
- * ░░ LOCKED VISUAL LANGUAGE — 深亮混搭 / DARK-LIGHT HYBRID ░░
- * "撞色显示活力，动态显示技巧" · bounded "不要太夸张" · "亮处专注输入，暗处炫技术".
+ * ░░ LOCKED VISUAL LANGUAGE — DARK-LIGHT HYBRID ░░
+ * "High contrast adds energy, motion demonstrates craft" · bounded and restrained · "light zones focus input, dark zones reveal technique".
  *
  * LIGHT zones (hero + Step-1 gate + the top brief): base #f8f8f6, strong type,
  * magenta #ff4cb2 ONLY for primary actions, generous whitespace — read & type.
  * DARK zone (Step-2 report / exposure map): deep ink ~#0b0b0e so neon severity
  * POPS — saturated red/amber/green with a soft glow; magenta × acid clash for
  * legends / active ring / CTA, WCAG-AA text on the dark bg.
- * A scroll-driven gradient (--scene 0→1) guides light 结论 → dark 现场.
+ * A scroll-driven gradient (--scene 0→1) guides light conclusion → dark exposure scene.
  * Type: Space Grotesk (oversized bold headings) + Space Mono (data/labels).
  * =======================================================================*/
 :root {
@@ -891,7 +891,7 @@ a { color: var(--heading); }
 .section-head h2 { font-weight: 700; }
 
 /* ============================================================
- * COMPREHENSIVE BRIEF — TOP, BRIGHT, 撞色 (结论 first)
+ * COMPREHENSIVE BRIEF — TOP, BRIGHT, HIGH-CONTRAST (conclusion first)
  * ============================================================ */
 .brief-zone { max-width: var(--maxw); margin: 0 auto; padding: 8px 20px 4px; }
 .brief-card {
@@ -907,7 +907,7 @@ a { color: var(--heading); }
 .brief-card.empty { background: var(--card); }
 .brief-card.synthetic { border-color: #e6d3a0; }
 .brief-card.live { border-color: #b6d6ad; }
-/* a thin acid×magenta accent bar across the top — the 撞色 signature */
+/* a thin acid×magenta accent bar across the top — the high-contrast signature */
 .brief-card::before {
   content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px;
   background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 48%, var(--acid) 52%, var(--acid) 100%);
@@ -1230,4 +1230,75 @@ a { color: var(--heading); }
   .map-stage { grid-template-columns: 1fr; }
   .brief-stats { margin-left: 0; width: 100%; }
   .brief-main { gap: 18px; }
+}
+
+
+/* ===== Compact homepage refinement: instrument-panel hierarchy ===== */
+:root { --radius: 10px; --radius-sm: 8px; --scroll: 0; }
+.scroll-track { position: absolute; inset: auto 0 -1px; height: 2px; overflow: hidden; background: rgba(11,107,0,.08); }
+.scroll-track span { display: block; width: 100%; height: 100%; transform: scaleX(0); transform-origin: left center; background: var(--accent); will-change: transform; }
+.hero { padding-top: 54px; padding-bottom: 18px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(230px,.7fr); gap: 28px; align-items: end; }
+.hero-signal { min-height: 188px; padding: 18px; border: 1px solid var(--heading); border-radius: var(--radius-sm); display: flex; flex-direction: column; justify-content: space-between; color: var(--heading); background: linear-gradient(135deg, rgba(206,228,219,.62), rgba(248,248,246,.92)); }
+.signal-label, .signal-foot { font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; color: var(--heading); }
+.hero-signal strong { font-size: 1.6rem; line-height: 1.02; color: var(--ink); }
+.feature-rail { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 34px; }
+.feature-tile, .how-tile { min-height: 112px; display: flex; flex-direction: column; gap: 6px; padding: 15px; border-top: 1px solid var(--line-strong); background: rgba(255,255,255,.55); }
+.feature-tile span, .inspector-kicker, .workspace-eyebrow { font-family: var(--font-mono); color: var(--heading); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; }
+.feature-tile b, .how-tile b { color: var(--ink); font-size: .94rem; }
+.feature-tile small, .how-tile span { color: var(--ink-soft); line-height: 1.45; font-size: .82rem; }
+.trust-drawer { margin-top: 20px; max-width: 720px; }
+.trust-drawer > summary, .implementation-drawer > summary, .workspace-advanced > summary { cursor: pointer; color: var(--heading); font-family: var(--font-mono); font-size: .76rem; text-transform: uppercase; padding: 10px 0; }
+.trust-drawer > summary span, .implementation-drawer > summary span { color: var(--muted); margin-left: 8px; font-family: var(--font-ui); text-transform: none; }
+.trust-note { margin: 4px 0 0; padding: 16px 18px; border-radius: var(--radius-sm); }
+.compact-section { padding-top: 42px; padding-bottom: 42px; }
+.zone-divider { height: 58px; margin-top: 4px; }
+.dark-zone { padding-top: 42px; }
+.report-glance { display: grid; grid-template-columns: minmax(250px,.85fr) minmax(0,1.4fr); gap: 14px; align-items: stretch; margin: 0 0 22px; }
+.report-status { display: flex; flex-direction: column; gap: 10px; }
+.report-status .report-banner, .report-status .report-provenance { margin: 0; }
+.inspector-stack { margin-top: 24px; border-top: 1px solid #2a2935; }
+.inspector-kicker { color: var(--acid); margin: 16px 0 6px; }
+.inspector-drawer { border-bottom: 1px solid #2a2935; }
+.inspector-drawer > summary { list-style: none; cursor: pointer; padding: 18px 0; display: flex; flex-direction: column; gap: 3px; color: #fff; }
+.inspector-drawer > summary::-webkit-details-marker { display: none; }
+.inspector-drawer > summary::after { content: "+"; position: absolute; right: 2px; color: var(--acid); font-family: var(--font-mono); font-size: 1.1rem; }
+.inspector-drawer[open] > summary::after { content: "−"; }
+.inspector-drawer { position: relative; }
+.inspector-drawer > summary small { color: #8b8b97; font-size: .78rem; }
+.inspector-content { padding: 2px 0 20px; }
+.inspector-content > :first-child { margin-top: 0; }
+.inspector-content > :last-child { margin-bottom: 0; }
+.how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.implementation-drawer { margin-top: 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.implementation-content { display: grid; gap: 18px; padding: 8px 0 18px; }
+.workspace-section { padding-top: 46px; }
+.workspace-box { margin-top: 0; border-color: var(--heading); }
+.workspace-top { display: flex; align-items: start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.workspace-eyebrow { margin-bottom: 3px; }
+.workspace-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.workspace-chips span { border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 3px 8px; color: var(--ink-soft); font-family: var(--font-mono); font-size: .62rem; }
+.workspace-note, .workspace-preview { margin-top: 10px; color: var(--muted); font-size: .8rem; word-break: break-word; }
+.workspace-preview { color: var(--heading); font-family: var(--font-mono); }
+.workspace-advanced { margin-top: 8px; }
+.apify-state { margin-top: 14px; }
+.apify-state.checking { color: var(--info); background: var(--info-bg); border-color: #b6c8e7; }
+.apify-state.attention { color: var(--warn); background: var(--warn-bg); border-color: #e6d3a0; }
+.apify-fields .btn { flex: none; }
+.gate-modal-note.flash { color: var(--ink-soft); }
+.purge-zone { border-radius: var(--radius-sm); }
+.reveal.from-left { transform: translateX(-16px); }
+.reveal.from-right { transform: translateX(16px); }
+.reveal.from-left.revealed, .reveal.from-right.revealed { transform: none; }
+
+@media (max-width: 760px) {
+  .hero-grid, .feature-rail, .how-grid, .report-glance { grid-template-columns: 1fr; }
+  .hero-signal { min-height: 132px; }
+  .feature-tile, .how-tile { min-height: auto; }
+  .map-wrap { padding: 14px; }
+  .trust-drawer > summary span, .implementation-drawer > summary span { display: block; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-track { display: none; }
 }

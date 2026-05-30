@@ -40,7 +40,7 @@ function check(name, fn) {
 
 console.log('\n[1] scope gate fails closed (recurring monitoring is dual-use)');
 
-for (const bad of ['consented', 'brand', 'safety_evidence', '', 'ex', undefined]) {
+for (const bad of ['consented', 'brand', 'safety_evidence', '', 'private_person_tracking', undefined]) {
   check(`scope_type="${bad}" -> not schedulable`, () => {
     const v = evaluateCadence({ scope_type: bad, cadence: 'weekly' });
     assert.strictEqual(v.allowed, false);

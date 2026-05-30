@@ -3,7 +3,7 @@
 把 MirrorTrace（合规版）真正跑起来：5 个 Apify actor + Schedule + Webhook + 静态托管的 `web/`。
 
 > **诚实前提**：真实抓取需要 **你自己的 Apify 账号**。本仓库不含任何凭据。
-> 所有 `YOUR_USERNAME` / `<APIFY_TOKEN>` 都是占位符，请替换为你自己的值。
+> 当前 workspace 已绑定 `roger_1of1`。`<APIFY_TOKEN>` 仍是占位符；真实 token 不入库。
 > 没有真实账号时，你仍可本地跑 `web/index.html` 的展示与合规闸门（见 §6）。
 
 ---
@@ -38,23 +38,26 @@ export APIFY_TOKEN="<APIFY_TOKEN>"   # 替换为你自己的 token
 
 ---
 
-## 2. 推送 5 个 actor（`apify push`）
+## 2. 推送 5 个 actor（staging + `apify push`）
 
-每个 actor 目录各推一次。`apify push` 会读取该目录下的 `.actor/actor.json` 与 `INPUT_SCHEMA`，构建并上传镜像到 **你的** 账号。
+核心 actor 复用 repo 根目录的 `shared/` 模块。先运行 staging helper，为每个 actor 生成独立的 Apify CLI 上传上下文，再逐个推送到 **你的** 账号。staging 目录位于系统临时目录，不含凭据。
 
 ```bash
 # 从仓库根目录开始
-cd actors/policy-gate    && apify push    # A0 · Standby + metamorph 合规入口
-cd ../discovery          && apify push    # A2 · 公开/授权源发现
-cd ../crawler            && apify push    # A3 · AdaptivePlaywrightCrawler
-cd ../diff-evidence      && apify push    # A5 · 变更检测 + 证据哈希链
-cd ../report-builder     && apify push    # A6 · Closure Mode 报告
-cd ../..
+node scripts/prepare-apify-push.js
+
+apify push --dir /private/tmp/mirrortrace-apify-stage/policy-gate
+apify push --dir /private/tmp/mirrortrace-apify-stage/discovery
+apify push --dir /private/tmp/mirrortrace-apify-stage/crawler
+apify push --dir /private/tmp/mirrortrace-apify-stage/diff-evidence
+apify push --dir /private/tmp/mirrortrace-apify-stage/report-builder
 ```
 
-推送后，每个 actor 会以 `YOUR_USERNAME/mirrortrace-<name>` 的形式出现在 Apify Console。
+A0 的 `.actor/web_server_openapi.json` 是 Standby tab 的 OpenAPI 3.x schema；Apify 云端 build 会验证它。
 
-> 验证 `scope_type` enum 是否生效：在 Console 里手动用一个非法 scope（如 `"ex"`）触发 actor，平台应在 **input 校验阶段** 直接拒绝——这就是 compliance-as-code 的第一道闸。
+推送后，每个 actor 会以 `roger_1of1/mirrortrace-<name>` 的形式出现在 Apify Console。
+
+> 验证 `scope_type` enum 是否生效：在 Console 里手动用一个非法 scope（如 `"private_person_tracking"`）触发 actor，平台应在 **input 校验阶段** 直接拒绝——这就是 compliance-as-code 的第一道闸。
 
 ---
 
@@ -66,20 +69,20 @@ A0 是 **Standby** actor（常驻、低延迟响应请求），通过 `Actor.met
 
 在 Apify Console → `mirrortrace-policy-gate` → **Standby** 标签：
 - 开启 Standby 模式
-- 记下 Standby URL（形如 `https://YOUR_USERNAME--mirrortrace-policy-gate.apify.actor/`）
+- 记下 Standby URL（形如 `https://roger_1of1--mirrortrace-policy-gate.apify.actor/`）
 
 ### 3.2 设置 metamorph 目标（target actor IDs）
 
 A0 需要知道每个下游 actor 的 ID 才能 metamorph。通过 **环境变量** 注入（Console → actor → Settings → Environment variables，或在 task 的 input 里传）：
 
 ```text
-TARGET_DISCOVERY = YOUR_USERNAME/mirrortrace-discovery
-TARGET_CRAWLER   = YOUR_USERNAME/mirrortrace-crawler
-TARGET_DIFF      = YOUR_USERNAME/mirrortrace-diff-evidence
-TARGET_REPORT    = YOUR_USERNAME/mirrortrace-report-builder
+DISCOVERY_ACTOR_ID = roger_1of1/mirrortrace-discovery
+CRAWLER_ACTOR_ID   = roger_1of1/mirrortrace-crawler
+DIFF_ACTOR_ID      = roger_1of1/mirrortrace-diff-evidence
+REPORT_ACTOR_ID    = roger_1of1/mirrortrace-report-builder
 ```
 
-> "metamorph target usernames"：把上面四个变量里的 `YOUR_USERNAME` 替换成 **你自己的** Apify 用户名。
+> 当前 workspace 的 Metamorph target username 已固定为 `roger_1of1`。
 > metamorph 只在合规闸门 **通过后** 触发；被拒请求不会 metamorph，因此 **永远不会** 进入抓取层。
 
 ---
@@ -103,7 +106,7 @@ Tasks:
 CLI 方式（可选）创建 task：
 
 ```bash
-apify call YOUR_USERNAME/mirrortrace-policy-gate --input ./demo/allowed-urls.json
+apify call roger_1of1/mirrortrace-policy-gate --input ./demo/allowed-urls.json
 # 验证一次性运行通过后，再在 Console 把它存为 task 并挂 Schedule
 ```
 
@@ -176,8 +179,8 @@ python3 -m http.server 8080 --directory web
 
 ## 8. 部署后自检清单
 
-- [ ] 5 个 actor 都在 `YOUR_USERNAME/...` 下可见
-- [ ] 非法 `scope_type`（如 `"ex"`）被 input schema 拒绝
+- [ ] 5 个 actor 都在 `roger_1of1/...` 下可见
+- [ ] 非法 `scope_type`（如 `"private_person_tracking"`）被 input schema 拒绝
 - [ ] policy-gate Standby 开启，4 个 metamorph 目标变量已填
 - [ ] 一个 `demo/reject-cases.json` 请求被 A0 拒绝且 **未** 进入抓取
 - [ ] 一个 `demo/allowed-urls.json` 请求走通 A2→A3→A5→A6

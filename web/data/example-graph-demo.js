@@ -11,11 +11,11 @@
  * as such everywhere via __label. No plaintext email is stored after hashing; the
  * email_prefix link is derived via the HIBP k-anonymity SHA-1 prefix at runtime.
  *
- * file://-safe: loaded as a <script> that sets window.__EX_GRAPH_DEMO__.
+ * file://-safe: loaded as a <script> that sets window.__MIRRORTRACE_GRAPH_DEMO__.
  */
-window.__EX_GRAPH_DEMO__ = {
-  "__label": "SYNTHETIC 关联演示 fixture（示范跨来源关联，非真实抓取）",
-  "__notice": "以下发现为清晰标注的合成样本，仅用于演示「同一邮箱/用户名在多个站点复用 → 可被关联」的画面与低风险折叠。地图本身由真实 buildExposureGraph 契约绘制，不编造任何关联。",
+window.__MIRRORTRACE_GRAPH_DEMO__ = {
+  "__label": "SYNTHETIC correlation-demo fixture (cross-source example, not a live crawl)",
+  "__notice": "These clearly labeled synthetic findings demonstrate how one email address or handle reused across sites becomes correlatable, plus low-risk folding. The map is rendered by the real buildExposureGraph contract and fabricates no link.",
   "__source": "synthetic correlation demo (template) · real graph builder",
   "generated_at": "(synthetic correlation demo)",
   "findings": [

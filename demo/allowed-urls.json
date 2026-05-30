@@ -1,5 +1,5 @@
 {
-  "_comment": "SAFE DEMO TARGETS ONLY. Hard rule: demo data is the user's OWN public test page, a company/product news page, a public GitHub release page, or a hand-made static evidence HTML. NEVER a real ex, NEVER a real dating-app profile, NEVER a real private account, NEVER any non-consenting private individual. All entries below are synthetic/own-public and clearly labeled. Replace placeholder hosts with your OWN test assets before running the demo; do not substitute a real person's URL.",
+  "_comment": "SAFE DEMO TARGETS ONLY. Hard rule: demo data is the user's OWN public test page, a company/product news page, a public GitHub release page, or a hand-made static evidence HTML. NEVER a real private-person target, NEVER a real dating-app profile, NEVER a real private account, NEVER any non-consenting private individual. All entries below are synthetic/own-public and clearly labeled. Replace placeholder hosts with your OWN test assets before running the demo; do not substitute a real person's URL.",
   "rules": [
     "Only self / brand / public_figure(public-capacity) / safety_evidence(own) targets.",
     "Single public URL, no login, respects robots.txt and rate limits.",

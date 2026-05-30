@@ -11,15 +11,15 @@
 Apify 的远程 MCP 端点接受一个 `tools` 查询参数，显式列出要暴露给 MCP 客户端的工具：
 
 ```
-https://mcp.apify.com?tools=YOUR_USERNAME/mirrortrace-policy-gate,YOUR_USERNAME/mirrortrace-report,docs
+https://mcp.apify.com?tools=roger_1of1/mirrortrace-policy-gate,roger_1of1/mirrortrace-report-builder,docs
 ```
 
 对 MirrorTrace，我们 **只** 白名单这些：
 
 | 暴露的工具 | 为什么安全 |
 | --- | --- |
-| `YOUR_USERNAME/mirrortrace-policy-gate` | 入口 actor，本身先跑合规闸门（scope enum + 红线）再 metamorph |
-| `YOUR_USERNAME/mirrortrace-report` | 只读 Closure Mode 报告，不发起新抓取 |
+| `roger_1of1/mirrortrace-policy-gate` | 入口 actor，本身先跑合规闸门（scope enum + 红线）再 metamorph |
+| `roger_1of1/mirrortrace-report-builder` | 只读 Closure Mode 报告，不发起新抓取 |
 | `docs` | Apify 文档工具，供 agent 自查用法 |
 
 **没有** 通用抓取 actor、**没有** 私域社交 actor、**没有** 任意 URL fetch 工具被列进去。
@@ -63,9 +63,9 @@ flowchart LR
 
 ## 4. 配置怎么落地
 
-1. 部署合规 actor（见 `../DEPLOY.md` §2），拿到 `YOUR_USERNAME/mirrortrace-*` 的 ID。
+1. 部署合规 actor（见 `../DEPLOY.md` §2），拿到 `roger_1of1/mirrortrace-*` 的 ID。
 2. 复制 `client-config.example.json` 到你的 MCP 客户端配置（Claude Desktop / Cursor）。
-3. 替换 `YOUR_USERNAME` 与 `<APIFY_TOKEN>`（Bearer，来自你自己的 Apify 账号）。
+3. 确认 workspace 账号为 `roger_1of1`，并替换 `<APIFY_TOKEN>`（Bearer，来自你自己的 Apify 账号）。
 4. **审阅 `?tools=` 这一行**——它就是你的暴露面。任何不在其中的 actor，agent 都调不到。
 5. 重启 MCP 客户端使配置生效。
 

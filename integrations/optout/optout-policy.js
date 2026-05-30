@@ -385,7 +385,7 @@ function proposeRecheck({ scope, safe, brokers }) {
       cron: cadenceDecision.cron,
       effective_floor_minutes: cadenceDecision.effectiveFloorMinutes,
       reasons: cadenceDecision.reasons,
-      action: { type: 'RUN_ACTOR_TASK', actorTaskId: '<EX_DITECTOR_OPTOUT_RECHECK_TASK_ID>' },
+      action: { type: 'RUN_ACTOR_TASK', actorTaskId: '<MIRRORTRACE_OPTOUT_RECHECK_TASK_ID>' },
       deployed: false,
     },
   });

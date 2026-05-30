@@ -30,8 +30,8 @@ const { hashPage } = require('../../../shared/hashing.js');
 const { ALLOWED_SCOPES, hostOf, PRIVATE_SOCIAL_HOSTS } = require('../../../shared/scope.js');
 const { makeCaptureRecord, makeBackoffRecord } = require('../../../shared/schemas.js');
 
-// HUMAN CONFIG: set DIFF_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-diff-evidence".
-const DIFF_ACTOR_ID = process.env.DIFF_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-diff-evidence';
+// HUMAN CONFIG: set DIFF_ACTOR_ID to "roger_1of1/mirrortrace-diff-evidence".
+const DIFF_ACTOR_ID = process.env.DIFF_ACTOR_ID || 'roger_1of1/mirrortrace-diff-evidence';
 
 // Status codes that mean "the source is telling us to stop". We honor them.
 const BACKOFF_STATUS = new Set([401, 403, 429]);

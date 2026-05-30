@@ -16,7 +16,11 @@
       "views": {}
     }
   },
-  "webServerSchema": {},
+  "webServerSchema": "./web_server_openapi.json",
   "minMemoryMbytes": 256,
-  "maxMemoryMbytes": 1024
+  "maxMemoryMbytes": 1024,
+  "usesStandbyMode": true,
+  "environmentVariables": {
+    "DISCOVERY_ACTOR_ID": "roger_1of1/mirrortrace-discovery"
+  }
 }

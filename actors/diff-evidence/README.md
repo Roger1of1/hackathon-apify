@@ -20,4 +20,4 @@ If the crawl was blocked/aborted and produced no captures, the index is empty an
 the summary says so. Nothing is invented.
 
 ## Human config
-- `REPORT_ACTOR_ID` env → `YOUR_USERNAME/mirrortrace-report-builder`.
+- `REPORT_ACTOR_ID` env → `roger_1of1/mirrortrace-report-builder`.

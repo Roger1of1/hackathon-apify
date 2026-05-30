@@ -23,8 +23,8 @@
 const { Actor, log } = require('apify');
 const { makeEvidenceIndexEntry } = require('../../../shared/schemas.js');
 
-// HUMAN CONFIG: set REPORT_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-report-builder".
-const REPORT_ACTOR_ID = process.env.REPORT_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-report-builder';
+// HUMAN CONFIG: set REPORT_ACTOR_ID to "roger_1of1/mirrortrace-report-builder".
+const REPORT_ACTOR_ID = process.env.REPORT_ACTOR_ID || 'roger_1of1/mirrortrace-report-builder';
 
 /**
  * Read every `capture` record this case produced from the default dataset.

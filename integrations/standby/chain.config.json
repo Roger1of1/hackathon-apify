@@ -1,39 +1,39 @@
 {
-  "_comment": "Metamorph chain manifest for MirrorTrace. Declares the ONE legal entry point (the policy gate) and the fixed downstream DAG it metamorphs into. The gate is the only door; every hop re-asserts scope so a metamorph cannot smuggle a rejected subject into the pipeline. No ids here are live — actorId values are placeholders the operator fills at deploy time. NO claim of deployment.",
+  "_comment": "Core MirrorTrace actors are wired to the roger_1of1 Apify workspace. Configure task and webhook resources separately after choosing operator endpoints.",
   "entry": "policy-gate",
   "scope_gate": "shared/scope.js",
   "stages": [
     {
       "key": "policy-gate",
-      "actorId": "<POLICY_GATE_ACTOR_ID>",
+      "actorId": "roger_1of1/mirrortrace-policy-gate",
       "role": "A0 — Standby real-time API + compliance gate. Validates scope_type, rejects prohibited scopes, then metamorphs into discovery. The ONLY entry point.",
       "metamorph_to": "discovery",
       "reasserts_scope": true
     },
     {
       "key": "discovery",
-      "actorId": "<DISCOVERY_ACTOR_ID>",
+      "actorId": "roger_1of1/mirrortrace-discovery",
       "role": "A2 — enumerate public, logged-out sources for the vetted subject.",
       "metamorph_to": "crawler",
       "reasserts_scope": true
     },
     {
       "key": "crawler",
-      "actorId": "<CRAWLER_ACTOR_ID>",
+      "actorId": "roger_1of1/mirrortrace-crawler",
       "role": "A3 — adaptive crawl + evidence capture with compliance backoff.",
       "metamorph_to": "diff-evidence",
       "reasserts_scope": true
     },
     {
       "key": "diff-evidence",
-      "actorId": "<DIFF_EVIDENCE_ACTOR_ID>",
+      "actorId": "roger_1of1/mirrortrace-diff-evidence",
       "role": "A5 — change diff + content/html hashing.",
       "metamorph_to": "report-builder",
       "reasserts_scope": true
     },
     {
       "key": "report-builder",
-      "actorId": "<REPORT_BUILDER_ACTOR_ID>",
+      "actorId": "roger_1of1/mirrortrace-report-builder",
       "role": "A6 — compliant scoring + Closure Mode report. Terminal stage.",
       "metamorph_to": null,
       "reasserts_scope": true

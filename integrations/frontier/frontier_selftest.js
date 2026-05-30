@@ -43,7 +43,7 @@ console.log('\nfrontier_selftest — Apify Request Queue layer\n');
 // ── 1. Scope gate is the front door (fail-closed) ────────────────────────────
 const stalk = buildEnqueuePlan({
   scope_type: 'private_person_tracking',
-  target_urls: ['https://example.com/ex'],
+  target_urls: ['https://example.com/private-person'],
 });
 ok('prohibited scope_type refused at the gate', stalk.allowed === false);
 ok('refusal yields NO requests array', stalk.requests === undefined);

@@ -8,20 +8,35 @@
       "title": "Scope type",
       "type": "string",
       "editor": "select",
-      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
-      "enumTitles": ["Self", "Consented", "Public figure", "Brand", "Safety evidence"],
-      "default": "self"
+      "enum": [
+        "self",
+        "consented",
+        "public_figure",
+        "brand",
+        "safety_evidence"
+      ],
+      "enumTitles": [
+        "Self",
+        "Consented",
+        "Public figure",
+        "Brand",
+        "Safety evidence"
+      ],
+      "default": "self",
+      "description": "Compliant audit scope. Values outside the fixed public-footprint allowlist are rejected."
     },
     "case_id": {
       "title": "Case ID",
       "type": "string",
-      "editor": "textfield"
+      "editor": "textfield",
+      "description": "Case identifier issued by the Policy Gate for this audit chain."
     },
     "case_store_name": {
       "title": "Case KV store name",
       "type": "string",
       "editor": "textfield",
-      "default": "mirrortrace-case"
+      "default": "mirrortrace-case",
+      "description": "Named key-value store carrying the immutable case record across the actor chain."
     },
     "checks_per_day": {
       "title": "Checks per day (wellbeing signal)",
@@ -29,8 +44,11 @@
       "editor": "number",
       "default": 0,
       "minimum": 0,
-      "maximum": 100
+      "maximum": 100,
+      "description": "Wellbeing pacing signal used to shape Closure Mode recommendations."
     }
   },
-  "required": ["scope_type"]
+  "required": [
+    "scope_type"
+  ]
 }

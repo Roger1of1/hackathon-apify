@@ -39,8 +39,8 @@ const CASE_STORE_NAME = 'mirrortrace-case';
 
 // The actor we metamorph INTO on a successful gate. Configure via env so the
 // same image works whether you deploy under your own account namespace or not.
-// HUMAN CONFIG: set DISCOVERY_ACTOR_ID to "<YOUR_USERNAME>/mirrortrace-discovery".
-const DISCOVERY_ACTOR_ID = process.env.DISCOVERY_ACTOR_ID || 'YOUR_USERNAME/mirrortrace-discovery';
+// HUMAN CONFIG: set DISCOVERY_ACTOR_ID to "roger_1of1/mirrortrace-discovery".
+const DISCOVERY_ACTOR_ID = process.env.DISCOVERY_ACTOR_ID || 'roger_1of1/mirrortrace-discovery';
 
 /**
  * Generate a stable-ish case id. Uses the run id when present so the case is

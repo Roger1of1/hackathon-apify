@@ -32,3 +32,6 @@ node_modules/
 .DS_Store
 storage/
 apify_storage/
+
+# Local desktop inspector preview config
+inspector.json

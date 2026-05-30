@@ -7,12 +7,13 @@
  * and therefore by `npm run test:modules`.
  *
  * Asserts the load-bearing properties of the #1 deliverable's data flow:
- *  - buildExposureGraph maps REAL module_events -> one node per source, colour
- *    tier from the canonical severity band (red=critical|high), size = distinct
+ *  - buildExposureGraph maps REAL module_events -> canonical ExposureGraphV1:
+ *    center is separate, one node per source, severityTier from the canonical
+ *    severity band (red=critical|high), infoCount = distinct
  *    finding count;
  *  - center "you" node + radial "exposes" edges to every source;
- *  - a CROSS-SOURCE "correlates" edge appears ONLY when two DIFFERENT sources
- *    share the same identifier (same email_prefix / handle), via cluster-keys;
+ *  - a CROSS-SOURCE "shared-identifier" edge appears ONLY when two DIFFERENT
+ *    sources share the same identifier (same email_prefix / handle);
  *  - no value leaks: correlation edges carry the identifier KIND, never the value;
  *  - empty events -> empty-but-honest graph (center only), never a fake dossier;
  *  - the feed planner is scope-gated (a private-person request is REFUSED before
@@ -74,25 +75,24 @@ check('bandToTier maps critical/high -> red, medium -> yellow, low/info -> green
   assert.strictEqual(bandToTier('info'), 'green');
 });
 
-check('buildExposureGraph: one source node per host + a center "you" node', () => {
+check('buildExposureGraph: one source node per host + separate center "you"', () => {
   const g = buildExposureGraph(EVENTS, { subjectLabel: 'Jane Q' });
-  const center = g.nodes.find((n) => n.id === 'self');
-  assert.ok(center && center.role === 'center' && center.label === 'Jane Q', 'center node present + labelled');
-  const sourceIds = g.nodes.filter((n) => n.role === 'source').map((n) => n.id).sort();
+  assert.ok(g.center && g.center.id === 'self' && g.center.label === 'Jane Q', 'center node present + labelled');
+  const sourceIds = g.nodes.map((n) => n.id).sort();
   assert.deepStrictEqual(
     sourceIds,
-    ['src:forum.example', 'src:pastebin.com', 'src:www.spokeo.com'].sort(),
+    ['host:forum.example', 'host:pastebin.com', 'host:www.spokeo.com'].sort(),
     'one node per distinct source host',
   );
 });
 
-check('buildExposureGraph: node colour tier = worst finding band (spokeo high -> red)', () => {
+check('buildExposureGraph: node severityTier = worst finding band (spokeo high -> red)', () => {
   const g = buildExposureGraph(EVENTS);
-  const spokeo = g.nodes.find((n) => n.id === 'src:www.spokeo.com');
-  assert.strictEqual(spokeo.color_tier, 'red', 'a HIGH/indexed broker hit must be red');
+  const spokeo = g.nodes.find((n) => n.id === 'host:www.spokeo.com');
+  assert.strictEqual(spokeo.severityTier, 'red', 'a HIGH/indexed broker hit must be red');
 });
 
-check('buildExposureGraph: node size = distinct finding count + normalized weight', () => {
+check('buildExposureGraph: node size input = distinct finding count', () => {
   const dup = EVENTS.concat([
     makeEvent({
       event_type: 'PII_PHONE_PUBLIC', source_module: 'pii-detector',
@@ -101,44 +101,44 @@ check('buildExposureGraph: node size = distinct finding count + normalized weigh
     }),
   ]);
   const g = buildExposureGraph(dup);
-  const spokeo = g.nodes.find((n) => n.id === 'src:www.spokeo.com');
-  assert.strictEqual(spokeo.finding_count, 2, 'spokeo now holds 2 findings');
-  assert.strictEqual(spokeo.size_weight, 1, 'most-findings source has weight 1 (normalized)');
+  const spokeo = g.nodes.find((n) => n.id === 'host:www.spokeo.com');
+  assert.strictEqual(spokeo.infoCount, 2, 'spokeo now holds 2 findings');
+  assert.deepStrictEqual(spokeo.findingRefs, [0, 3], 'refs point back to report/event order');
 });
 
 check('buildExposureGraph: radial "exposes" edge from center to EVERY source', () => {
   const g = buildExposureGraph(EVENTS);
-  const sources = g.nodes.filter((n) => n.role === 'source').map((n) => n.id).sort();
+  const sources = g.nodes.map((n) => n.id).sort();
   const exposeTargets = g.edges.filter((e) => e.kind === 'exposes')
-    .map((e) => { assert.strictEqual(e.source, 'self', 'exposes edges originate at center'); return e.target; })
+    .map((e) => { assert.strictEqual(e.from, 'self', 'exposes edges originate at center'); return e.to; })
     .sort();
   assert.deepStrictEqual(exposeTargets, sources, 'one exposes edge per source');
 });
 
-check('buildExposureGraph: CROSS-SOURCE "correlates" edge on a shared email_prefix', () => {
+check('buildExposureGraph: CROSS-SOURCE "shared-identifier" edge on a shared email', () => {
   const g = buildExposureGraph(EVENTS);
-  const corr = g.edges.filter((e) => e.kind === 'correlates');
+  const corr = g.edges.filter((e) => e.kind === 'shared-identifier');
   assert.strictEqual(corr.length, 1, 'exactly one correlation: spokeo<->pastebin share the email');
   const e = corr[0];
-  const pair = [e.source, e.target].sort();
-  assert.deepStrictEqual(pair, ['src:pastebin.com', 'src:www.spokeo.com'].sort());
-  assert.strictEqual(e.shared, 'email_prefix', 'edge labels the identifier KIND…');
+  const pair = [e.from, e.to].sort();
+  assert.deepStrictEqual(pair, ['host:pastebin.com', 'host:www.spokeo.com'].sort());
+  assert.strictEqual(e.via, 'email', 'edge labels the identifier KIND...');
   // …and NEVER the identifier VALUE (no plaintext email anywhere in the edge).
   assert.ok(!JSON.stringify(e).includes('jane@example.com'), 'no plaintext PII on the edge');
 });
 
 check('buildExposureGraph: a handle on only ONE source yields NO correlation edge', () => {
   const g = buildExposureGraph(EVENTS);
-  const handleEdges = g.edges.filter((e) => e.kind === 'correlates' && e.shared === 'handle');
+  const handleEdges = g.edges.filter((e) => e.kind === 'shared-identifier' && e.via === 'handle');
   assert.strictEqual(handleEdges.length, 0, 'a single-source identifier is not a correlation');
 });
 
 check('buildExposureGraph: empty events -> honest empty graph (center only), no fake dossier', () => {
   const g = buildExposureGraph([]);
-  assert.strictEqual(g.nodes.length, 1, 'only the center node');
-  assert.strictEqual(g.nodes[0].id, 'self');
+  assert.strictEqual(g.nodes.length, 0, 'no fabricated source nodes');
+  assert.strictEqual(g.center.id, 'self');
   assert.strictEqual(g.edges.length, 0);
-  assert.strictEqual(g.summary.source_count, 0);
+  assert.strictEqual(g.meta.source_count, 0);
 });
 
 check('buildExposureGraph: emits a browser-only privacy banner the UI must show', () => {
@@ -151,7 +151,7 @@ check('buildExposureGraph: emits a browser-only privacy banner the UI must show'
 check('planExposureFeed: a private-person subject is REFUSED before any Apify run', () => {
   const r = planExposureFeed({
     scope_type: 'private_person_tracking',
-    subject_label: 'an ex',
+    subject_label: 'a private person',
     target_urls: ['https://example.com/x'],
     verified_identity: { verified: true, provider: 'google', email: 'me@example.com' },
   });
@@ -210,7 +210,7 @@ check('rowsToGraph: REAL Apify WCC rows -> events -> graph, writes nothing', () 
   const out = rowsToGraph(plan.ingest_plan, rows, { subjectLabel: 'me' });
   assert.ok(Array.isArray(out.events), 'events array returned');
   assert.ok(out.graph && Array.isArray(out.graph.nodes), 'graph built from real rows');
-  assert.ok(out.graph.nodes.some((n) => n.id === 'self'), 'center node present');
+  assert.ok(out.graph.center && out.graph.center.id === 'self', 'center node present');
 });
 
 console.log(`\nexposure-map self-test: ${fail === 0 ? 'OK' : fail + ' FAILURE(S)'} (${pass} passed)`);

@@ -1,26 +1,31 @@
 {
-  "_comment": "Config for the SELF-AUDIT INGESTION layer: how MirrorTrace fetches a vetted subject's OWN public footprint using two Apify first-party actors — apify/website-content-crawler (page crawl -> clean markdown/text) and apify/rag-web-browser (public web search/fetch for context). NO credentials here; actorIds are PLACEHOLDERS and deployed:false. The live actorId + APIFY_TOKEN are supplied by the operator at the LAST deploy step. Nothing here performs a fetch.",
-
+  "_comment": "Store actor references use their published Apify slugs. Runtime credentials remain operator-managed.",
   "actors": {
     "website_content_crawler": {
-      "actorId": "<PLACEHOLDER:apify/website-content-crawler>",
+      "actorId": "apify/website-content-crawler",
       "store_slug": "apify/website-content-crawler",
       "role": "Primary self-audit crawl of the subject's OWN URLs -> clean text/markdown per page.",
-      "deployed": false
+      "deployed": true
     },
     "rag_web_browser": {
-      "actorId": "<PLACEHOLDER:apify/rag-web-browser>",
+      "actorId": "apify/rag-web-browser",
       "store_slug": "apify/rag-web-browser",
       "role": "Public web search/fetch for CONTEXT (where else a self/public_figure surface is publicly referenced). Query may be a phrase OR a single URL.",
-      "deployed": false
+      "deployed": true
     }
   },
-
-  "scopes_allowed_to_ingest": ["self", "consented", "public_figure", "brand", "safety_evidence"],
-
+  "scopes_allowed_to_ingest": [
+    "self",
+    "consented",
+    "public_figure",
+    "brand",
+    "safety_evidence"
+  ],
   "_dual_use_note": "rag-web-browser runs a Google search by phrase, which is a dual-use discovery technique. A free-text/name search is therefore restricted to scope=self|public_figure (the same chokepoint as username enumeration). For consented|brand|safety_evidence the query MUST be a concrete URL the operator already holds, never a name search.",
-  "scopes_allowed_name_search": ["self", "public_figure"],
-
+  "scopes_allowed_name_search": [
+    "self",
+    "public_figure"
+  ],
   "wcc_defaults": {
     "crawlerType": "playwright:adaptive",
     "maxCrawlDepth": 1,
@@ -34,23 +39,21 @@
     "requestTimeoutSecs": 60,
     "_compliance": "respectRobotsTxtFile is forced true and CANNOT be turned off by the caller (anti-evasion). maxCrawlPages/maxCrawlDepth are capped low: a self-audit reads the subject's own surface, it does not deep-mine. saveHtmlAsFile + saveScreenshots give tamper-evident evidence handles for STIX x_integrity."
   },
-
   "rag_defaults": {
     "maxResults": 3,
-    "outputFormats": ["markdown"],
+    "outputFormats": [
+      "markdown"
+    ],
     "requestTimeoutSecs": 40,
     "_compliance": "maxResults capped low — context, not a dragnet. outputFormats text/markdown only (no need for raw html in the context pass)."
   },
-
   "caps": {
     "max_crawl_pages": 50,
     "max_crawl_depth": 2,
     "max_rag_results": 5,
     "_note": "Hard ceilings. A caller asking above these is clamped DOWN, never up (minimum-disclosure / anti-dragnet)."
   },
-
   "blocked_host_note": "Host-level blocking (login-walled private social) is NOT re-implemented here — it lives in shared/scope.js (PRIVATE_SOCIAL_HOSTS) and is enforced by reading validateScope() before any input is built. Two doors: validateScope AND this ingestion policy.",
-
   "forced_overrides": {
     "respectRobotsTxtFile": true,
     "_why": "Robots compliance is not negotiable. Even if a caller passes respectRobotsTxtFile:false, the builder overwrites it to true. This is the anti-evasion floor the proxy policy also enforces."

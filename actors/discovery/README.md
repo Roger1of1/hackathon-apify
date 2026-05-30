@@ -13,7 +13,7 @@ metamorphs into the crawler.
 - Metamorphs into `CRAWLER_ACTOR_ID`, passing the queue name (storage inherited).
 
 ## Human config
-- `CRAWLER_ACTOR_ID` env → `YOUR_USERNAME/mirrortrace-crawler`.
+- `CRAWLER_ACTOR_ID` env → `roger_1of1/mirrortrace-crawler`.
 
 ## Notes
 - Normally reached via metamorph from A0; running it standalone still enforces

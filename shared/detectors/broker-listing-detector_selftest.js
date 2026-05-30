@@ -110,7 +110,7 @@ t('emits NOTHING when corroborators are present but the name is absent', () => {
 });
 
 t('refuses (zero events) for a prohibited scope — dual-use gate', () => {
-  for (const scope of ['consented', 'brand', 'safety_evidence', undefined, 'ex', 'crush']) {
+  for (const scope of ['consented', 'brand', 'safety_evidence', undefined, 'private_person_tracking', 'crush']) {
     const events = detectBrokerListing({
       broker_id: 'spokeo', text: SELF_PAGE_TEXT, scope_type: scope, identity: SELF_IDENTITY,
     });

@@ -9,7 +9,13 @@
       "type": "string",
       "description": "Compliant scope only. Prohibited scopes are absent and cannot be selected.",
       "editor": "select",
-      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+      "enum": [
+        "self",
+        "consented",
+        "public_figure",
+        "brand",
+        "safety_evidence"
+      ],
       "enumTitles": [
         "Self — audit my own public footprint",
         "Consented — written authorization on file",
@@ -41,7 +47,8 @@
     "authorization_evidence_url": {
       "title": "Authorization evidence URL (for 'consented')",
       "type": "string",
-      "editor": "textfield"
+      "editor": "textfield",
+      "description": "URL for written authorization when the consented scope is used."
     },
     "max_pages": {
       "title": "Max pages (cost cap)",
@@ -49,7 +56,8 @@
       "editor": "number",
       "default": 50,
       "minimum": 1,
-      "maximum": 1000
+      "maximum": 1000,
+      "description": "Maximum number of pages processed during this bounded audit run."
     },
     "checks_per_day": {
       "title": "Checks per day (wellbeing signal)",
@@ -57,8 +65,11 @@
       "editor": "number",
       "default": 0,
       "minimum": 0,
-      "maximum": 100
+      "maximum": 100,
+      "description": "Wellbeing pacing signal used to shape Closure Mode recommendations."
     }
   },
-  "required": ["scope_type"]
+  "required": [
+    "scope_type"
+  ]
 }

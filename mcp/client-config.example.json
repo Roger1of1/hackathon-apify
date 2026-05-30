@@ -1,11 +1,11 @@
 {
-  "_comment": "MirrorTrace (合规版) — MCP client config example for Claude Desktop / Cursor. Copy to your client config and replace YOUR_USERNAME + <APIFY_TOKEN>. This is a PLACEHOLDER config; nothing here is deployed for you.",
+  "_comment": "MirrorTrace (合规版) — MCP client config example for Claude Desktop / Cursor. Copy to your client config and replace <APIFY_TOKEN>. The actor whitelist is already bound to roger_1of1; the secret remains operator-managed.",
   "_compliance_note": "The ?tools= query parameter is a COMPLIANCE CONTROL. Only compliant actors are whitelisted into the tool layer. Private-scraping actors are intentionally absent, so an AI agent physically cannot call them. See configurator-notes.md.",
   "_transport_note": "As of 2026-04-01 Apify migrated the MCP endpoint from SSE to Streamable HTTP. Use the streamable-http transport (or a remote-MCP-capable client). Legacy SSE config is deprecated.",
   "mcpServers": {
     "mirrortrace": {
       "transport": "streamable-http",
-      "url": "https://mcp.apify.com?tools=YOUR_USERNAME/mirrortrace-policy-gate,YOUR_USERNAME/mirrortrace-report,docs",
+      "url": "https://mcp.apify.com?tools=roger_1of1/mirrortrace-policy-gate,roger_1of1/mirrortrace-report-builder,docs",
       "headers": {
         "Authorization": "Bearer <APIFY_TOKEN>"
       }
@@ -16,7 +16,7 @@
       "args": [
         "-y",
         "mcp-remote",
-        "https://mcp.apify.com?tools=YOUR_USERNAME/mirrortrace-policy-gate,YOUR_USERNAME/mirrortrace-report,docs",
+        "https://mcp.apify.com?tools=roger_1of1/mirrortrace-policy-gate,roger_1of1/mirrortrace-report-builder,docs",
         "--header",
         "Authorization: Bearer <APIFY_TOKEN>"
       ]
