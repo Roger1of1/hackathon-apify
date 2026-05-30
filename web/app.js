@@ -1054,6 +1054,91 @@
   }
   const RISK_RANK = { high: 3, medium: 2, low: 1, info: 0 };
 
+  /* =========================================================================
+   * REPORT BREADTH — the honest "how many sources were checked, how many hit"
+   * per identifier (phone / email / name / handle). Single source of truth for
+   * the email+phone hero stats, the coverage strip, and the references breadth
+   * list. Drawn ONLY from the real report's provenance — never fabricated:
+   *   - provenance.per_query[]  → queries run + SERP results + findings per kind
+   *   - provenance.serp_listings_all[] → public listings actually surfaced
+   *   - findings[] (by event_type) → CONFIRMED self-exposure hits
+   *   - provenance.dropped_by_compliance[] → social hosts blocked by the gate
+   * Identity findings (SELF_PROFILE_URL) and name/handle queries map to "name".
+   * If a kind was never queried, it reports honestly as not-checked (sources:0).
+   * ======================================================================= */
+  // event_type → the identifier kind it exposes.
+  const EVENT_TO_KIND = {
+    PII_PHONE_PUBLIC: "phone",
+    PII_EMAIL_PUBLIC: "email",
+    PII_HANDLE_PUBLIC: "handle",
+    SELF_USERNAME: "handle",
+    SECRET_LEAK_PUBLIC: "handle",
+    SELF_PROFILE_URL: "name",
+    PII_POSTAL_PUBLIC: "name",
+    PII_GEO_HINT_PUBLIC: "name"
+  };
+  // per_query.kind / serp.query_kind use "identity" for name searches.
+  function normKind(k) {
+    k = String(k || "").toLowerCase();
+    if (k === "identity") return "name";
+    if (k === "phone" || k === "email" || k === "handle" || k === "name") return k;
+    return "other";
+  }
+  // Which kind a single finding belongs to (prefers explicit fields, then event).
+  function findingKind(f) {
+    if (f.identifier_kind) return normKind(f.identifier_kind);
+    if (f.query_kind) return normKind(f.query_kind);
+    if (EVENT_TO_KIND[f.event_type]) return EVENT_TO_KIND[f.event_type];
+    return "other";
+  }
+
+  function reportBreadth(report) {
+    const kinds = ["phone", "email", "name", "handle"];
+    const out = {};
+    kinds.forEach(function (k) {
+      out[k] = { kind: k, queried: false, sources: 0, results: 0, listings: 0, findings: 0, blocked: 0 };
+    });
+    out.total = { sources: 0, results: 0, findings: 0, blocked: 0 };
+    if (!report || typeof report !== "object") return out;
+    const prov = (report.provenance && typeof report.provenance === "object") ? report.provenance : {};
+
+    // 1) per_query = the authoritative list of sources/queries checked per kind.
+    if (Array.isArray(prov.per_query)) {
+      prov.per_query.forEach(function (q) {
+        const k = normKind(q.kind);
+        if (!out[k]) return;
+        out[k].queried = true;
+        out[k].sources += 1;                         // one source/query checked
+        out[k].results += Number(q.results) || 0;    // SERP results that came back
+        out.total.sources += 1;
+        out.total.results += Number(q.results) || 0;
+      });
+    }
+    // 2) real public listings actually surfaced (breadth visible even pre-crawl).
+    if (Array.isArray(prov.serp_listings_all)) {
+      prov.serp_listings_all.forEach(function (s) {
+        const k = normKind(s.query_kind);
+        if (out[k]) out[k].listings += 1;
+      });
+    }
+    // 3) CONFIRMED hits = real findings, counted by the identifier they expose.
+    reportFindings(report).forEach(function (f) {
+      const k = findingKind(f);
+      if (out[k]) out[k].findings += 1;
+      out.total.findings += 1;
+    });
+    // 4) compliance blocks (social hosts the gate refused to scrape) — a feature.
+    if (Array.isArray(prov.dropped_by_compliance)) {
+      out.total.blocked = prov.dropped_by_compliance.length;
+      // best-effort attribution: which identifier surfaced the blocked host.
+      prov.dropped_by_compliance.forEach(function (d) {
+        const k = normKind(d.query_kind || d.kind);
+        if (out[k]) out[k].blocked += 1;
+      });
+    }
+    return out;
+  }
+
   // Render the unmistakable provenance banner above the report data whenever a
   // report is loaded: shows the report's own __label/__notice so a reader can
   // see at a glance whether the data is a SYNTHETIC fixture or live output.
@@ -1875,6 +1960,7 @@
     if (kind === "email") return "email";
     if (kind === "handle") return "handle";
     if (kind === "name") return "name";
+    // (kind === "other" or empty falls through to surfaced_by heuristics below)
     // surfaced_by reads like "name Roger Tang / @ruizetang" or "phone 2067…":
     // the LEADING token is the identifier that actually drove the search, so it
     // wins over an "@handle" that merely appears later in the same string.
@@ -1904,19 +1990,23 @@
     const out = [];
     if (!report || typeof report !== "object") return out;
 
-    // 1) confirmed findings
+    const seenUrls = {};
+
+    // 1) confirmed findings — the real self-exposure hits, tagged with the
+    // identifier that surfaced them so they group under Phone / Email / Name.
     reportFindings(report).forEach(function (f, i) {
       if (!f.source_url) return; // a row needs a real URL to be a "reference"
+      seenUrls[f.source_url] = true;
       out.push({
         url: f.source_url,
         host: refHostOf(f.source_url),
         eventType: f.event_type,
         risk: f.risk, severity_band: f.severity_band,
-        title: null,
-        snippet: (f.meta && f.meta.snippet) || f.note || null,
-        confirmed: true, is_data_broker: false,
-        surfaced_by: f.surfaced_by || null,
-        identifier_kind: f.identifier_kind || null,
+        title: f.title || null,
+        snippet: (f.meta && f.meta.snippet) || f.snippet || f.note || null,
+        confirmed: true, is_data_broker: !!f.broker,
+        surfaced_by: f.surfaced_by || f.surfaced_by_query || null,
+        identifier_kind: findingKind(f),
         kindNote: "confirmed self-exposure",
         refId: "find:" + i
       });
@@ -1927,7 +2017,8 @@
     // 2) real detector observations that did not confirm the identifier
     if (Array.isArray(prov.observed_unconfirmed)) {
       prov.observed_unconfirmed.forEach(function (o, i) {
-        if (!o || !o.source_url) return;
+        if (!o || !o.source_url || seenUrls[o.source_url]) return;
+        seenUrls[o.source_url] = true;
         out.push({
           url: o.source_url,
           host: refHostOf(o.source_url),
@@ -1937,33 +2028,37 @@
           snippet: o.snippet || o.note || null,
           confirmed: false, is_data_broker: false,
           surfaced_by: o.surfaced_by || null,
-          identifier_kind: o.identifier_kind || null,
+          identifier_kind: o.identifier_kind ? normKind(o.identifier_kind) : null,
           kindNote: "observed · identifier not confirmed on page",
           refId: "obs:" + i
         });
       });
     }
 
-    // 3) real SERP listings surfaced but not crawled (incl. data brokers)
-    if (Array.isArray(prov.serp_listings_not_crawled)) {
-      prov.serp_listings_not_crawled.forEach(function (s, i) {
-        if (!s || !s.url) return;
-        out.push({
-          url: s.url,
-          host: s.host || refHostOf(s.url),
-          eventType: null,
-          risk: s.is_data_broker ? "medium" : "low",
-          severity_band: null,
-          title: s.title || null,
-          snippet: s.snippet || null,
-          confirmed: false, is_data_broker: !!s.is_data_broker,
-          surfaced_by: s.surfaced_by || null,
-          identifier_kind: s.identifier_kind || null,
-          kindNote: s.is_data_broker ? "data-broker listing (search result)" : "search listing · not crawled",
-          refId: "serp:" + i
-        });
+    // 3) real SERP listings surfaced (incl. data brokers). The real report
+    // stores these as provenance.serp_listings_all[]; older fixtures used
+    // serp_listings_not_crawled[]. Either way: only genuinely surfaced URLs.
+    const serpList = Array.isArray(prov.serp_listings_all)
+      ? prov.serp_listings_all
+      : (Array.isArray(prov.serp_listings_not_crawled) ? prov.serp_listings_not_crawled : []);
+    serpList.forEach(function (s, i) {
+      if (!s || !s.url || seenUrls[s.url]) return;
+      seenUrls[s.url] = true;
+      out.push({
+        url: s.url,
+        host: s.host || refHostOf(s.url),
+        eventType: null,
+        risk: s.is_data_broker ? "medium" : "low",
+        severity_band: null,
+        title: s.title || null,
+        snippet: s.snippet || null,
+        confirmed: false, is_data_broker: !!s.is_data_broker,
+        surfaced_by: s.surfaced_by || null,
+        identifier_kind: normKind(s.identifier_kind || s.query_kind),
+        kindNote: s.is_data_broker ? "data-broker listing (search result)" : "search listing · not crawled",
+        refId: "serp:" + i
       });
-    }
+    });
 
     return out;
   }
@@ -2013,18 +2108,50 @@
     if (countEl) countEl.textContent = sources.length ? "(" + sources.length + " sources)" : "";
     if (headEl) headEl.textContent = "References — where your info was found";
 
-    // honest empty state — report has no public sources (or none loaded).
-    if (!sources.length) {
+    // no report loaded yet → honest pre-run empty state.
+    if (!report) {
       const empty = el("p", "ref-empty");
       empty.id = "referencesEmpty";
-      empty.textContent = report
-        ? "No public sources found in this report. Nothing of yours surfaced on a crawlable public page."
-        : "Run an audit to list every real public source from your report.";
+      empty.textContent = "Run an audit to list every real public source from your report.";
       body.appendChild(empty);
       return;
     }
 
-    // group by surfacing identifier (phone / email / name / handle / other)
+    // --- BREADTH STRIP: full list of identifiers checked, with status, so the
+    // coverage is visible even where a search came back clean. Phone + email are
+    // foregrounded (their real per_query counts), then name/handle as secondary.
+    const breadth = reportBreadth(report);
+    const breadthWrap = el("div", "ref-breadth");
+    breadthWrap.appendChild(el("p", "ref-breadth-label", "Sources checked — breadth of this audit"));
+    const bRow = el("ul", "ref-breadth-list");
+    [
+      { k: "phone", ico: "📱", label: "Phone" },
+      { k: "email", ico: "📧", label: "Email" },
+      { k: "name", ico: "🪪", label: "Name" },
+      { k: "handle", ico: "＠", label: "Handle" }
+    ].forEach(function (row) {
+      const b = breadth[row.k];
+      if (!b || !b.queried) return; // only show identifiers actually searched
+      const status = b.findings > 0 ? "found" : "none";
+      const li = el("li", "ref-breadth-item " + status + (row.k === "phone" || row.k === "email" ? " primary" : ""));
+      const ico = el("span", "ref-breadth-ico", row.ico);
+      li.appendChild(ico);
+      const tx = el("div", "ref-breadth-tx");
+      const top = el("div", "ref-breadth-top");
+      top.appendChild(el("span", "ref-breadth-name", row.label));
+      top.appendChild(el("span", "ref-breadth-badge " + status,
+        b.findings > 0 ? (b.findings + " found") : "none found"));
+      tx.appendChild(top);
+      tx.appendChild(el("span", "ref-breadth-sub",
+        b.sources + " source" + (b.sources === 1 ? "" : "s") + " checked"
+        + (b.results ? " · " + b.results + " result" + (b.results === 1 ? "" : "s") + " seen" : "")));
+      li.appendChild(tx);
+      bRow.appendChild(li);
+    });
+    breadthWrap.appendChild(bRow);
+    body.appendChild(breadthWrap);
+
+    // group surfaced sources by identifier (phone / email / name / handle / other)
     const groups = {};
     sources.forEach(function (s) {
       const g = refGroupOf(s);
@@ -2032,14 +2159,16 @@
     });
 
     const TIER_RANK = { red: 2, yellow: 1, green: 0 };
+    let renderedAny = false;
     REF_GROUP_ORDER.forEach(function (gid) {
       const list = groups[gid];
       if (!list || !list.length) return;
+      renderedAny = true;
       // worst exposure first inside each identifier group
       list.sort(function (a, b) { return (TIER_RANK[refTierOf(b)] || 0) - (TIER_RANK[refTierOf(a)] || 0); });
 
       const meta = REF_GROUP_META[gid] || REF_GROUP_META.other;
-      const groupWrap = el("div", "ref-group");
+      const groupWrap = el("div", "ref-group" + (gid === "phone" || gid === "email" ? " ref-group-primary" : ""));
       const gh = el("div", "ref-group-head");
       gh.appendChild(el("span", "ref-group-ico", meta.ico));
       gh.appendChild(el("span", "ref-group-label", esc(meta.label)));
@@ -2051,6 +2180,55 @@
       groupWrap.appendChild(ul);
       body.appendChild(groupWrap);
     });
+
+    // honest line when breadth exists but nothing surfaced on a public page.
+    if (!renderedAny) {
+      body.appendChild(el("p", "ref-clean",
+        "Sources were checked (above) but nothing of yours surfaced on a crawlable public page in this run."));
+    }
+
+    // --- COMPLIANCE BLOCKS: social hosts the policy gate refused to scrape.
+    // Shown as a FEATURE — breadth the gate deliberately did not cross. Honest:
+    // we list the blocked URLs but never claim what they contain.
+    const prov = (report.provenance && typeof report.provenance === "object") ? report.provenance : {};
+    const blocked = Array.isArray(prov.dropped_by_compliance) ? prov.dropped_by_compliance : [];
+    if (blocked.length) {
+      // de-dup blocked URLs, keep a stable reason.
+      const seenB = {};
+      const uniq = [];
+      blocked.forEach(function (d) {
+        if (!d || !d.url || seenB[d.url]) return;
+        seenB[d.url] = true;
+        uniq.push(d);
+      });
+      const cWrap = el("div", "ref-group ref-group-compliance");
+      const ch = el("div", "ref-group-head");
+      ch.appendChild(el("span", "ref-group-ico", "⛬"));
+      ch.appendChild(el("span", "ref-group-label", "Blocked by compliance"));
+      ch.appendChild(el("span", "ref-group-count", String(uniq.length)));
+      cWrap.appendChild(ch);
+      cWrap.appendChild(el("p", "ref-compliance-note",
+        "These social-host links surfaced in search but the policy gate refused to scrape them. Login-walled / private social is never crossed — shown for transparency, not stored."));
+      const cul = el("ul", "ref-list");
+      uniq.forEach(function (d) {
+        const li = el("li", "ref-item ref-item-blocked");
+        const head = el("div", "ref-item-head");
+        head.appendChild(el("span", "ref-dot green"));
+        head.appendChild(el("span", "ref-type", "social · blocked"));
+        head.appendChild(el("span", "ref-flag blocked", "not scraped"));
+        li.appendChild(head);
+        const a = el("a", "ref-link");
+        a.href = d.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+        a.textContent = d.url;
+        li.appendChild(a);
+        const host = (d.reason && d.reason.indexOf(":") !== -1) ? d.reason.split(":")[1] : refHostOf(d.url);
+        if (host) li.appendChild(el("span", "ref-host", esc(host)));
+        li.appendChild(el("p", "ref-note", esc("compliance: " + (d.reason || "private social host"))));
+        cul.appendChild(li);
+      });
+      cWrap.appendChild(cul);
+      body.appendChild(cWrap);
+    }
   }
 
   // Optional: when a map node is clicked, highlight/scroll to its sources in the
@@ -2876,33 +3054,60 @@
     wrap.appendChild(top);
 
     // --- EMAIL + PHONE exposure lead (the demo's main point) -----------------
-    // Counted from REAL findings only (never fabricated). Email/phone lead the
-    // headline; the A–F grade and the rest of the stats follow underneath.
-    const emailCount = findings.filter(function (f) { return f.event_type === "PII_EMAIL_PUBLIC"; }).length;
-    const phoneCount = findings.filter(function (f) { return f.event_type === "PII_PHONE_PUBLIC"; }).length;
+    // The two hero stats lead with HITS / SOURCES CHECKED, drawn from the real
+    // report's provenance (per_query = sources checked, findings = hits). Never
+    // fabricated; honest empties when a kind was searched but came back clean.
+    const breadth = reportBreadth(report);
+    const phoneB = breadth.phone;
+    const emailB = breadth.email;
     const epLead = el("div", "brief-headline");
     epLead.appendChild(el("h3", "brief-headline-title", "Your email &amp; phone exposure"));
     const epRow = el("div", "brief-ep-row");
     [
-      { ico: "📧", n: emailCount, label: emailCount === 1 ? "email exposure" : "email exposures",
-        note: "breaches + public mentions" },
-      { ico: "📱", n: phoneCount, label: phoneCount === 1 ? "phone exposure" : "phone exposures",
-        note: "data-broker listings + public records" }
+      { ico: "📧", b: emailB, label: "email", note: "breaches + public mentions" },
+      { ico: "📱", b: phoneB, label: "phone", note: "data-broker listings + public records" }
     ].forEach(function (c) {
-      const cell = el("div", "brief-ep" + (c.n > 0 ? " hit" : " clear"));
+      const hits = c.b.findings;
+      const checked = c.b.sources;
+      const cell = el("div", "brief-ep" + (hits > 0 ? " hit" : (c.b.queried ? " clear" : " unscanned")));
       cell.appendChild(el("span", "brief-ep-ico", c.ico));
       const txt = el("div", "brief-ep-text");
-      const num = el("span", "brief-ep-num", "0");
-      num.dataset.target = String(c.n);
+      // hero number = hits, with "/ N sources checked" right beside it.
       const head = el("div", "brief-ep-head");
+      const num = el("span", "brief-ep-num", "0");
+      num.dataset.target = String(hits);
       head.appendChild(num);
-      head.appendChild(el("span", "brief-ep-lbl", " " + c.label));
+      head.appendChild(el("span", "brief-ep-lbl",
+        " " + c.label + (hits === 1 ? " exposure" : " exposures")));
       txt.appendChild(head);
-      txt.appendChild(el("span", "brief-ep-note", c.n > 0 ? c.note : "none found in this run · " + c.note));
+      // honest breadth line under each hero stat.
+      if (c.b.queried) {
+        const frac = el("span", "brief-ep-frac");
+        frac.appendChild(el("b", null, String(hits)));
+        frac.appendChild(el("span", null, " hit / " + checked + " source" + (checked === 1 ? "" : "s") + " checked"));
+        txt.appendChild(frac);
+      }
+      txt.appendChild(el("span", "brief-ep-note",
+        !c.b.queried ? "not searched in this run · " + c.note
+          : hits > 0 ? c.note
+          : "clean · " + checked + " source" + (checked === 1 ? "" : "s") + " checked, nothing surfaced"));
       cell.appendChild(txt);
       epRow.appendChild(cell);
     });
     epLead.appendChild(epRow);
+
+    // --- coverage / breadth strip (honest, from the real report only) --------
+    const stripBits = [];
+    if (phoneB.queried) stripBits.push("Checked <b>" + phoneB.sources + "</b> source" + (phoneB.sources === 1 ? "" : "s") + " for your phone");
+    if (emailB.queried) stripBits.push("<b>" + emailB.sources + "</b> for your email");
+    if (stripBits.length) {
+      const strip = el("p", "brief-coverage-strip", stripBits.join(" · "));
+      if (breadth.total.blocked > 0) {
+        strip.appendChild(el("span", "brief-coverage-block",
+          " · ⛬ " + breadth.total.blocked + " social link" + (breadth.total.blocked === 1 ? "" : "s") + " blocked by compliance"));
+      }
+      epLead.appendChild(strip);
+    }
     wrap.appendChild(epLead);
 
     // --- grade block (count-up) ---
