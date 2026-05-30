@@ -1,38 +1,38 @@
 /* Ex-Ditector 合规版 — app.js
- * All client-side logic. The Policy Gate is REAL logic, not a simulation.
+ *
+ * Clarity-first dashboard. The Policy Gate is REAL logic, not a simulation.
+ * No preloader, no radio-dial/channel nav, no scroll-driven wheel — those were
+ * removed because they violated the hard clarity red line ("明了,不要花哨让人疑惑").
+ *
+ * The self-exposure report is modelled on TWO reference architectures:
+ *   - The Markup Blacklight (themarkup.org/blacklight): a privacy inspector that
+ *     runs a fixed battery of checks and renders a grouped, plain-language
+ *     inventory of "what this site can learn about you", each with a "why it
+ *     matters". We INVERT it: grouped self-exposure finding categories, each with
+ *     a plain explanation + suggested fix + evidence-quality note.
+ *   - SpiderFoot (github.com/smicallef/spiderfoot): OSINT modules emit typed
+ *     events; a correlation engine links co-occurring events into clusters. Our
+ *     finding categories map 1:1 to detector modules + EVENT_TYPES
+ *     (shared/detectors/event-types.js), and the cluster card mirrors the
+ *     correlation engine's cluster keys (shared/enrich/cluster-keys.js).
+ *
+ * NO FAKE DATA: the report below shows the audit *schema* (template checks),
+ * clearly labelled. Real findings (URL + timestamp + hash) only appear on a real
+ * Apify run; this front-end never fabricates a scrape result or success.
  */
 (function () {
   "use strict";
 
-  // ---- fallback plan (used if fetch fails, e.g. opened via file:// with CSP) ----
   const FALLBACK_PLAN = window.__EX_PLAN__ || null;
 
-  /* Preloader (GT-Mechanik signature: crosshair corners + calibration sweep).
-     It is purely decorative and MUST never gate access to the real Live Compliance Gate,
-     so it self-removes on the earliest of DOMContentLoaded / load / a 1.6s safety timeout —
-     independent of plan.json loading. Offline-safe: no GSAP/network dependency. */
-  function dismissPreloader() {
-    const pre = document.getElementById("preloader");
-    if (!pre || pre.classList.contains("is-done")) return;
-    pre.classList.add("is-done");
-    // remove from the a11y/DOM tree after the fade so it never traps focus or screen readers
-    setTimeout(() => { if (pre.parentNode) pre.parentNode.removeChild(pre); }, 600);
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", dismissPreloader, { once: true });
-  } else {
-    dismissPreloader();
-  }
-  window.addEventListener("load", dismissPreloader, { once: true });
-  setTimeout(dismissPreloader, 1600); // safety net: never leave the page covered
-
   /* =========================================================================
-   * POLICY GATE — the genuine compliance logic (mirrors A0 / input_schema)
+   * POLICY GATE — the genuine compliance logic (mirrors A0 / input_schema).
+   * UNCHANGED behaviour: window.ExDitector.runPolicyGate still really rejects
+   * stalking / private-individual / laundering inputs (tests stay green).
    * =======================================================================*/
 
   const LEGAL_SCOPES = ["self", "consented", "public_figure", "brand", "safety_evidence"];
 
-  // Prohibited categories the gate must reject. Each has matcher patterns.
   const PROHIBITED = [
     {
       id: "romance_inference",
@@ -80,23 +80,15 @@
     }
   ];
 
-  // Signals that a request is plausibly about SELF / public entities (compliance-positive).
   const SELF_SIGNALS = /(我自己|我本人|本人|我的(姓名|名字|名誉|足迹|信息)|关于我的|针对我(本人|的))/i;
   const PUBLIC_SIGNALS = /(公众人物|政治人物|官员|名人|品牌|公司|机构|企业|官网|新闻报道|公开(报道|声明|新闻|页面|资料)|召回|声誉)/i;
   const SAFETY_SIGNALS = /(诽谤|骚扰|诈骗|名誉(权)?|证据|保全|侵权|网暴|谣言)/i;
   const CONSENT_SIGNALS = /(授权|书面同意|委托|同意书|代为(审计|监控))/i;
 
-  /**
-   * runPolicyGate — the real gate.
-   * @param {string} freeText  user free-text request (may be "")
-   * @param {string} scope     chosen scope_type (may be "")
-   * @returns {{accepted:boolean, ...}}
-   */
   function runPolicyGate(freeText, scope) {
     const text = (freeText || "").trim();
     scope = (scope || "").trim();
 
-    // 1) scope enum validation (compliance-as-code: only enum values allowed)
     if (scope && !LEGAL_SCOPES.includes(scope)) {
       return {
         accepted: false,
@@ -107,8 +99,6 @@
       };
     }
 
-    // 2) prohibited pattern matching on free text (always runs, even with a legal scope —
-    //    a legal scope label cannot launder a prohibited request).
     if (text) {
       const hits = [];
       for (const cat of PROHIBITED) {
@@ -127,7 +117,6 @@
       }
     }
 
-    // 3) Must have SOMETHING to act on
     if (!scope && !text) {
       return {
         accepted: false,
@@ -138,7 +127,6 @@
       };
     }
 
-    // 4) Determine effective scope. If free text has no explicit scope, infer/require it.
     let effectiveScope = scope;
     if (!effectiveScope && text) {
       if (SELF_SIGNALS.test(text)) effectiveScope = "self";
@@ -148,7 +136,6 @@
       else if (PUBLIC_SIGNALS.test(text)) effectiveScope = "public_figure";
     }
 
-    // 5) Free text with no legal scope and no public/self signal => cannot confirm legality => reject (fail closed)
     if (!effectiveScope) {
       return {
         accepted: false,
@@ -159,7 +146,6 @@
       };
     }
 
-    // ACCEPTED
     return {
       accepted: true,
       category: "accepted",
@@ -218,7 +204,7 @@
   }
 
   /* =========================================================================
-   * RENDERING
+   * RENDERING HELPERS
    * =======================================================================*/
 
   let PLAN = null;
@@ -234,7 +220,6 @@
   function renderHero() {
     const p = PLAN.product;
     document.getElementById("heroOne").textContent = p.oneLiner;
-    document.getElementById("heroSub").textContent = p.subtitle;
     const inv = p.inversion;
     document.getElementById("invHead").textContent = inv.headline;
     document.getElementById("invBody").textContent = inv.body;
@@ -270,6 +255,7 @@
         document.getElementById("requestInput").value = p.txt;
         document.getElementById("scopeSelect").value = "";
         doRun();
+        document.getElementById("gateResult").scrollIntoView({ behavior: "smooth", block: "nearest" });
       });
       row.appendChild(b);
     });
@@ -281,7 +267,7 @@
     const v = el("div", "verdict " + (res.accepted ? "accept" : "reject"));
 
     const head = el("div", "verdict-head");
-    head.appendChild(el("span", null, res.accepted ? "✓ ACCEPTED · 通过" : "⊘ REJECTED · 拒绝"));
+    head.appendChild(el("span", null, res.accepted ? "✓ 通过 · ACCEPTED" : "⊘ 拒绝 · REJECTED"));
     head.appendChild(el("span", "verdict-badge", res.accepted ? "compliant" : "blocked"));
     v.appendChild(head);
 
@@ -320,198 +306,684 @@
     const scope = document.getElementById("scopeSelect").value;
     const res = runPolicyGate(txt, scope);
     renderResult(res);
-    renderInspector(res);
-    setGateLed(res.accepted);
+    updateReportForScope(res);
   }
 
   /* =========================================================================
-   * SELF-EXPOSURE INSPECTOR (Blacklight-style privacy inspector, reframed)
+   * SELF-EXPOSURE REPORT — grouped finding categories (Blacklight-style),
+   * categories + event types from shared/detectors/event-types.js (SpiderFoot
+   * module/event model). These are TEMPLATE checks (the audit schema), each
+   * clearly flagged "模板检查项（无真实数据）". No scraped result is fabricated.
    *
-   * Borrowed pattern — The Markup's Blacklight (https://themarkup.org/blacklight):
-   * Blacklight runs a fixed battery of privacy checks against a site and renders
-   * a plain-language inventory of what that site does to a visitor (trackers,
-   * session recorders, key/fingerprint capture). Here we INVERT it: a fixed
-   * battery of self-exposure checks describing what a third party could TRIVIALLY
-   * discover about the SELF subject, in plain language, with a suggested fix.
-   *
-   * These are TEMPLATE checks (the audit schema), NOT scraped findings. No real
-   * data is fabricated. They only render for scope=self|public_figure — exactly
-   * the dual-use scopes the gate (validateScope / runPolicyGate) permits. For any
-   * other accepted scope (consented/brand/safety_evidence) the panel explains that
-   * the third-party-discovery framing does not apply and stays empty.
-   *
-   * Each check is also tagged with source_module + event_type, mirroring
-   * SpiderFoot's OSINT module/event model (shared/correlation.js, Track A), so the
-   * inspector and the correlation engine speak the same vocabulary.
+   * The categories below mirror, 1:1, the detector modules that actually exist
+   * in shared/detectors/* and the EVENT_TYPES they emit, so the UI and the
+   * pipeline speak the same vocabulary.
    * =======================================================================*/
 
-  const EXPOSURE_CHECKS = [
+  const FINDING_GROUPS = [
     {
-      finding: "姓名 + 城市可被搜索引擎直接关联",
-      severity: "high",
-      module: "sfp_search", event_type: "SELF_NAME_CO_OCCURRENCE",
-      plain: "搜索你的真实姓名时，结果首页可能同时暴露你的所在城市/单位。",
-      fix: "检查并请求移除高排名的旧个人页；对仍需公开的页面统一展示口径。"
+      id: "pii",
+      icon: "◐",
+      title: "公开 PII · 你自己发布的可识别信息",
+      module: "sfp_pii  ·  pii-detector.js",
+      desc: "你在自己控制的公开页面上发布的、可直接识别你的信息（邮箱 / 电话 / 地址 / 用户名 / 粗略位置）。检测，不推断。",
+      items: [
+        { name: "公开邮箱出现在你的页面上", event: "PII_EMAIL_PUBLIC", sev: "high", vis: "indexed",
+          why: "搜索引擎可索引的邮箱便于第三方把你的多个账号串起来，也是垃圾邮件/钓鱼的入口。",
+          fix: "用专用邮箱替换高敏页面上的主邮箱；核查哪些公开页面仍在展示它。" },
+        { name: "公开电话号码", event: "PII_PHONE_PUBLIC", sev: "high", vis: "indexed",
+          why: "公开电话可被用于社工、撞库找回与定位。", fix: "下线或改为联系表单；保留快照作为已处理记录。" },
+        { name: "公开邮寄/家庭地址文本", event: "PII_POSTAL_PUBLIC", sev: "high", vis: "linked",
+          why: "公开地址直接关系到人身安全。", fix: "联系站点移除；优先处理高排名页面。" },
+        { name: "复用的公开用户名", event: "PII_HANDLE_PUBLIC", sev: "medium", vis: "indexed",
+          why: "同一用户名让人从一个公开账号跳到你的其他公开账号。", fix: "区隔公私用户名，降低跨平台关联。" },
+        { name: "自述的粗略位置（城市/单位）", event: "PII_GEO_HINT_PUBLIC", sev: "low", vis: "indexed",
+          why: "粗略位置文本（非实时定位）与姓名同时出现会缩小你的可定位范围。", fix: "评估是否必须公开；统一对外展示口径。" }
+      ]
     },
     {
-      finding: "邮箱哈希出现在多个公开数据集",
-      severity: "high",
-      module: "sfp_emailrep", event_type: "EMAILHASH_CLUSTER",
-      plain: "同一邮箱（以哈希比对，不存明文）跨多个公开来源出现，便于第三方把账号串起来。",
-      fix: "为高敏场景使用独立邮箱；核查哪些公开页面仍在展示主邮箱。"
+      id: "tracker",
+      icon: "◉",
+      title: "第三方追踪器 · 你自己网站上的隐私泄露面",
+      module: "sfp_tracker  ·  tracker-detector.js",
+      desc: "这是 Blacklight 的核心检查项：你控制的站点上有哪些第三方追踪器，会泄露访客（也包括你）的信息。",
+      items: [
+        { name: "第三方追踪器脚本", event: "TRACKER_THIRD_PARTY", sev: "medium", vis: "indexed",
+          why: "第三方脚本把访客行为回传给广告/数据中介。", fix: "审查并移除非必要的第三方脚本与标签。" },
+        { name: "浏览器指纹采集", event: "TRACKER_FINGERPRINTING", sev: "high", vis: "indexed",
+          why: "指纹采集即使禁用 Cookie 也能跨站识别访客。", fix: "移除指纹库；改用合规的隐私友好分析。" },
+        { name: "会话录制（键鼠回放）", event: "TRACKER_SESSION_RECORDING", sev: "high", vis: "indexed",
+          why: "会话录制可能连同表单内容一起被采集。", fix: "停用会话录制或严格脱敏。" },
+        { name: "键盘记录式表单监听", event: "TRACKER_KEYLOGGING", sev: "high", vis: "indexed",
+          why: "提交前即捕获输入会泄露未提交的敏感内容。", fix: "移除提交前监听的第三方表单脚本。" },
+        { name: "第三方 Cookie", event: "COOKIE_THIRD_PARTY", sev: "low", vis: "indexed",
+          why: "第三方 Cookie 用于跨站追踪访客。", fix: "限制为必要的第一方 Cookie。" },
+        { name: "Referrer 泄露身份", event: "LEAK_REFERRER", sev: "medium", vis: "indexed",
+          why: "URL/Referrer 可能把你的身份带给第三方域。", fix: "设置 referrer policy，避免在 URL 暴露标识。" }
+      ]
     },
     {
-      finding: "用户名在多平台可枚举到同一人",
-      severity: "med",
-      module: "sfp_accounts", event_type: "USERNAME_ENUM_SELF",
-      plain: "复用的用户名让人能从一个公开账号跳到你的其他公开账号。",
-      fix: "区隔公私用户名；这是 dual-use 枚举，仅对 self / public_figure 开放并经闸门校验。"
+      id: "secret",
+      icon: "◈",
+      title: "密钥泄露 · 你自己误发的凭证",
+      module: "sfp_secret  ·  secret-leak-detector.js",
+      desc: "你在自己控制的页面/仓库里误发的 API key / token / 私钥 / .env 赋值——安全卫生问题，应当轮换。借鉴 secret-scanning（TruffleHog / GitHub secret scanning），方向为自审。",
+      items: [
+        { name: "公开页面/仓库中的密钥", event: "SECRET_LEAK_PUBLIC", sev: "high", vis: "indexed",
+          why: "公开的凭证可被直接滥用，应立即轮换。这是关于你自己的凭证，绝不涉及第三方密钥。",
+          fix: "立即轮换凭证；从历史记录中清除；改用密钥管理。" }
+      ]
     },
     {
-      finding: "头像图片在多处公开复用",
-      severity: "med",
-      module: "sfp_imagemeta", event_type: "AVATAR_REUSE",
-      plain: "同一张头像被反向图搜可串联到你的多个公开身份。（仅做图片复用检测，绝不推断性别/性取向。）",
-      fix: "为不同公开场景使用不同头像，降低跨平台关联度。"
+      id: "breach",
+      icon: "◍",
+      title: "泄露库命中（k-匿名）· 你自己凭证的已知泄露",
+      module: "sfp_breach  ·  breach-range-detector.js",
+      desc: "用 HIBP 式 k-匿名 range 比对你自己的凭证是否出现在已知泄露中——我们绝不传输或存储完整明文，只比对哈希前缀范围。",
+      items: [
+        { name: "凭证命中泄露范围", event: "BREACH_RANGE_HIT", sev: "high", vis: "private",
+          why: "出现在已知泄露中的凭证应停用并改密码。比对在 k-匿名桶内完成，桶内候选 ≥ k 才返回，不暴露具体后缀。",
+          fix: "停用该凭证、改用唯一强密码、开启两步验证。" }
+      ]
     },
     {
-      finding: "公开档案残留旧联系方式",
-      severity: "low",
-      module: "sfp_pagecontent", event_type: "STALE_CONTACT_INFO",
-      plain: "过期的电话/地址仍挂在某些公开页面上，可能被用于定位或社工。",
-      fix: "联系站点更新或下线过期信息；保留可引用快照作为已处理记录。"
+      id: "surface",
+      icon: "◎",
+      title: "可见账号与表面 · 你控制并暴露的入口",
+      module: "sfp_accounts  ·  username-enum-detector.js（dual-use，仅 self/public_figure 经闸门校验）",
+      desc: "你自己控制并公开暴露的档案 URL 与用户名。用户名枚举是 dual-use 技术，仅对 self / public_figure 开放，且必须经过合规闸门。",
+      items: [
+        { name: "公开档案 URL", event: "SELF_PROFILE_URL", sev: "low", vis: "indexed",
+          why: "盘点你已知公开的档案入口，便于统一管理与处置。", fix: "整理对外档案清单；下线不再使用的旧档案。" },
+        { name: "可枚举的公开用户名", event: "SELF_USERNAME", sev: "medium", vis: "indexed",
+          why: "复用用户名提高了跨平台关联度。", fix: "区隔公私用户名；这是经闸门校验的 dual-use 枚举。" }
+      ]
     }
   ];
 
-  // public_figure: the discovery framing is about official/public surface only.
+  // Per-finding evidence-quality note (mirrors shared/enrich/evidence-quality.js +
+  // k-anonymity.js framing): template checks have no real evidence yet.
+  const SEV_LABEL = { high: "高", medium: "中", low: "低", info: "提示" };
+  const VIS_LABEL = { indexed: "可被搜索引擎索引", linked: "顺链接可达", private: "通常不应外露" };
+
+  // The "why this is a template, not a finding" banner copy.
+  const SELF_NOTE =
+    "scope=self：以下按类别列出第三方能轻易发现关于你的什么。这些是审计 schema 的模板检查项，" +
+    "不是真实抓取结果——真实运行才会按 evidence index 填入带 URL+时间戳+哈希的条目。";
   const PUBLIC_FIGURE_NOTE =
     "scope=public_figure：只盘点该公众人物在公共领域的官方/公开表面（官网、新闻、公开声明）。" +
-    "不触碰任何私域行为，不做身份/关系推断。下列为审计 schema 的检查项模板，非抓取结果。";
-  const SELF_NOTE =
-    "以下是「第三方能轻易发现关于你什么」的检查项清单（借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审）。" +
-    "这些是审计 schema 的模板检查项，不是真实抓取结果——真实运行才会按 evidence index 填入带 URL+时间戳+哈希的条目。";
+    "不触碰任何私域行为，不做身份/关系推断。以下为审计 schema 的模板检查项。";
 
-  function renderInspector(res) {
-    const box = document.getElementById("inspector");
-    const list = document.getElementById("exposureList");
-    const note = document.getElementById("inspectorNote");
-    const scopeTag = document.getElementById("inspectorScope");
-    const cluster = document.getElementById("clusterBanner");
-    if (!box || !list) return;
-    list.innerHTML = "";
-    cluster.hidden = true;
+  /* -------------------------------------------------------------------------
+   * LIVE k-ANONYMITY DEMONSTRATOR (Have I Been Pwned "Pwned Passwords" range API)
+   *
+   * Mirrors the EXACT contract in shared/aux/kanon.js so the UI and the actor
+   * agree byte-for-byte:
+   *   sha1Hex(secret)  -> UPPERCASE hex SHA-1 of the UTF-8 string
+   *   kAnonPair(secret) -> { hash, prefix: hash.slice(0,5), suffix: hash.slice(5) }
+   *
+   * The privacy mechanic (Troy Hunt, "Understanding Have I Been Pwned's Use of
+   * SHA-1 and k-Anonymity"): only the 5-char PREFIX would ever be sent to the
+   * range endpoint (16^5 = 1,048,576 buckets, so the prefix is shared by
+   * thousands of hashes and the server cannot tell which one you asked about);
+   * the 35-char SUFFIX is matched LOCALLY and never leaves the device.
+   *
+   * HONEST OFFLINE BEHAVIOUR: we do NOT query any breach corpus here and we
+   * NEVER fabricate a breach count or a "pwned" verdict. This panel proves the
+   * privacy MECHANIC (what leaves vs. what stays local), not a breach RESULT.
+   * Hashing runs entirely in the browser via the Web Crypto SubtleCrypto API.
+   * -----------------------------------------------------------------------*/
 
-    const scope = res.accepted ? res.scope : null;
+  // Browser SHA-1 -> uppercase hex (matches kanon.sha1Hex). Async because
+  // crypto.subtle.digest returns a Promise. file:// and https:// expose a
+  // SubtleCrypto; plain http:// on a remote origin may not (secure-context rule).
+  async function sha1HexBrowser(input) {
+    const s = typeof input === "string" ? input : String(input == null ? "" : input);
+    const subtle = (window.crypto && window.crypto.subtle) || null;
+    if (!subtle) throw new Error("no-subtlecrypto");
+    const bytes = new TextEncoder().encode(s);
+    const digest = await subtle.digest("SHA-1", bytes);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
+  }
+
+  // Mirror of kanon.kAnonPair: prefix = hash[0..5], suffix = hash[5..40].
+  function kAnonSplit(hash) {
+    return { hash: hash, prefix: hash.slice(0, 5), suffix: hash.slice(5) };
+  }
+
+  function kAnonPanel() {
+    const panel = el("div", "kanon");
+
+    panel.appendChild(el("div", "kanon-tag", "实时演示 · HIBP k-匿名 range 机制"));
+    panel.appendChild(el("p", "kanon-intro",
+      "在浏览器本地把你<b>自己</b>的一个凭证（密码或邮箱）做 SHA-1，然后看清楚：" +
+      "<b>哪 5 个字符会被发出</b>、<b>哪 35 个字符永远留在本地</b>。" +
+      "这复刻 Have I Been Pwned「Pwned Passwords」range API 的隐私机制，" +
+      "也与后端 <code>shared/aux/kanon.js</code> 的 prefix/suffix 切分契约逐字一致。"));
+
+    const warn = el("p", "kanon-offline");
+    warn.innerHTML = "⊘ 离线模式不会查询任何泄露库 —— 本面板证明的是<b>隐私机制</b>（什么离开设备、什么留在本地），" +
+      "<b>不是</b>泄露结果。绝不会显示任何伪造的泄露命中或次数。";
+    panel.appendChild(warn);
+
+    const field = el("div", "kanon-field");
+    const label = el("label", "field-label", "你自己的凭证（仅在本机哈希，不会上传）");
+    label.setAttribute("for", "kanonInput");
+    field.appendChild(label);
+    const input = el("input", "input");
+    input.id = "kanonInput";
+    input.type = "text";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.setAttribute("autocapitalize", "off");
+    input.placeholder = "例如：你自己的一个旧密码或邮箱（本机 SHA-1，永不离开浏览器）";
+    field.appendChild(input);
+    const actions = el("div", "kanon-actions");
+    const runBtn = el("button", "btn btn-ghost btn-tiny", "本地哈希并切分");
+    runBtn.type = "button";
+    const clrBtn = el("button", "btn btn-ghost btn-tiny", "清空");
+    clrBtn.type = "button";
+    actions.appendChild(runBtn);
+    actions.appendChild(clrBtn);
+    field.appendChild(actions);
+    panel.appendChild(field);
+
+    const out = el("div", "kanon-out");
+    out.id = "kanonOut";
+    out.setAttribute("aria-live", "polite");
+    panel.appendChild(out);
+
+    function clearOut() { out.innerHTML = ""; }
+
+    async function run() {
+      const secret = input.value;
+      if (!secret) {
+        out.innerHTML = '<p class="kanon-hint">输入一个字符串后再哈希。空输入不发送、不哈希。</p>';
+        return;
+      }
+      let hash;
+      try {
+        hash = await sha1HexBrowser(secret);
+      } catch (e) {
+        out.innerHTML = '<p class="kanon-hint kanon-err">此环境不提供 Web Crypto（SubtleCrypto 仅在安全上下文，如 file:// 或 https:// 可用）。' +
+          '请用 file:// 直接打开本页，或通过 https 访问。后端 <code>kanon.js</code> 用 Node crypto 做同样的 SHA-1。</p>';
+        return;
+      }
+      const k = kAnonSplit(hash);
+
+      out.innerHTML = "";
+
+      // The split, shown unambiguously: prefix (sent) highlighted vs suffix (local).
+      const split = el("div", "kanon-split");
+      const pre = el("span", "kanon-prefix", esc(k.prefix));
+      pre.title = "会被发往 range 端点的 5 个字符";
+      const suf = el("span", "kanon-suffix", esc(k.suffix));
+      suf.title = "永远留在本地、本地比对的 35 个字符";
+      split.appendChild(pre);
+      split.appendChild(suf);
+      out.appendChild(split);
+
+      const legend = el("div", "kanon-legend");
+      const sent = el("div", "kanon-leg-row");
+      sent.innerHTML = '<span class="kanon-chip sent">会发出 · prefix</span>' +
+        '<code class="kanon-mono">GET range/<b>' + esc(k.prefix) + "</b></code>" +
+        '<span class="kanon-leg-note">5 个十六进制字符 → 1,048,576 个桶之一，服务器无法分辨你查的是哪个。</span>';
+      const local = el("div", "kanon-leg-row");
+      local.innerHTML = '<span class="kanon-chip local">留本地 · suffix</span>' +
+        '<code class="kanon-mono">' + esc(k.suffix) + "</code>" +
+        '<span class="kanon-leg-note">35 个字符在你设备上与桶内候选逐一比对；明文凭证从不离开浏览器。</span>';
+      legend.appendChild(sent);
+      legend.appendChild(local);
+      out.appendChild(legend);
+
+      const foot = el("p", "kanon-foot");
+      foot.innerHTML = "完整 SHA-1（仅展示，不发送）：<code class=\"kanon-mono\">" + esc(k.hash) + "</code><br>" +
+        "下一步在真实运行中：后端只用 <code>" + esc(k.prefix) + "</code> 向 HIBP range 端点取回该桶的所有后缀+次数，" +
+        "在本地匹配 <code>suffix</code>，并按 HIBP padding 指南把 count=0 的填充行当作「未命中」。" +
+        "离线此处<b>到此为止</b>——不查询、不返回、不伪造任何泄露结果。";
+      out.appendChild(foot);
+    }
+
+    runBtn.addEventListener("click", run);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); run(); } });
+    clrBtn.addEventListener("click", () => { input.value = ""; clearOut(); input.focus(); });
+
+    return panel;
+  }
+
+  /* =======================================================================
+   * PORTABLE EVIDENCE — STIX 2.1 "Observed Data" (OpenCTI / MISP interop)
+   * -----------------------------------------------------------------------
+   * Mirror of shared/enrich/stix-evidence.js (toObservedData) for the
+   * browser/offline (file://) build. Same field names, same observable
+   * category map, same x_scope_note red line — so the JSON a user copies
+   * here is byte-for-byte the shape the real actor pipeline emits.
+   *
+   * Why STIX Observed Data: an exposure finding ("this email is public on
+   * this page, first/last observed at T, with this content hash") is exactly
+   * an OASIS STIX 2.1 Observed Data object — first_observed / last_observed
+   * + an objects bag of observables. That is the de-facto interchange shape
+   * that OpenCTI ingests and MISP maps to attributes/objects, so a user can
+   * export ONE finding and hand it to a takedown request, a SIEM, or a CTI
+   * platform without reformatting.
+   *
+   * Ref: OASIS STIX 2.1 — Observed Data SDO + Indicator pattern; OpenCTI /
+   * MISP STIX 2.1 interop (OpenCTI ingests STIX bundles; MISP <-> STIX
+   * mapping of attributes to Cyber-observable Objects).
+   *
+   * RED LINE (unchanged from the shared module): an Observed Data object only
+   * describes a PUBLIC observation of the SELF subject's footprint. No
+   * inference, no third-private-party identity, no romance/intimacy slot.
+   * NO FAKE DATA: in this offline template the value/url/hash fields are the
+   * literal string "<TEMPLATE — filled on a real scoped run>"; nothing is
+   * fabricated as if it were a real scrape.
+   * =======================================================================*/
+
+  // 1:1 with OBSERVABLE_CATEGORY in shared/enrich/stix-evidence.js
+  const OBSERVABLE_CATEGORY = {
+    PII_EMAIL_PUBLIC: "email-addr",
+    PII_PHONE_PUBLIC: "phone-number",
+    PII_POSTAL_PUBLIC: "postal-address",
+    PII_HANDLE_PUBLIC: "user-account",
+    PII_GEO_HINT_PUBLIC: "location-hint",
+    SECRET_LEAK_PUBLIC: "credential-exposure",
+    SELF_PROFILE_URL: "url",
+    SELF_USERNAME: "user-account",
+    TRACKER_THIRD_PARTY: "tracking-tech",
+    TRACKER_FINGERPRINTING: "tracking-tech",
+    TRACKER_SESSION_RECORDING: "tracking-tech",
+    TRACKER_KEYLOGGING: "tracking-tech",
+    COOKIE_THIRD_PARTY: "cookie",
+    LEAK_REFERRER: "url",
+    BREACH_RANGE_HIT: "credential-exposure",
+    EXPOSURE_SUMMARY: "observed-data"
+  };
+
+  // Deterministic STIX-ish id (djb2), mirrors deterministicId() in the module.
+  function stixId(type) {
+    const parts = Array.prototype.slice.call(arguments, 1);
+    const s = parts.map(String).join("|");
+    let h = 5381;
+    for (let i = 0; i < s.length; i += 1) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    return type + "--" + h.toString(16).padStart(8, "0");
+  }
+
+  const STIX_TEMPLATE = "<TEMPLATE — filled on a real scoped run>";
+
+  // Map an event type to the SpiderFoot-style detector module that emits it,
+  // mirroring the source_module values the real pipeline sets.
+  const EVENT_SOURCE_MODULE = {
+    PII_EMAIL_PUBLIC: "sfp_pii", PII_PHONE_PUBLIC: "sfp_pii", PII_POSTAL_PUBLIC: "sfp_pii",
+    PII_HANDLE_PUBLIC: "sfp_pii", PII_GEO_HINT_PUBLIC: "sfp_pii",
+    TRACKER_THIRD_PARTY: "sfp_tracker", TRACKER_FINGERPRINTING: "sfp_tracker",
+    TRACKER_SESSION_RECORDING: "sfp_tracker", TRACKER_KEYLOGGING: "sfp_tracker",
+    COOKIE_THIRD_PARTY: "sfp_tracker", LEAK_REFERRER: "sfp_tracker",
+    SECRET_LEAK_PUBLIC: "sfp_secret", BREACH_RANGE_HIT: "sfp_breach",
+    SELF_PROFILE_URL: "sfp_accounts", SELF_USERNAME: "sfp_accounts"
+  };
+
+  // Build the STIX 2.1 Observed Data object for a template finding item.
+  // Shape matches toObservedData(event) exactly; template strings stand in
+  // for fields a real scoped run would populate (no fabricated values).
+  function observedDataTemplate(it) {
+    const category = OBSERVABLE_CATEGORY[it.event] || "observed-data";
+    const id = stixId("observed-data", it.event, STIX_TEMPLATE, "template");
+    return {
+      type: "observed-data",
+      spec_version: "2.1",
+      id: id,
+      created: STIX_TEMPLATE,
+      modified: STIX_TEMPLATE,
+      first_observed: STIX_TEMPLATE,
+      last_observed: STIX_TEMPLATE,
+      number_observed: 1,
+      x_source_module: EVENT_SOURCE_MODULE[it.event] || "sfp_detector",
+      x_event_type: it.event,
+      x_scope_note: "Public observation of the SELF subject footprint. No third-party-private inference.",
+      x_confidence: STIX_TEMPLATE,
+      x_visibility: it.vis,
+      x_risk: it.sev,
+      x_source_url: STIX_TEMPLATE,
+      x_integrity: {
+        content_sha256: STIX_TEMPLATE,
+        html_sha256: STIX_TEMPLATE,
+        html_key: STIX_TEMPLATE,
+        screenshot_key: STIX_TEMPLATE
+      },
+      objects: {
+        0: { type: category, x_value: STIX_TEMPLATE, x_meta: {} }
+      }
+    };
+  }
+
+  // Render the per-finding "Portable evidence" detail block. Reuses existing
+  // card tokens; the ONE primary (magenta) action is the copy button.
+  function stixEvidenceBlock(it) {
+    const od = observedDataTemplate(it);
+    const cat = OBSERVABLE_CATEGORY[it.event] || "observed-data";
+    const wrap = el("details", "stix-ev");
+
+    const summary = el("summary", "stix-summary");
+    summary.appendChild(el("span", "stix-summary-label",
+      "可移植证据 · STIX 2.1 Observed Data（OpenCTI / MISP 互通）"));
+    summary.appendChild(el("span", "stix-cat-chip", esc(cat)));
+    wrap.appendChild(summary);
+
+    const note = el("p", "stix-note");
+    note.innerHTML =
+      "把这条发现导出为 OASIS <b>STIX 2.1 Observed Data</b> 对象（含 " +
+      "<code>first_observed</code> / <code>last_observed</code> / 内容哈希 / observable 类别），" +
+      "可直接交给下架请求、SIEM 或 OpenCTI / MISP。下面是真实运行会填充的 JSON 形状——" +
+      "本离线模板里所有取值字段均为占位串，<b>不是</b>抓取数据。";
+    wrap.appendChild(note);
+
+    const pre = el("pre", "stix-json");
+    pre.appendChild(el("code", null, esc(JSON.stringify(od, null, 2))));
+    wrap.appendChild(pre);
+
+    const actions = el("div", "stix-actions");
+    const copyBtn = el("button", "btn btn-primary btn-tiny", "复制 STIX JSON");
+    copyBtn.type = "button";
+    copyBtn.addEventListener("click", function () {
+      const text = JSON.stringify(od, null, 2);
+      const done = function () { copyBtn.textContent = "已复制 ✓"; setTimeout(function () { copyBtn.textContent = "复制 STIX JSON"; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+      } else { fallbackCopy(text); done(); }
+    });
+    actions.appendChild(copyBtn);
+    actions.appendChild(el("span", "stix-template-flag", "模板 · 无真实数据"));
+    wrap.appendChild(actions);
+
+    const ref = el("p", "stix-ref");
+    ref.innerHTML =
+      "代码：<b>shared/enrich/stix-evidence.js</b>（toObservedData / toBundle，与此处同字段）。" +
+      "引用：OASIS STIX 2.1 Observed Data SDO + Indicator pattern；OpenCTI / MISP STIX 2.1 互通映射。";
+    wrap.appendChild(ref);
+
+    return wrap;
+  }
+
+  // Clipboard fallback for older/file:// browsers without async clipboard.
+  function fallbackCopy(text) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "absolute";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    } catch (e) { /* no-op: copy unavailable offline */ }
+  }
+
+  function renderFindings() {
+    const wrap = document.getElementById("findingsGroups");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    FINDING_GROUPS.forEach(g => {
+      const card = el("div", "finding-group");
+
+      const head = el("div", "fg-head");
+      head.appendChild(el("span", "fg-icon", esc(g.icon)));
+      const titleWrap = el("div");
+      titleWrap.appendChild(el("div", "fg-title", esc(g.title)));
+      titleWrap.appendChild(el("div", "fg-module", esc(g.module)));
+      head.appendChild(titleWrap);
+      head.appendChild(el("span", "fg-count", g.items.length + " 项检查"));
+      card.appendChild(head);
+
+      const body = el("div", "fg-body");
+      body.appendChild(el("p", "fg-desc", esc(g.desc)));
+
+      // The breach group gets a LIVE, HONEST k-anonymity demonstrator so a user
+      // can see EXACTLY what the breach-range check would send for their OWN
+      // credential vs. what stays local — without ever querying a breach corpus
+      // offline. (See kAnonPanel below.)
+      if (g.id === "breach") body.appendChild(kAnonPanel());
+
+      g.items.forEach(it => {
+        const item = el("div", "finding-item");
+        const row = el("div", "fi-row");
+        row.appendChild(el("span", "fi-name", esc(it.name)));
+        row.appendChild(el("span", "sev-badge " + it.sev, esc((SEV_LABEL[it.sev] || it.sev) + "暴露")));
+        row.appendChild(el("span", "vis-badge", esc(VIS_LABEL[it.vis] || it.vis)));
+        row.appendChild(el("span", "event-chip", esc(it.event)));
+        item.appendChild(row);
+
+        const why = el("p", "fi-why");
+        why.innerHTML = "<b>为什么重要：</b>" + esc(it.why);
+        item.appendChild(why);
+
+        item.appendChild(el("p", "fi-fix", "建议处置：" + esc(it.fix)));
+
+        const q = el("div", "fi-quality");
+        q.appendChild(el("span", "q-dot"));
+        q.appendChild(el("span", null, "evidence_quality：待真实运行（来源权威性 + 时间戳 + 完整性）"));
+        q.appendChild(el("span", "fi-template-flag", "模板检查项 · 无真实数据"));
+        item.appendChild(q);
+
+        // Portable evidence detail — the existing module's STIX 2.1 Observed
+        // Data shape, surfaced per finding so a user can export/hand off.
+        item.appendChild(stixEvidenceBlock(it));
+
+        body.appendChild(item);
+      });
+
+      card.appendChild(body);
+      wrap.appendChild(card);
+    });
+  }
+
+  function renderClusterCard() {
+    const body = document.getElementById("clusterBody");
+    const keys = document.getElementById("clusterKeys");
+    if (!body || !keys) return;
+    body.textContent =
+      "关联引擎（同 SpiderFoot 关联引擎，对应 shared/enrich/cluster-keys.js）会把共享同一关联键的事件聚合成一个「自我暴露簇」。" +
+      "例如多个 PII / 账号事件共享同一 handle 或同一 email-hash 时，会被聚合并给出置信度。真实运行时簇会附带可引用的 evidence index。";
+    keys.innerHTML = "";
+    ["normalizeHandle(用户名)", "email-hash 前缀", "hostOf(同一站点)"].forEach(k => {
+      keys.appendChild(el("li", null, esc(k)));
+    });
+  }
+
+  // Adjust the report banner + cluster note depending on the latest gate verdict.
+  function updateReportForScope(res) {
+    const banner = document.getElementById("reportGateBanner");
+    if (!banner) return;
+    const scope = res && res.accepted ? res.scope : null;
     const applies = scope === "self" || scope === "public_figure";
+    if (applies) {
+      banner.className = "report-banner applies";
+      banner.innerHTML = "✓ 闸门已放行 <code>" + esc(scope) + "</code>。" + esc(scope === "public_figure" ? PUBLIC_FIGURE_NOTE : SELF_NOTE);
+    } else if (res && res.accepted) {
+      banner.className = "report-banner";
+      banner.innerHTML = "闸门放行了 <code>" + esc(res.scope) + "</code>，但「第三方能发现你什么」的自审框架只适用于 <code>self</code> / <code>public_figure</code>。下面显示的是完整检查项目录。";
+    } else {
+      banner.className = "report-banner";
+      banner.innerHTML = '先在<a href="#gate">第 1 步</a>用 <code>self</code> 或 <code>public_figure</code> 范围通过闸门，下面的检查项就会按你的范围呈现。当前显示的是完整检查项目录。';
+    }
+  }
 
-    if (!applies) {
-      box.hidden = true;
+  /* =========================================================================
+   * LIVE k-ANONYMITY BREACH MECHANIC (HIBP Pwned Passwords range API)
+   *
+   * Ref: Troy Hunt, "Pwned Passwords" k-anonymity range query. To check a secret
+   * we SHA-1 it locally, send ONLY the 5-char hex prefix, and match the 35-char
+   * suffix locally — the secret never leaves the device. This mirrors the EXACT
+   * prefix/suffix split contract in shared/aux/kanon.js (uppercase hex, prefix=5,
+   * suffix=35) so the UI and the actor module agree byte-for-byte.
+   *
+   * NO FAKE DATA: this offline demo NEVER queries a real breach corpus and NEVER
+   * shows a breach hit or count. It proves the privacy split mechanic only.
+   *
+   * Implementation note: crypto.subtle requires a secure context and is absent on
+   * file://, so we ship a tiny pure-JS SHA-1 so the demo works fully offline.
+   * =======================================================================*/
+
+  // Minimal, dependency-free SHA-1 -> UPPERCASE hex (matches kanon.js sha1Hex).
+  function sha1HexUpper(str) {
+    function rotl(n, s) { return (n << s) | (n >>> (32 - s)); }
+    // UTF-8 encode
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) {
+      let c = str.charCodeAt(i);
+      if (c < 0x80) bytes.push(c);
+      else if (c < 0x800) { bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f)); }
+      else if (c < 0xd800 || c >= 0xe000) {
+        bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+      } else {
+        // surrogate pair
+        i++;
+        c = 0x10000 + (((c & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
+        bytes.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 0x3f),
+          0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+      }
+    }
+    const ml = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    // 64-bit big-endian length (high 32 bits assumed 0 for these short inputs)
+    for (let i = 7; i >= 0; i--) bytes.push((i < 4) ? (ml >>> (i * 8)) & 0xff : 0);
+
+    let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
+    const w = new Array(80);
+    for (let i = 0; i < bytes.length; i += 64) {
+      for (let j = 0; j < 16; j++) {
+        w[j] = (bytes[i + j * 4] << 24) | (bytes[i + j * 4 + 1] << 16)
+          | (bytes[i + j * 4 + 2] << 8) | (bytes[i + j * 4 + 3]);
+      }
+      for (let j = 16; j < 80; j++) w[j] = rotl(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+      let a = h0, b = h1, cc = h2, d = h3, e = h4;
+      for (let j = 0; j < 80; j++) {
+        let f, k;
+        if (j < 20) { f = (b & cc) | (~b & d); k = 0x5A827999; }
+        else if (j < 40) { f = b ^ cc ^ d; k = 0x6ED9EBA1; }
+        else if (j < 60) { f = (b & cc) | (b & d) | (cc & d); k = 0x8F1BBCDC; }
+        else { f = b ^ cc ^ d; k = 0xCA62C1D6; }
+        const t = (rotl(a, 5) + f + e + k + w[j]) | 0;
+        e = d; d = cc; cc = rotl(b, 30); b = a; a = t;
+      }
+      h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + cc) | 0;
+      h3 = (h3 + d) | 0; h4 = (h4 + e) | 0;
+    }
+    function hx(n) { return ("00000000" + (n >>> 0).toString(16)).slice(-8); }
+    return (hx(h0) + hx(h1) + hx(h2) + hx(h3) + hx(h4)).toUpperCase();
+  }
+
+  // Same contract as shared/aux/kanon.js kAnonPair: {hash, prefix(5), suffix(35)}.
+  function kAnonPair(secret) {
+    const hash = sha1HexUpper(String(secret == null ? "" : secret));
+    return { hash: hash, prefix: hash.slice(0, 5), suffix: hash.slice(5) };
+  }
+
+  function renderKanonResult(secret) {
+    const out = document.getElementById("kanonOut");
+    if (!out) return;
+    out.innerHTML = "";
+    const trimmed = (secret || "").trim();
+    if (!trimmed) {
+      const h = el("p", "kanon-hint kanon-err", "请输入任意字符串（你自己的口令或邮箱）再计算。");
+      out.appendChild(h);
       return;
     }
+    const pair = kAnonPair(trimmed);
 
-    box.hidden = false;
-    scopeTag.textContent = "scope · " + scope;
-    note.textContent = scope === "public_figure" ? PUBLIC_FIGURE_NOTE : SELF_NOTE;
+    const split = el("div", "kanon-split");
+    split.innerHTML = '<span class="kanon-prefix">' + esc(pair.prefix) + '</span>'
+      + '<span class="kanon-suffix">' + esc(pair.suffix) + '</span>';
+    out.appendChild(split);
 
-    EXPOSURE_CHECKS.forEach(c => {
-      const li = el("li", "exposure-item sev-" + c.severity);
+    const legend = el("div", "kanon-legend");
 
-      const row = el("div", "exposure-row");
-      row.appendChild(el("span", "exposure-finding", esc(c.finding)));
-      const sevLabel = { high: "高暴露", med: "中暴露", low: "低暴露" }[c.severity] || c.severity;
-      row.appendChild(el("span", "exposure-sev", esc(sevLabel)));
-      row.appendChild(el("span", "exposure-module", esc(c.module)));
-      li.appendChild(row);
+    const rowSent = el("div", "kanon-leg-row");
+    rowSent.appendChild(el("span", "kanon-chip sent", "会发送"));
+    rowSent.appendChild(el("code", "kanon-mono", esc(pair.prefix)));
+    rowSent.appendChild(el("span", "kanon-leg-note",
+      "5 位十六进制前缀 = 1 个 range 桶（16^5 ≈ 104 万桶），成千上万哈希共享，服务器无法分辨你查的是哪一个。"));
+    legend.appendChild(rowSent);
 
-      li.appendChild(el("p", "exposure-plain", esc(c.plain)));
+    const rowLocal = el("div", "kanon-leg-row");
+    rowLocal.appendChild(el("span", "kanon-chip local", "留在本地"));
+    rowLocal.appendChild(el("code", "kanon-mono", esc(pair.suffix)));
+    rowLocal.appendChild(el("span", "kanon-leg-note",
+      "35 位后缀永不离开你的设备；真实查询时只在本地把它和返回桶里的候选比对。"));
+    legend.appendChild(rowLocal);
 
-      const meta = el("div", "exposure-meta");
-      meta.appendChild(el("span", null, "event_type · " + esc(c.event_type)));
-      meta.appendChild(el("span", null, "模板检查项（无真实数据）"));
-      li.appendChild(meta);
+    out.appendChild(legend);
 
-      li.appendChild(el("div", "exposure-fix", "<b>建议处置：</b>" + esc(c.fix)));
-      list.appendChild(li);
-    });
-
-    // Correlation hint mirrors SpiderFoot's correlation engine (Track A, shared/correlation.js):
-    // co-occurring events on the same handle / email-hash form a self-exposure cluster.
-    cluster.hidden = false;
-    cluster.textContent =
-      "关联引擎提示：上述事件中若有 ≥2 项共享同一 handle / email-hash，将被聚合为一个「自我暴露簇」" +
-      "（同 SpiderFoot 关联引擎的共现聚类）。真实运行时簇会带置信度与可引用 evidence index。";
+    const note = el("p", "kanon-hint");
+    note.innerHTML = "离线演示：<b>没有查询任何真实泄露库</b>，因此这里不显示任何泄露命中或次数——"
+      + "这证明的是隐私拆分机制，不是泄露结果。真实判定由 actors/breach-check 经 HIBP range API 完成。";
+    out.appendChild(note);
   }
 
-  function renderArch() {
-    const a = PLAN.architecture;
-    const flow = document.getElementById("archFlow");
-    const detail = document.getElementById("archDetail");
-    const byId = {};
-    a.nodes.forEach(n => (byId[n.id] = n));
-    a.webhooks.forEach(n => (byId[n.id] = n));
-
-    function show(id, sourceEl) {
-      const n = byId[id];
-      detail.innerHTML = "";
-      detail.appendChild(el("h3", null, esc(n.title)));
-      detail.appendChild(el("p", null, esc(n.role)));
-      document.querySelectorAll(".arch-node.active,.wh-node.active").forEach(x => x.classList.remove("active"));
-      if (sourceEl) sourceEl.classList.add("active");
-    }
-
-    a.flow.forEach((id, i) => {
-      const n = byId[id];
-      const node = el("div", "arch-node");
-      node.setAttribute("role", "listitem");
-      node.tabIndex = 0;
-      node.appendChild(el("div", "node-id", esc(n.id)));
-      node.appendChild(el("div", "node-name", esc(n.title.split("·")[1] ? n.title.split("·")[1].trim() : n.title)));
-      node.addEventListener("click", () => show(id, node));
-      node.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(id, node); } });
-      flow.appendChild(node);
-      if (i < a.flow.length - 1) flow.appendChild(el("div", "arch-arrow", "→"));
-    });
-
-    const wh = document.getElementById("archWebhooks");
-    a.webhooks.forEach(w => {
-      const n = el("div", "wh-node");
-      n.tabIndex = 0;
-      n.appendChild(el("div", "wh-title", esc(w.title)));
-      n.appendChild(el("div", "muted", "点击查看回调职责"));
-      n.addEventListener("click", () => show(w.id, n));
-      n.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(w.id, n); } });
-      wh.appendChild(n);
+  function wireKanon() {
+    const runBtn = document.getElementById("kanonRun");
+    const clearBtn = document.getElementById("kanonClear");
+    const input = document.getElementById("kanonInput");
+    if (!runBtn || !input) return;
+    runBtn.addEventListener("click", () => renderKanonResult(input.value));
+    input.addEventListener("keydown", e => { if (e.key === "Enter") renderKanonResult(input.value); });
+    if (clearBtn) clearBtn.addEventListener("click", () => {
+      input.value = "";
+      const out = document.getElementById("kanonOut");
+      if (out) out.innerHTML = '<p class="kanon-hint">输入任意字符串后点击，演示「会发送的 5 位前缀」与「留在本地的 35 位后缀」。</p>';
     });
   }
 
-  function renderCards() {
-    const grid = document.getElementById("cardsGrid");
-    PLAN.cards.forEach(c => {
-      const card = el("div", "tech-card");
-      card.appendChild(el("h3", null, esc(c.title)));
-      card.appendChild(el("p", "what", esc(c.what)));
-      card.appendChild(el("div", "bonus", "<b>合规加分：</b>" + esc(c.bonus.replace(/^合规加分：?/, ""))));
-      grid.appendChild(card);
-    });
+  /* =========================================================================
+   * PIPELINE / MIDDLEWARE ORDER PANEL (Scrapy + Crawlee)
+   * Mirrors shared/middleware/stages.js canonical ordering. Static, plain list —
+   * no animation, no flashy section; reuses existing card + pipe-list styles.
+   * =======================================================================*/
+
+  const PIPE_REQUEST = [
+    { ord: "100", name: "scopeGate",
+      desc: "重新运行 shared/scope.js 校验：非 self/consented/public_figure/brand/safety_evidence，或带追踪私人个体意图，立即 IgnoreRequest 丢弃（fail-closed，在 fetch 前）。" },
+    { ord: "200", name: "robotsTos",
+      desc: "尊重 robots.txt / ToS，丢弃登录墙 / 私域社交主机；绝不绕过登录、验证码或封禁。" },
+    { ord: "300", name: "rateLimit",
+      desc: "按主机最小间隔礼貌限速，超额则重新排队延后，不冲击服务器、不规避限速或封禁。" },
+    { ord: "900", name: "fetchTerminal",
+      desc: "真实 actor 在此抓取；纯流水线返回明确标注的 TEMPLATE 占位（template:true），绝不伪造抓取数据。" }
+  ];
+  const PIPE_ITEM = [
+    { ord: "100", name: "scopeReassertItem",
+      desc: "防御性复核：产出条目必须带合法 scope_type，否则 DropItem，不入库。" },
+    { ord: "500", name: "evidenceHash",
+      desc: "用 shared/hashing.js 计算 content/html SHA-256，使每条保全证据可被引用、防篡改。" }
+  ];
+
+  function renderPipelinePanel() {
+    const renderList = (id, rows) => {
+      const ol = document.getElementById(id);
+      if (!ol) return;
+      ol.innerHTML = "";
+      rows.forEach(r => {
+        const li = el("li");
+        li.appendChild(el("span", "pstep", r.ord));
+        const body = el("div");
+        body.appendChild(el("b", null, esc(r.name)));
+        body.appendChild(el("div", null, esc(r.desc)));
+        li.appendChild(body);
+        ol.appendChild(li);
+      });
+    };
+    renderList("pipeReqList", PIPE_REQUEST);
+    renderList("pipeItemList", PIPE_ITEM);
   }
 
-  function renderReport() {
+  function renderEvidenceTable() {
     const r = PLAN.report;
-    document.getElementById("reportLabel").textContent = r.label;
-    const scores = document.getElementById("reportScores");
-    r.scores.forEach(s => {
-      const c = el("div", "score-card");
-      const top = el("div", "score-top");
-      const left = el("div");
-      left.appendChild(el("span", "score-label", esc(s.label) + " "));
-      left.appendChild(el("span", "score-key", esc(s.key)));
-      top.appendChild(left);
-      top.appendChild(el("span", "score-sample", esc(s.sample)));
-      c.appendChild(top);
-      c.appendChild(el("div", "score-desc", esc(s.desc)));
-      scores.appendChild(c);
-    });
     const tbody = document.querySelector("#evTable tbody");
+    if (!tbody) return;
     r.evidenceIndexFields.forEach(f => {
       const tr = el("tr");
       tr.appendChild(el("td", null, esc(f.field)));
@@ -519,6 +991,10 @@
       tbody.appendChild(tr);
     });
   }
+
+  /* =========================================================================
+   * CLOSURE MODE
+   * =======================================================================*/
 
   function renderClosure() {
     const c = PLAN.closureMode;
@@ -532,7 +1008,6 @@
       grid.appendChild(item);
     });
 
-    // Reverse-design demo interactions (no fake data — generic placeholder text only)
     const status = document.getElementById("closureStatus");
     const collapsed = document.getElementById("closureCollapsed");
     const revealBtn = document.getElementById("revealBtn");
@@ -587,16 +1062,38 @@
     });
   }
 
-  function renderPlan() {
-    const board = document.getElementById("planBoard");
-    const statusLabel = { done: "已完成", in_progress: "进行中", todo: "待办" };
-    PLAN.plan48h.forEach(p => {
-      const col = el("div", "plan-col " + p.status);
-      col.appendChild(el("div", "plan-phase", esc(p.phase)));
-      col.appendChild(el("h3", null, esc(p.title)));
-      col.appendChild(el("p", null, esc(p.desc)));
-      col.appendChild(el("span", "plan-status " + p.status, statusLabel[p.status] || p.status));
-      board.appendChild(col);
+  /* =========================================================================
+   * HOW IT WORKS — architecture flow
+   * =======================================================================*/
+
+  function renderArch() {
+    const a = PLAN.architecture;
+    const flow = document.getElementById("archFlow");
+    const detail = document.getElementById("archDetail");
+    const byId = {};
+    a.nodes.forEach(n => (byId[n.id] = n));
+    a.webhooks.forEach(n => (byId[n.id] = n));
+
+    function show(id, sourceEl) {
+      const n = byId[id];
+      detail.innerHTML = "";
+      detail.appendChild(el("h3", null, esc(n.title)));
+      detail.appendChild(el("p", null, esc(n.role)));
+      document.querySelectorAll(".arch-node.active").forEach(x => x.classList.remove("active"));
+      if (sourceEl) sourceEl.classList.add("active");
+    }
+
+    a.flow.forEach((id, i) => {
+      const n = byId[id];
+      const node = el("div", "arch-node");
+      node.setAttribute("role", "listitem");
+      node.tabIndex = 0;
+      node.appendChild(el("div", "node-id", esc(n.id)));
+      node.appendChild(el("div", "node-name", esc(n.title.split("·")[1] ? n.title.split("·")[1].trim() : n.title)));
+      node.addEventListener("click", () => show(id, node));
+      node.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(id, node); } });
+      flow.appendChild(node);
+      if (i < a.flow.length - 1) flow.appendChild(el("div", "arch-arrow", "→"));
     });
   }
 
@@ -606,7 +1103,6 @@
       const token = document.getElementById("apifyToken").value.trim();
       const actors = document.getElementById("apifyActors").value.trim();
       if (token && actors) {
-        // We do NOT call Apify or simulate success here. We only acknowledge config presence.
         state.className = "apify-state connected";
         state.textContent = "已检测到 token 与 actor 配置。真实运行需由后端用此凭证调用已部署 actor —— 本前端不会伪造抓取结果。";
       } else {
@@ -622,10 +1118,8 @@
       document.getElementById("requestInput").value = "";
       document.getElementById("scopeSelect").value = "";
       const out = document.getElementById("gateResult");
-      out.innerHTML = '<div class="gate-empty"><span class="gate-empty-icon" aria-hidden="true">⌖</span><p>选择一个 scope 或输入请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行——没有假数据。</p></div>';
-      const insp = document.getElementById("inspector");
-      if (insp) insp.hidden = true;
-      setGateLed(null);
+      out.innerHTML = '<div class="gate-empty"><span class="gate-empty-icon" aria-hidden="true">◎</span><p>选择一个范围或描述你的请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行，没有假数据。</p></div>';
+      updateReportForScope(null);
     });
     document.getElementById("requestInput").addEventListener("keydown", e => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") doRun();
@@ -639,145 +1133,35 @@
     links.addEventListener("click", e => { if (e.target.tagName === "A") links.classList.remove("open"); });
   }
 
-  /* =========================================================================
-   * RADIO-DIAL CHANNEL NAV (GT-Mechanik signature, reframed for OSINT/compliance)
-   * Each channel = a section that maps to a scope_type or actor; the central
-   * knob = the compliance gate (LED state reflects last gate verdict). The dial
-   * needle rotates with scroll --progress; clicking a chip tunes to that channel.
-   * =======================================================================*/
-
-  // channel id => section id; frequency is a tasteful "radio" label per channel.
-  const CHANNELS = [
-    { id: "hero",    freq: "00.0", label: "信号" },
-    { id: "gate",    freq: "01.5", label: "闸门" },
-    { id: "arch",    freq: "02.4", label: "流水线" },
-    { id: "cards",   freq: "03.3", label: "技术" },
-    { id: "report",  freq: "04.7", label: "报告" },
-    { id: "closure", freq: "05.9", label: "戒断" },
-    { id: "plan",    freq: "06.6", label: "计划" },
-    { id: "apify",   freq: "07.8", label: "真实运行" }
-  ];
-
-  function setGateLed(accepted) {
-    const knob = document.getElementById("dialKnob");
-    if (!knob) return;
-    knob.classList.remove("blocked");
-    if (accepted === false) knob.classList.add("blocked");
-    knob.setAttribute("aria-label",
-      accepted === true ? "合规闸门：已通过（绿灯）"
-      : accepted === false ? "合规闸门：已拦截（闪烁红灯）"
-      : "合规闸门：待命");
-  }
-
-  function wireDial() {
-    const dial = document.getElementById("dial");
-    const band = document.getElementById("dialBand");
-    const knob = document.getElementById("dialKnob");
-    const readout = document.getElementById("dialReadout");
-    if (!dial || !band) return;
-
-    const chips = CHANNELS.map(ch => {
-      if (!document.getElementById(ch.id)) return null;
-      const chip = el("button", "dial-chip");
-      chip.type = "button";
-      chip.dataset.target = ch.id;
-      chip.innerHTML = '<span class="freq">' + esc(ch.freq) + '</span>' + esc(ch.label);
-      chip.addEventListener("click", () => {
-        const t = document.getElementById(ch.id);
-        if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-      band.appendChild(chip);
-      return { ch, chip };
-    }).filter(Boolean);
-
-    const sections = chips.map(c => ({ ...c, sec: document.getElementById(c.ch.id) }));
-
-    function tune() {
-      // total scroll progress drives the knob needle rotation (radio "dial" feel)
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const prog = max > 0 ? window.scrollY / max : 0;
-      if (knob) knob.style.setProperty("--progress", (prog * 270 - 135) + "deg");
-
-      // active channel = section nearest viewport top
-      const mid = window.scrollY + window.innerHeight * 0.35;
-      let active = sections[0];
-      for (const s of sections) {
-        if (s.sec.offsetTop <= mid) active = s;
-      }
-      sections.forEach(s => s.chip.classList.toggle("active", s === active));
-      if (active && readout) {
-        readout.innerHTML = "CH <b>" + esc(active.ch.freq) + "</b>";
-        // keep the active chip in view within the band track
-        const offset = active.chip.offsetLeft - band.parentElement.clientWidth / 2 + active.chip.clientWidth / 2;
-        band.style.transform = "translateX(" + (-Math.max(0, offset)) + "px)";
-      }
-    }
-    window.addEventListener("scroll", tune, { passive: true });
-    window.addEventListener("resize", tune);
-    tune();
-  }
-
-  /* Scroll-driven data-wheel via GSAP ScrollTrigger; graceful offline fallback:
-     if GSAP/ScrollTrigger did not load (file:// or no network), rotate the wheel
-     with a lightweight scroll listener so the signature interaction still reads. */
-  function wireWheel() {
-    const wheel = document.querySelector("[data-wheel]");
-    if (!wheel) return;
-    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-
-    if (window.gsap && window.ScrollTrigger) {
-      try {
-        window.gsap.registerPlugin(window.ScrollTrigger);
-        window.gsap.to(wheel, {
-          rotation: 360,
-          ease: "none",
-          scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 0.5 }
-        });
-        return;
-      } catch (e) { /* fall through to manual fallback */ }
-    }
-    // Offline fallback: manual rotation tied to scroll position.
-    const onScroll = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const prog = max > 0 ? window.scrollY / max : 0;
-      wheel.style.transform = "rotate(" + (prog * 360) + "deg)";
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-  }
-
   function boot(plan) {
     PLAN = plan;
     renderHero();
     renderScopeSelect();
     renderPresets();
-    renderArch();
-    renderCards();
-    renderReport();
+    renderFindings();
+    renderClusterCard();
+    renderEvidenceTable();
     renderClosure();
-    renderPlan();
+    renderArch();
+    renderPipelinePanel();
     wireApify();
+    wireKanon();
     wireNavAndGate();
-    wireDial();
-    // GSAP loads with defer; wait a tick so window.gsap is present before wiring.
-    if (document.readyState === "complete") wireWheel();
-    else window.addEventListener("load", wireWheel);
+    updateReportForScope(null);
   }
 
-  // Load plan.json; gracefully fall back so the app works even via file:// when fetch is blocked.
   fetch("data/plan.json")
     .then(r => { if (!r.ok) throw new Error("bad status"); return r.json(); })
     .then(boot)
     .catch(() => {
       if (FALLBACK_PLAN) { boot(FALLBACK_PLAN); return; }
-      // Last resort: minimal inline notice + still run gate-only.
       console.warn("plan.json 加载失败（可能是 file:// 限制）。注入内置数据。");
       var s = document.createElement("script");
       s.src = "data/plan.js";
       s.onload = function () { if (window.__EX_PLAN__) boot(window.__EX_PLAN__); };
       s.onerror = function () {
-        document.getElementById("heroOne").textContent = "（plan.json 未能加载；请用本地服务器打开，或确认 data/plan.json 存在。合规闸门仍可独立使用。）";
+        var ho = document.getElementById("heroOne");
+        if (ho) ho.textContent = "（plan.json 未能加载；请用本地服务器打开，或确认 data/plan.json 存在。合规闸门仍可独立使用。）";
       };
       document.head.appendChild(s);
     });

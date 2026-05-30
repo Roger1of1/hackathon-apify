@@ -1,0 +1,47 @@
+{
+  "_comment": "Metamorph chain manifest for Ex-Ditector. Declares the ONE legal entry point (the policy gate) and the fixed downstream DAG it metamorphs into. The gate is the only door; every hop re-asserts scope so a metamorph cannot smuggle a rejected subject into the pipeline. No ids here are live — actorId values are placeholders the operator fills at deploy time. NO claim of deployment.",
+  "entry": "policy-gate",
+  "scope_gate": "shared/scope.js",
+  "stages": [
+    {
+      "key": "policy-gate",
+      "actorId": "<POLICY_GATE_ACTOR_ID>",
+      "role": "A0 — Standby real-time API + compliance gate. Validates scope_type, rejects prohibited scopes, then metamorphs into discovery. The ONLY entry point.",
+      "metamorph_to": "discovery",
+      "reasserts_scope": true
+    },
+    {
+      "key": "discovery",
+      "actorId": "<DISCOVERY_ACTOR_ID>",
+      "role": "A2 — enumerate public, logged-out sources for the vetted subject.",
+      "metamorph_to": "crawler",
+      "reasserts_scope": true
+    },
+    {
+      "key": "crawler",
+      "actorId": "<CRAWLER_ACTOR_ID>",
+      "role": "A3 — adaptive crawl + evidence capture with compliance backoff.",
+      "metamorph_to": "diff-evidence",
+      "reasserts_scope": true
+    },
+    {
+      "key": "diff-evidence",
+      "actorId": "<DIFF_EVIDENCE_ACTOR_ID>",
+      "role": "A5 — change diff + content/html hashing.",
+      "metamorph_to": "report-builder",
+      "reasserts_scope": true
+    },
+    {
+      "key": "report-builder",
+      "actorId": "<REPORT_BUILDER_ACTOR_ID>",
+      "role": "A6 — compliant scoring + Closure Mode report. Terminal stage.",
+      "metamorph_to": null,
+      "reasserts_scope": true
+    }
+  ],
+  "rules": {
+    "single_entry": "policy-gate is the only stage that may be invoked directly; all others are reachable ONLY via metamorph from the previous stage.",
+    "reassert_scope_every_hop": "Each stage re-runs validateScope on the inherited input before doing any work; a hop can never widen scope.",
+    "no_self_invoke_from_standby": "A Standby HTTP request can ONLY trigger the chain through the gate; it cannot target a downstream stage."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "ex-ditector-archive-exposure",
+  "version": "1.0.0",
+  "description": "AUX public-archive self-exposure audit — lists Wayback (Internet Archive) snapshots of a URL/host the SELF subject owns (incl. deleted pages), optionally scans snapshot text with the shared PII detector, and emits STIX-ready module-events dated to the true archive capture time.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "selftest": "node ../../shared/aux/archive-finding_selftest.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6",
+    "got-scraping": "^4.0.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

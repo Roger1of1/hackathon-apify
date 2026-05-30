@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-archive-exposure",
+  "title": "Ex-Ditector AUX — Public-Archive Self-Exposure Audit (Wayback + STIX)",
+  "description": "Auxiliary actor. Surfaces what the SELF subject published and LATER deleted but which still lives in a PUBLIC web archive: it queries the Internet Archive Wayback CDX index for snapshots of a URL/host the subject owns, optionally fetches each PUBLIC snapshot and runs the SHARED PII detector over its text, and emits typed module-events carrying the REAL archive capture time + content digest so shared/enrich/stix-evidence.js can wrap each as a STIX 2.1 Observed Data object (first_observed/last_observed = true capture time) for OpenCTI/MISP-interop takedown hand-off. Scope-gated to self/public_figure ONLY via shared/scope.js (fail-closed before any fetch). NO fake data: an empty archive yields zero events, never a fabricated snapshot.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "./Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Archive self-exposure module-events",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 1024
+}

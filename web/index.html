@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ex-Ditector 合规版 · Self Footprint Audit Pro</title>
-  <meta name="description" content="把窥探前任的冲动反转成审计自己、保全证据、戒断强迫性查看的合规 OSINT 工具。" />
+  <meta name="description" content="审计你自己的公开数字足迹：看清第三方能轻易发现关于你的什么，并知道下一步怎么处理。合规 OSINT，不追踪任何私人个体。" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,193 +12,160 @@
 <body>
   <a class="skip-link" href="#main">跳到主内容</a>
 
-  <!-- PRELOADER (GT-Mechanik signature: crosshair corner SVGs + a short calibration sweep).
-       Reframed for an OSINT/compliance tool: it reads as "calibrating the compliance gate /
-       tuning scope channels", echoing how the correlation pipeline (Track A, shared/correlation.js)
-       runs ONLY for self|public_figure — fail-closed. Pure CSS, no GSAP/network dependency, so it
-       works offline via file://; app.js removes it on DOMContentLoaded and it is hidden entirely
-       under prefers-reduced-motion. It never blocks the Live Compliance Gate. -->
-  <div class="preloader" id="preloader" role="status" aria-label="正在校准合规闸门" aria-live="polite">
-    <svg class="ph-corner ph-tl" viewBox="0 0 40 40" aria-hidden="true"><path d="M2 14V2h12M2 2l8 8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
-    <svg class="ph-corner ph-tr" viewBox="0 0 40 40" aria-hidden="true"><path d="M38 14V2H26M38 2l-8 8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
-    <svg class="ph-corner ph-bl" viewBox="0 0 40 40" aria-hidden="true"><path d="M2 26v12h12M2 38l8-8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
-    <svg class="ph-corner ph-br" viewBox="0 0 40 40" aria-hidden="true"><path d="M38 26v12H26M38 38l-8-8" stroke="var(--color-dark-green)" stroke-width="1.5" fill="none"/></svg>
-    <div class="ph-core">
-      <svg class="ph-wheel" viewBox="0 0 120 120" aria-hidden="true" fill="none">
-        <circle cx="60" cy="60" r="56" stroke="var(--color-magenta)" stroke-width="1.5" opacity="0.7"/>
-        <circle cx="60" cy="60" r="40" stroke="var(--color-dark-green)" stroke-width="1" opacity="0.6"/>
-        <line x1="60" y1="2" x2="60" y2="118" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
-        <line x1="2" y1="60" x2="118" y2="60" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
-        <circle class="ph-needle" cx="60" cy="8" r="4" fill="var(--color-magenta)"/>
-        <circle cx="60" cy="60" r="5" fill="var(--color-acid)"/>
-      </svg>
-      <p class="ph-label para-ui-xs">校准合规闸门 · CALIBRATING GATE</p>
-      <p class="ph-sub para-ui-xs">SELF · PUBLIC_FIGURE · BRAND · CONSENTED · SAFETY_EVIDENCE</p>
-    </div>
-  </div>
-
   <header class="nav" id="nav">
     <div class="nav-inner">
-      <a class="brand" href="#hero" aria-label="返回顶部">
-        <span class="brand-mark" aria-hidden="true">⌖</span>
+      <a class="brand" href="#top" aria-label="返回顶部">
+        <span class="brand-mark" aria-hidden="true">◎</span>
         <span class="brand-text">Ex-Ditector <em>合规版</em></span>
       </a>
       <nav class="nav-links" aria-label="主导航">
-        <a href="#gate" class="nav-pill">合规闸门</a>
-        <a href="#arch">架构</a>
-        <a href="#cards">炫技</a>
-        <a href="#report">报告结构</a>
+        <a href="#gate">合规闸门</a>
+        <a href="#report">足迹报告</a>
         <a href="#closure">戒断模式</a>
-        <a href="#plan">48h 计划</a>
+        <a href="#how">工作原理</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="切换菜单" aria-expanded="false">☰</button>
     </div>
   </header>
 
   <main id="main">
-    <!-- HERO -->
-    <section class="hero" id="hero" data-channel="00.0" data-title="信号源 / Signal">
-      <div class="hero-bg" aria-hidden="true"></div>
-      <!-- scroll-driven data-wheel (GT-Mechanik signature; rotates via GSAP ScrollTrigger scrub,
-           falls back to a CSS-static crosshair wheel when GSAP CDN is unavailable offline) -->
-      <svg class="hero-wheel" data-wheel viewBox="0 0 200 200" aria-hidden="true" fill="none">
-        <circle cx="100" cy="100" r="96" stroke="var(--color-dark-green)" stroke-width="1.5" opacity="0.5"/>
-        <circle cx="100" cy="100" r="70" stroke="var(--color-magenta)" stroke-width="1.5" opacity="0.7"/>
-        <circle cx="100" cy="100" r="44" stroke="var(--color-dark-green)" stroke-width="1"/>
-        <circle cx="100" cy="100" r="6" fill="var(--color-acid)"/>
-        <line x1="100" y1="0" x2="100" y2="200" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
-        <line x1="0" y1="100" x2="200" y2="100" stroke="var(--color-dark-green)" stroke-width="0.75" opacity="0.4"/>
-        <g font-family="monospace" font-size="9" fill="var(--color-dark-green)">
-          <text x="100" y="14" text-anchor="middle">SELF</text>
-          <text x="186" y="103" text-anchor="middle">PUB</text>
-          <text x="100" y="196" text-anchor="middle">BRAND</text>
-          <text x="14" y="103" text-anchor="middle">SAFE</text>
-        </g>
-        <circle cx="100" cy="30" r="4" fill="var(--color-magenta)"/>
-      </svg>
+    <!-- ===================== HERO ===================== -->
+    <section class="hero" id="top">
       <div class="hero-inner">
         <p class="eyebrow">合规 OSINT · Apify 驱动</p>
-        <h1 id="heroName">Ex-Ditector <span class="accent">合规版</span></h1>
-        <p class="hero-sub" id="heroSub">Self Footprint Audit Pro</p>
+        <h1 id="heroName">看清网络上<span class="accent">关于你自己</span>的公开足迹</h1>
         <p class="hero-one" id="heroOne"></p>
 
-        <div class="inversion" role="note" aria-label="合规声明">
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#gate">开始一次合规自审 →</a>
+          <a class="btn btn-ghost" href="#how">它是怎么工作的</a>
+        </div>
+
+        <!-- inversion / red-line statement, restated plainly as a trust note -->
+        <div class="trust-note" role="note" aria-label="合规声明">
           <h2 id="invHead"></h2>
           <p id="invBody"></p>
           <ul id="invPoints" class="redlines"></ul>
         </div>
-
-        <div class="hero-cta">
-          <a class="btn btn-primary" href="#gate">试用 Live 合规闸门 →</a>
-          <a class="btn btn-ghost" href="#arch">看架构</a>
-        </div>
       </div>
     </section>
 
-    <!-- LIVE COMPLIANCE GATE -->
-    <section class="section gate" id="gate" data-channel="01.5" data-title="合规闸门 / Gate" data-graphic="dial">
-      <div class="channel-flag para-ui-xs" aria-hidden="true"><span class="ping"></span>CH 01.5 · GATE</div>
+    <!-- ===================== LIVE COMPLIANCE GATE ===================== -->
+    <section class="section" id="gate">
       <div class="section-head">
-        <span class="tag tag-star">★ 核心演示</span>
-        <h2>Live Compliance Gate · 合规闸门</h2>
-        <p class="lead">真实运行的客户端策略闸门。选择合法 scope 或自由输入请求，同一套 Policy Gate 逻辑会当场判定：拒绝（含原因 + 合法替代）或通过（展示流水线将要做什么）。</p>
+        <span class="step-tag">第 1 步</span>
+        <h2>合规闸门 · 它只会审计合法范围</h2>
+        <p class="lead">这是一个在你浏览器里<strong>真实运行</strong>的策略闸门。它把每个请求归入 5 个合法范围之一，或当场拒绝（并给出原因 + 合法替代）。没有假数据：拒绝逻辑是真的。</p>
       </div>
 
       <div class="gate-grid">
+        <!-- LEFT: the single clear input + ONE primary action (HIBP-style) -->
         <div class="gate-panel">
-          <label class="field-label" for="scopeSelect">scope_type（只列出 5 个合法范围）</label>
+          <label class="field-label" for="scopeSelect">范围 scope_type（5 个合法值）</label>
           <select id="scopeSelect" class="select">
-            <option value="">— 选择一个合法 scope（可选）—</option>
+            <option value="">— 选择一个合法范围（可选）—</option>
           </select>
 
-          <label class="field-label" for="requestInput">或自由输入请求</label>
-          <textarea id="requestInput" class="textarea" rows="3" placeholder="例如：搜索我自己的姓名在公开网页上的出现情况"></textarea>
-
-          <div class="preset-row" id="presetRow" aria-label="示例请求"></div>
+          <label class="field-label" for="requestInput">或直接描述你想做什么</label>
+          <textarea id="requestInput" class="textarea" rows="3" placeholder="例如：搜索我自己的姓名在公开网页上的出现情况，评估我的暴露度"></textarea>
 
           <div class="gate-actions">
-            <button id="runGate" class="btn btn-primary">运行合规闸门</button>
+            <button id="runGate" class="btn btn-primary btn-lg">运行合规闸门</button>
             <button id="clearGate" class="btn btn-ghost">清空</button>
           </div>
+
+          <p class="preset-label">或试一个示例：</p>
+          <div class="preset-row" id="presetRow" aria-label="示例请求"></div>
         </div>
 
+        <!-- RIGHT: verdict result, strong hierarchy -->
         <div class="gate-result" id="gateResult" aria-live="polite">
           <div class="gate-empty">
-            <span class="gate-empty-icon" aria-hidden="true">⌖</span>
-            <p>选择一个 scope 或输入请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行——没有假数据。</p>
+            <span class="gate-empty-icon" aria-hidden="true">◎</span>
+            <p>选择一个范围或描述你的请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行，没有假数据。</p>
           </div>
         </div>
       </div>
-
-      <!-- SELF-EXPOSURE INSPECTOR (Blacklight-style privacy inspector, reframed for SELF audit).
-           Populated by app.js ONLY when the gate ACCEPTS a self / public_figure scope.
-           Rows are clearly-labeled TEMPLATE checks (what a third party could trivially discover),
-           never fabricated scrape results. -->
-      <div class="inspector" id="inspector" hidden>
-        <div class="inspector-head">
-          <h3>自我暴露检查器 · Self-Exposure Inspector</h3>
-          <span class="tag para-ui-xs" id="inspectorScope">scope —</span>
-        </div>
-        <p class="inspector-note" id="inspectorNote"></p>
-        <ul class="exposure-list" id="exposureList"></ul>
-        <div class="cluster-banner" id="clusterBanner" hidden></div>
-      </div>
     </section>
 
-    <!-- ARCHITECTURE -->
-    <section class="section" id="arch">
-      <div class="section-head">
-        <h2>架构 · Actor 流水线</h2>
-        <p class="lead">A0 → A2 → A3 → A5 → A6 加 webhooks。点击任意节点查看其职责。</p>
-      </div>
-      <div class="arch-wrap">
-        <div class="arch-flow" id="archFlow" role="list"></div>
-        <div class="arch-webhooks" id="archWebhooks"></div>
-        <div class="arch-detail" id="archDetail" aria-live="polite">
-          <p class="muted">点击上方任意节点查看职责。</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- CARDS -->
-    <section class="section" id="cards">
-      <div class="section-head">
-        <h2>炫技五卡 · 合规即设计</h2>
-        <p class="lead">每张卡：它是什么 + 合规加分。</p>
-      </div>
-      <div class="cards-grid" id="cardsGrid"></div>
-    </section>
-
-    <!-- REPORT -->
+    <!-- ===================== SELF-EXPOSURE REPORT (Blacklight-style) ===================== -->
     <section class="section" id="report">
       <div class="section-head">
-        <h2>自我足迹报告 · 结构预览</h2>
-        <p class="lead" id="reportLabel"></p>
+        <span class="step-tag">第 2 步</span>
+        <h2>自我足迹报告 · 我们会检查什么</h2>
+        <p class="lead">闸门放行 <code>self</code> 或 <code>public_figure</code> 后，报告按类别列出第三方能轻易发现关于你的东西——借鉴 The Markup Blacklight 的隐私检查器，方向反转为自审。下面展示的是<strong>检查项结构（模板）</strong>，每条都说明「为什么重要」，真实运行才会填入带 URL + 时间戳 + 哈希的条目。</p>
       </div>
-      <div class="report-banner">
-        本节仅展示报告的 <strong>结构 / schema</strong>，不包含任何真实抓取数据，也不虚构关于任何人的发现。
+
+      <!-- top-of-report exposure summary (only meaningful after a self/public_figure accept) -->
+      <div class="report-banner" id="reportGateBanner">
+        先在<a href="#gate">第 1 步</a>用 <code>self</code> 或 <code>public_figure</code> 范围通过闸门，下面的检查项就会按你的范围呈现。当前显示的是完整检查项目录。
       </div>
-      <div class="report-grid">
-        <div class="report-scores" id="reportScores"></div>
-        <div class="report-index">
-          <h3>evidence index 字段</h3>
-          <table class="ev-table" id="evTable">
-            <thead><tr><th>字段</th><th>说明</th></tr></thead>
-            <tbody></tbody>
-          </table>
+
+      <!-- grouped finding categories — fed by shared/detectors EVENT_TYPES -->
+      <div class="findings" id="findingsGroups"></div>
+
+      <!-- correlation / cluster view (SpiderFoot correlation engine) -->
+      <div class="cluster-card" id="clusterCard">
+        <div class="cluster-head">
+          <h3>关联视图 · 自我暴露簇</h3>
+          <span class="mono-chip">correlation</span>
         </div>
+        <p class="cluster-body" id="clusterBody"></p>
+        <ul class="cluster-keys" id="clusterKeys"></ul>
+      </div>
+
+      <!-- LIVE k-anonymity breach-check mechanic (HIBP Pwned Passwords range API) -->
+      <div class="kanon" id="kanonCard">
+        <span class="kanon-tag">k-匿名 · live demo</span>
+        <p class="kanon-intro">
+          泄露检查的隐私机制：你输入<b>自己</b>的口令或邮箱，浏览器在<b>本地</b>用 SHA-1 哈希，
+          只把前 5 位前缀（range 前缀）发往泄露库，剩下 35 位后缀<b>永不离开你的设备</b>。
+          这正是 Have I Been Pwned 的 Pwned Passwords range API（Troy Hunt）所用的模型。
+        </p>
+        <p class="kanon-offline">
+          <b>离线演示：</b>本页不查询任何真实泄露库，因此<b>不会、也永不</b>给出泄露命中或次数。
+          这里只证明「前缀发送 / 后缀本地」这一隐私拆分机制本身，不是泄露结果。
+        </p>
+        <div class="kanon-field">
+          <label class="field-label" for="kanonInput">你自己的口令或邮箱（只在本地处理）</label>
+          <input id="kanonInput" class="input" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="例如：你常用的一个口令，或 you@example.com" />
+        </div>
+        <div class="kanon-actions">
+          <button class="btn btn-ghost" id="kanonRun">本地计算 SHA-1 前缀拆分</button>
+          <button class="btn btn-ghost btn-tiny" id="kanonClear">清空</button>
+        </div>
+        <div class="kanon-out" id="kanonOut" aria-live="polite">
+          <p class="kanon-hint">输入任意字符串后点击，演示「会发送的 5 位前缀」与「留在本地的 35 位后缀」。</p>
+        </div>
+        <p class="kanon-foot">
+          机制与 <b>shared/aux/kanon.js</b>（actors/breach-check 的隐私阻塞点）共用同一套前缀/后缀拆分契约。
+          引用：Troy Hunt，Pwned Passwords k-Anonymity range query。
+        </p>
+      </div>
+
+      <!-- evidence index schema -->
+      <div class="ev-card">
+        <h3>每条证据的字段 · evidence index</h3>
+        <p class="muted">真实运行时，每个发现都会保全为可引用的一行：</p>
+        <table class="ev-table" id="evTable">
+          <thead><tr><th>字段</th><th>说明</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </section>
 
-    <!-- CLOSURE MODE -->
-    <section class="section closure" id="closure">
+    <!-- ===================== CLOSURE MODE ===================== -->
+    <section class="section" id="closure">
       <div class="section-head">
+        <span class="step-tag">第 3 步</span>
         <h2 id="closureHead"></h2>
         <p class="lead" id="closureIntro"></p>
       </div>
       <div class="closure-grid" id="closureGrid"></div>
+
       <div class="closure-demo" id="closureDemo">
-        <h3>反向 UI 示例</h3>
+        <h3>反向 UI 示例 · 让你少看，而不是更上瘾</h3>
         <div class="closure-card" id="closureCard">
           <div class="closure-card-head">
             <span class="distress-badge">高困扰风险 · 已折叠</span>
@@ -215,23 +182,43 @@
       </div>
     </section>
 
-    <!-- PLAN -->
-    <section class="section" id="plan">
+    <!-- ===================== HOW IT WORKS ===================== -->
+    <section class="section" id="how">
       <div class="section-head">
-        <h2>48h 构建计划 · 任务板</h2>
-        <p class="lead">实时状态。</p>
+        <h2>工作原理 · Actor 流水线</h2>
+        <p class="lead">闸门放行后，请求依次经过 5 个 Apify actor。点击任意节点查看它的职责。</p>
       </div>
-      <div class="plan-board" id="planBoard"></div>
-    </section>
+      <div class="arch-wrap">
+        <div class="arch-flow" id="archFlow" role="list"></div>
+        <div class="arch-detail" id="archDetail" aria-live="polite">
+          <p class="muted">点击上方任意节点查看职责。</p>
+        </div>
+      </div>
 
-    <!-- APIFY REAL-RUN AFFORDANCE -->
-    <section class="section apify" id="apify">
-      <div class="section-head">
-        <h2>真实运行（Apify）</h2>
+      <!-- pipeline / middleware order — the compliance backbone (Scrapy + Crawlee) -->
+      <div class="ev-card" id="pipelineCard">
+        <h3>合规流水线 · 中间件顺序</h3>
+        <p class="muted">
+          每个抓取请求按顺序穿过下列中间件，顺序号小者先执行（借鉴 Scrapy 的 downloader middleware
+          与 item pipeline 排序，以及 Crawlee 的 RequestQueue / router 每跳重新路由）。范围闸门排在<b>最前</b>且
+          fail-closed：追踪私人个体的请求在任何抓取发生<b>之前</b>就被丢弃，且每发现一条新链接都会重新过闸。
+        </p>
+        <div class="field-label" style="margin-top:14px;">请求路径 · downloader middleware</div>
+        <ol class="pipe-list" id="pipeReqList"></ol>
+        <div class="field-label" style="margin-top:14px;">条目路径 · item pipeline</div>
+        <ol class="pipe-list" id="pipeItemList"></ol>
+        <p class="kanon-foot">
+          代码：<b>shared/middleware/pipeline.js</b> + <b>stages.js</b>（自测 <b>_selftest.js</b> 证明排序 +
+          stalking 请求在 fetch 前被闸门丢弃）。引用：Scrapy downloader-middleware / item-pipeline 排序；
+          Crawlee RequestQueue / router。
+        </p>
       </div>
+
+      <!-- real-run affordance (no fake success) -->
       <div class="apify-box" id="apifyBox">
+        <h3>真实运行（Apify）</h3>
         <p class="apify-state" id="apifyState">未连接真实 Apify（需 token + 已部署 actor）。</p>
-        <p class="muted">本 demo 不模拟抓取成功。要真实运行，需要在环境中提供 <code>APIFY_TOKEN</code> 与已部署的 actor IDs（A0/A2/A3/A5/A6）。缺失时此处明确显示未连接，绝不伪造结果。</p>
+        <p class="muted">本前端不会模拟抓取成功。要真实运行需在后端用 <code>APIFY_TOKEN</code> 调用已部署的 actor（A0/A2/A3/A5/A6）。缺失时此处如实显示未连接。</p>
         <div class="apify-fields">
           <input id="apifyToken" class="input" type="password" placeholder="APIFY_TOKEN（留空 = 未连接）" autocomplete="off" />
           <input id="apifyActors" class="input" type="text" placeholder="actor IDs，逗号分隔（如 user/a0,user/a2…）" />
@@ -242,25 +229,10 @@
   </main>
 
   <footer class="footer">
-    <p>Ex-Ditector 合规版 · 冲动 → 自我保护。窥探 → 戒断。</p>
-    <p class="muted">合规红线写进代码：scope 枚举 + prohibited 模式拒绝 + 工具层白名单。</p>
+    <p>Ex-Ditector 合规版 · 把窥探的冲动反转成自我保护与戒断。</p>
+    <p class="muted">合规红线写进代码：scope 枚举 + prohibited 模式拒绝 + 工具层白名单。参考架构：SpiderFoot（OSINT 模块 + 关联引擎）· The Markup Blacklight（隐私检查器）。</p>
   </footer>
 
-  <!-- RADIO-DIAL CHANNEL NAV (GT-Mechanik signature, reframed for OSINT/compliance):
-       each "channel" = a scope_type or actor; the central knob = the compliance gate
-       (green LED = gate open / compliant, magenta blinking = gate blocked a request). -->
-  <nav class="dial" id="dial" aria-label="频道导航 · 合规调谐器">
-    <div class="dial-knob" id="dialKnob" role="img" aria-label="合规闸门状态">
-      <span class="gate-led" aria-hidden="true"></span>
-    </div>
-    <div class="dial-track"><div class="dial-band" id="dialBand"></div></div>
-    <div class="dial-readout para-ui-xs" id="dialReadout">CH <b>00.0</b></div>
-  </nav>
-
-  <!-- GSAP via CDN for the scroll-driven data-wheel; app.js degrades gracefully if this
-       fails to load (offline / file://) — the wheel just stays static. -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
   <script src="app.js"></script>
 </body>
 </html>

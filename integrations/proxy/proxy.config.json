@@ -1,0 +1,48 @@
+{
+  "_comment": "Compliant Apify Proxy policy for Ex-Ditector (Self Footprint Audit Pro). This declares HOW proxies may be used: for AVAILABILITY/reliability only (geo-correct rendering of a user's OWN public page, IP diversity to be a polite client) and NEVER for EVASION (defeating bans, rate limits, captcha, or login walls). Every field here is read by proxy-policy.js and re-checked against the scope gate at request time. NO credentials live in this file; APIFY_PROXY_PASSWORD / APIFY_TOKEN are supplied by the operator at deploy time. This product asserts NO live deployment.",
+  "version": "0.1",
+  "intent": "availability_only",
+  "_intent_doc": "availability_only = proxy chosen for IP/geo diversity and reliable fetching of public/self pages. The ONLY legitimate reason. The opposite, 'evasion', is categorically refused by proxy-policy.js (see refusal codes).",
+  "allowed_groups": {
+    "DATACENTER": {
+      "preferred": true,
+      "why": "Fastest, cheapest, lowest footprint. Default tier for fetching a user's own public page. Apify auto-rotation gives polite IP diversity without targeting anti-bot defenses."
+    },
+    "RESIDENTIAL": {
+      "preferred": false,
+      "requires_justification": "geo_accuracy",
+      "why": "Allowed ONLY when geo-accurate rendering matters (a public page that varies by country for the user's own locale). NOT a means to look 'more human' to defeat a block. Requires geo_justification and a real country_code; never used to churn through a ban."
+    }
+  },
+  "denied_groups": {
+    "GOOGLE_SERP": "Out of product scope; we audit a named subject's own/public sources, not scrape search engines at volume."
+  },
+  "geo": {
+    "allowed_country_codes": ["US", "GB", "DE", "FR", "CA", "AU", "NL", "JP", "BR", "IN"],
+    "_doc": "Country targeting is for AVAILABILITY (render the user's own page as their region sees it), not for masquerading. subdivision (US state) targeting is intentionally NOT enabled — finer geo serves no availability purpose here and edges toward profiling."
+  },
+  "session": {
+    "max_sessions": 8,
+    "session_rotate_after_requests": 50,
+    "_doc": "Sessions exist for transport stability (sticky IP for a coherent fetch), mirroring Crawlee's SessionPool. They are NOT a rotation weapon to outlast a ban. retire_on_block below is fail-closed: a block STOPS the subject, it does not trigger a fresh-IP retry loop."
+  },
+  "compliance_floor": {
+    "retire_on_block": true,
+    "_retire_doc": "Crawlee retires a session on 401/403/429 and rotates to a fresh IP to KEEP scraping. We invert the intent: a 401/403/429/503 is read as 'this resource does not want this client right now' => COMPLIANCE STOP for that subject (hand to human review), NOT a fresh-IP retry. Same mechanism (detect block), opposite reflex (stop, not evade).",
+    "max_proxy_retries": 1,
+    "_retries_doc": "At most ONE retry, and ONLY for genuine transport faults (ECONNRESET / socket hangup / timeout) where the response carried no block signal. A block status NEVER counts as a retryable transport fault.",
+    "honor_robots": true,
+    "honor_rate_limit_headers": true,
+    "no_captcha_solving": true,
+    "no_login_walls": true
+  },
+  "scopes_allowed_to_use_proxy": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+  "scopes_allowed_residential": ["self", "public_figure"],
+  "_residential_doc": "Residential proxy is a dual-use capability (it is the tier people reach for to look human). So it is gated to the SAME chokepoint as other dual-use techniques in this product: scope=self|public_figure only, and only with a geo_justification. consented/brand/safety_evidence get datacenter only.",
+  "env": {
+    "APIFY_PROXY_PASSWORD": "proxy password from the Apify account; used to build the proxy URL at run time. Unset => proxy-client.js DRY-RUNS and prints the redacted URL it WOULD build.",
+    "APIFY_PROXY_HOSTNAME": "default proxy.apify.com",
+    "APIFY_PROXY_PORT": "default 8000"
+  },
+  "deployed": false
+}

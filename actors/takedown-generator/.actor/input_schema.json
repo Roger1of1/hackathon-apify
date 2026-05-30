@@ -1,0 +1,61 @@
+{
+  "title": "Ex-Ditector Takedown / Removal-Letter Generator Input",
+  "description": "Drafts removal requests from the SELF subject's OWN audit findings. Drafting is a first-person action ('remove information about ME'), so the scope enum intentionally omits consented/brand/safety_evidence and accepts only self/public_figure. This actor fetches nothing and analyses no third party; it only reformats existing module_events into standard legal request shapes.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Takedown drafting is permitted ONLY for your own footprint (self) or a genuine public figure acting publicly. Other compliant scopes (consented/brand/safety_evidence) intentionally cannot run this actor.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (your own footprint)", "Public figure"],
+      "default": "self"
+    },
+    "findings_dataset_name": {
+      "title": "Findings dataset name",
+      "type": "string",
+      "description": "Name of the Apify dataset holding the typed module_events produced by the other Ex-Ditector actors (PII/tracker/secret/breach/metadata findings). Records that are not valid module_events are ignored. Leave empty to pass findings inline via 'events'.",
+      "editor": "textfield"
+    },
+    "events": {
+      "title": "Inline findings (module_events)",
+      "type": "array",
+      "description": "Optional: pass module_event records directly (for offline/composed runs). Each must be a real module_event; anything else is dropped. No fake data is generated to fill gaps.",
+      "editor": "json",
+      "default": []
+    },
+    "owned_hosts": {
+      "title": "Hosts you control",
+      "type": "array",
+      "description": "Hostnames the subject controls (e.g. your-name.com). Findings on these become a self-remediation checklist instead of a third-party data-subject request, because you can simply remove them yourself.",
+      "editor": "stringList",
+      "default": []
+    },
+    "subject_name": {
+      "title": "Your name (for the letter)",
+      "type": "string",
+      "description": "Optional. Used to fill the requester name in the drafted letters. Left blank, it becomes an explicit [[ FILL IN ]] placeholder — never fabricated.",
+      "editor": "textfield"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name). Used only for reporting and routed through the scope gate's free-text laundering scan.",
+      "editor": "textfield"
+    }
+  },
+  "required": ["scope_type"]
+}

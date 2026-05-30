@@ -1,0 +1,16 @@
+{
+  "name": "ex-ditector-takedown-generator",
+  "version": "1.0.0",
+  "description": "AUX takedown/removal-letter generator — turns the SELF subject's own typed audit findings into reviewable GDPR/CCPA/de-index/self-remediation/credential-rotation request drafts for Ex-Ditector.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

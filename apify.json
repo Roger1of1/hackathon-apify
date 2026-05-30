@@ -13,6 +13,65 @@
     "breach-check":  { "path": "actors/breach-check",  "role": "self/public_figure breach-exposure check (scope-gated)" }
   },
   "integrations": {
+    "ingest": {
+      "path": "integrations/ingest",
+      "capability": "Apify Website Content Crawler + RAG Web Browser as the scope-gated SELF-AUDIT ingestion source",
+      "summary": "The REAL ingestion layer: a vetted subject's OWN public footprint is fetched via apify/website-content-crawler (page crawl -> clean text/markdown + htmlUrl/screenshotUrl evidence handles + error on failed pages) and contextualized via apify/rag-web-browser (public Google search OR single-URL fetch -> top-N markdown). buildIngestPlan() runs the REAL shared/scope.js gate FIRST (read-only) and refuses to build ANY actor input for a rejected subject, so a private-individual / stalking query is DROPPED before a single fetch input exists. A RAG free-text/name search is a dual-use discovery chokepoint, allowed only for scope=self|public_figure (consented/brand/safety_evidence must pass a concrete URL). The WCC input-builder FORCES respectRobotsTxtFile:true (anti-evasion) and clamps maxCrawlPages/Depth DOWN to caps (anti-dragnet), and confines the crawl to the subject's own hosts via includeUrlGlobs. A real Scrapy-style item-pipeline (shared/middleware) maps each REAL crawler row -> detector ARTIFACT_KINDS -> shared/detectors module_events -> shared/enrich/stix-evidence STIX 2.1 Observed Data (first_observed/last_observed/content-hash/observable category), re-asserting host on every row so a link/metamorph cannot smuggle a non-vetted host. NO-FAKE-DATA: the builder only builds the exact input an operator would submit and the mapper only transforms REAL rows passed to it; without APIFY_TOKEN the client dry-runs (started:false, no network, no fabricated rows). actorIds are placeholders and deployed:false until the operator wires a live token (the LAST step).",
+      "entrypoints": {
+        "policy": "integrations/ingest/ingest-policy.js",
+        "client": "integrations/ingest/ingest-client.js",
+        "tests": "integrations/ingest/_selftest.js"
+      },
+      "config": {
+        "ingest": "integrations/ingest/ingest.config.json"
+      },
+      "env": {
+        "APIFY_TOKEN": "run token for POST /v2/acts/{actorId}/run-sync-get-dataset-items. Without it, ingest-client.js DRY-RUNS and returns the exact request it WOULD send (never live, never fabricated rows)."
+      },
+      "actors_used": {
+        "website_content_crawler": "apify/website-content-crawler",
+        "rag_web_browser": "apify/rag-web-browser"
+      },
+      "scopes_allowed_name_search": ["self", "public_figure"],
+      "platform_constraints": {
+        "wcc_output_fields": ["url", "crawl.loadedUrl", "text", "markdown", "metadata.title", "metadata.canonicalUrl", "htmlUrl", "screenshotUrl", "error"],
+        "rag_output_format": ["text", "markdown", "html"],
+        "robots_respected_forced": true,
+        "both_support_standby": true
+      },
+      "maps_to": "shared/detectors (ARTIFACT_KINDS) -> module_events -> shared/enrich/stix-evidence (STIX 2.1 Observed Data, OpenCTI/MISP interop)",
+      "docs": "docs/apify/ingest.md",
+      "deployed": false
+    },
+    "standby": {
+      "path": "integrations/standby",
+      "capability": "Apify Actor Standby (real-time HTTP API) + Metamorph actor chain",
+      "summary": "Turns the policy gate into a warm, real-time API. POST /inspect takes ONE subject, runs the REAL shared/scope.js gate, and only on a pass metamorphs the run into the audit pipeline (policy-gate -> discovery -> crawler -> diff-evidence -> report-builder, all in the same run, storages preserved). A rejected subject returns HTTP 403 with legal alternatives and NEVER starts a run. Single entry point: a request cannot start mid-chain (gate_bypass_attempt), and every stage re-asserts scope so a metamorph cannot smuggle a refused subject downstream (SpiderFoot module-edge gating). The one-subject endpoint shape mirrors The Markup Blacklight's single real-time self-exposure inspector. NO-FAKE-DATA: the real Actor.metamorph fires ONLY on-platform (APIFY_IS_AT_HOME=1) against a real actorId; off-platform the endpoint returns the plan with started:false and performs no side effect.",
+      "entrypoints": {
+        "server": "integrations/standby/server.js",
+        "policy": "integrations/standby/chain-policy.js",
+        "client": "integrations/standby/client.js",
+        "tests": "integrations/standby/test-standby.js"
+      },
+      "config": {
+        "chain": "integrations/standby/chain.config.json"
+      },
+      "env": {
+        "ACTOR_WEB_SERVER_PORT": "port Apify Standby proxies user requests to; server.js binds it (default 4321 local).",
+        "APIFY_IS_AT_HOME": "\"1\" on the Apify platform; gates the real Actor.metamorph. Off-platform the gate still runs but metamorph is inert.",
+        "APIFY_STANDBY_URL": "client.js target; unset => dry-run (local plan, no request, no run started).",
+        "APIFY_TOKEN": "bearer token client.js sends to the Standby endpoint."
+      },
+      "chain": ["policy-gate", "discovery", "crawler", "diff-evidence", "report-builder"],
+      "platform_constraints": {
+        "standby_requires_http_server": true,
+        "readiness_probe": "GET /healthz",
+        "metamorph_input_key": "INPUT-METAMORPH-1 (read via Actor.getInput())",
+        "metamorph_preserves_default_storages": true
+      },
+      "docs": "docs/apify/standby.md",
+      "deployed": false
+    },
     "webhooks": {
       "path": "integrations/webhooks",
       "capability": "Apify run Webhooks with an OUTPUT-HEALTH receiver",
@@ -84,6 +143,39 @@
         "tabular_limits": "csv/xlsx/html capped at 2000 columns, column names <= 200 chars"
       },
       "docs": "docs/apify/exports.md",
+      "deployed": false
+    },
+    "proxy": {
+      "path": "integrations/proxy",
+      "capability": "Apify Proxy (datacenter + residential, country targeting) — AVAILABILITY-ONLY policy",
+      "summary": "Wires Apify Proxy as a compliant, availability-only transport — IP/geo diversity to be a polite client of a PUBLIC page and to render the user's OWN page as their region sees it — and REFUSES evasion. decideProxy() runs an ordered guard pipeline (scope gate -> evasion gate -> group gate -> residential dual-use gate -> coarse-geo gate -> build); the first guard that objects DROPS the request before any fetch (Scrapy DropItem). It READS the real shared/scope.js gate (read-only) so a proxy is only ever built for an accepted subject. The compliance INVERSION of Crawlee: a 401/403/429 block is read as a COMPLIANCE STOP (human review), never a retire-and-rotate-to-fresh-IP loop; at most one retry, transport faults only. RESIDENTIAL is dual-use, restricted to scope=self|public_figure with a written geo_justification; US-state/subdivision targeting is disabled (HIBP minimum-disclosure stance). NO-FAKE-DATA: without APIFY_PROXY_PASSWORD, prepareProxy() dry-runs and returns the REDACTED url it WOULD build (password stripped), makes no network call, and yields no usable proxy; a refused request yields no proxy url at all.",
+      "entrypoints": {
+        "policy": "integrations/proxy/proxy-policy.js",
+        "client": "integrations/proxy/proxy-client.js",
+        "tests": "integrations/proxy/_selftest.js"
+      },
+      "config": {
+        "proxy": "integrations/proxy/proxy.config.json"
+      },
+      "env": {
+        "APIFY_PROXY_PASSWORD": "proxy password from the Apify account; builds the live proxy URL in memory at fetch time. Unset => proxy-client.js DRY-RUNS and returns the redacted url it would build (never logged, never fabricated).",
+        "APIFY_PROXY_HOSTNAME": "default proxy.apify.com",
+        "APIFY_PROXY_PORT": "default 8000"
+      },
+      "intent": "availability_only",
+      "allowed_groups": ["DATACENTER", "RESIDENTIAL"],
+      "denied_groups": ["GOOGLE_SERP"],
+      "scopes_allowed_residential": ["self", "public_figure"],
+      "compliance_floor": {
+        "retire_on_block": "block status = COMPLIANCE STOP, not fresh-IP retry loop",
+        "max_proxy_retries": 1,
+        "honor_robots": true,
+        "honor_rate_limit_headers": true,
+        "no_captcha_solving": true,
+        "no_login_walls": true,
+        "subdivision_targeting": "disabled (anti-profiling)"
+      },
+      "docs": "docs/apify/proxy.md",
       "deployed": false
     }
   },

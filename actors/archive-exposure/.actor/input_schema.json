@@ -1,0 +1,64 @@
+{
+  "title": "Ex-Ditector Public-Archive Self-Exposure Audit Input",
+  "description": "Finds PUBLIC web-archive (Wayback) snapshots of a URL/host you own — including pages you have since deleted — so you can request removal. Prohibited and non-applicable scopes are absent from the enum: only self/public_figure are accepted because enumerating an archive prefix is a dual-use technique restricted to those scopes. Only public archived snapshots of YOUR OWN surface are read; there is no field for third-party identity, romance, gender, location, or social-graph data.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Archive enumeration is permitted ONLY for your own footprint (self) or a genuine public figure acting publicly. Other compliant scopes (consented/brand/safety_evidence) intentionally cannot run this actor.",
+      "editor": "select",
+      "enum": ["self", "public_figure"],
+      "enumTitles": ["Self (your own pages)", "Public figure"],
+      "default": "self"
+    },
+    "subject_url": {
+      "title": "Your URL or host",
+      "type": "string",
+      "description": "A URL or host you OWN (or a public figure's official site), e.g. https://example.com or example.com/blog. The Wayback CDX index is queried for archived snapshots under this prefix.",
+      "editor": "textfield"
+    },
+    "match_prefix": {
+      "title": "Match the whole prefix",
+      "type": "boolean",
+      "description": "If true (default), every archived URL beginning with your subject_url is listed. If false, only the exact URL is checked.",
+      "editor": "checkbox",
+      "default": true
+    },
+    "max_snapshots": {
+      "title": "Max snapshots",
+      "type": "integer",
+      "description": "Upper bound on archived snapshots to retrieve from the CDX index (deduped by content digest). Keeps the run bounded and polite.",
+      "editor": "number",
+      "default": 50,
+      "minimum": 1,
+      "maximum": 500
+    },
+    "scan_snapshot_pii": {
+      "title": "Scan snapshot text for your PII",
+      "type": "boolean",
+      "description": "If true, each PUBLIC snapshot is fetched and the SHARED PII detector is run over its text to flag your own email/phone/handle still exposed in a deleted page. Off by default (listing is cheaper). Never fabricates a hit.",
+      "editor": "checkbox",
+      "default": false
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "Human label for the subject (e.g. your name). Used only for reporting.",
+      "editor": "textfield"
+    }
+  },
+  "required": ["scope_type", "subject_url"]
+}
