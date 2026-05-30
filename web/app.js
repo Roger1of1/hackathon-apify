@@ -949,7 +949,7 @@
         var li = el("li", "sc-row " + st[1]);
         li.appendChild(el("span", "sc-ic", st[0]));
         li.appendChild(el("span", "sc-name", esc(scLabel(s))));
-        if (s.status) li.appendChild(el("span", "sc-st", esc(s.status)));
+        if (s.status && s.status !== "none") li.appendChild(el("span", "sc-st", esc(s.status)));
         ul.appendChild(li);
       });
       g.appendChild(ul);
