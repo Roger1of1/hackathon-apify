@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-diff-evidence",
+  "title": "Ex-Ditector A5 — Diff & Evidence Index",
+  "description": "Compares current vs previous content_sha256 from a named baseline KV store, reports only real changes, and emits an immutable evidence index {url, timestamp, content_sha256, html_sha256, screenshot_key, html_key}. Reached via metamorph from the Crawler.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Evidence index entries",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 1024
+}

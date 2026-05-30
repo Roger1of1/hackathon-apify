@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-discovery",
+  "title": "Ex-Ditector A2 — Discovery",
+  "description": "Incremental discovery using a named Request Queue keyed by case. Re-validates scope (defense in depth), enqueues seeds with dedupe, then metamorphs into the crawler. Normally reached via metamorph from the Policy Gate.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Discovered URLs",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 1024
+}

@@ -1,0 +1,61 @@
+{
+  "title": "Ex-Ditector Policy Gate Input",
+  "description": "Define what you are auditing. Only compliant scope types are selectable — tracking private individuals or romantic/dating inference is not offered by this product.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "What kind of audit this is. Only compliant scopes exist. Prohibited scopes (private-person tracking, romance/dating inference) are intentionally not present and cannot be selected.",
+      "editor": "select",
+      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+      "enumTitles": [
+        "Self — audit my own public footprint",
+        "Consented — a person who gave me written authorization",
+        "Public figure — a genuine public figure acting publicly",
+        "Brand — a company/brand/product I am entitled to monitor",
+        "Safety evidence — preserve public evidence of harm directed at me"
+      ],
+      "default": "self"
+    },
+    "subject_label": {
+      "title": "Subject label",
+      "type": "string",
+      "description": "A non-identifying label for the audit (e.g. 'My LinkedIn', 'Acme Corp'). Do not enter another private person's personal details.",
+      "editor": "textfield"
+    },
+    "target_urls": {
+      "title": "Target URLs",
+      "type": "array",
+      "description": "Public, logged-out URLs to audit/monitor. Login-walled private social hosts (Instagram, Facebook, Tinder, etc.) are blocked.",
+      "editor": "stringList",
+      "prefill": ["https://example.com/your-public-profile"]
+    },
+    "authorization_evidence_url": {
+      "title": "Authorization evidence URL (required for 'consented')",
+      "type": "string",
+      "description": "A URL pointing to written consent from the subject. REQUIRED when scope_type is 'consented'; ignored otherwise.",
+      "editor": "textfield"
+    },
+    "max_pages": {
+      "title": "Max pages (cost cap)",
+      "type": "integer",
+      "description": "Hard cap on pages crawled, to bound cost and avoid hammering sources.",
+      "editor": "number",
+      "default": 50,
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "checks_per_day": {
+      "title": "How often do you currently check this yourself? (per day)",
+      "type": "integer",
+      "description": "Wellbeing signal only. Used to compute distress_risk_score and offer Closure Mode. Never used to track anyone.",
+      "editor": "number",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": ["scope_type", "target_urls"]
+}

@@ -1,0 +1,57 @@
+{
+  "title": "Ex-Ditector Crawler Input",
+  "description": "Normally provided automatically via metamorph from Discovery. Crawls the named queue's frontier, preserves public evidence, and backs off on blocks instead of evading them.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Compliant scope only. Prohibited scopes are absent.",
+      "editor": "select",
+      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+      "enumTitles": [
+        "Self",
+        "Consented",
+        "Public figure",
+        "Brand",
+        "Safety evidence"
+      ],
+      "default": "self"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "queue_name": {
+      "title": "Frontier queue name",
+      "type": "string",
+      "description": "Named Request Queue filled by Discovery (ex-ditector-frontier-<caseId>).",
+      "editor": "textfield"
+    },
+    "max_pages": {
+      "title": "Max pages (maxRequestsPerCrawl cost cap)",
+      "type": "integer",
+      "editor": "number",
+      "default": 50,
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "checks_per_day": {
+      "title": "Checks per day (wellbeing signal)",
+      "type": "integer",
+      "editor": "number",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": ["scope_type", "queue_name"]
+}

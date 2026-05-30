@@ -1,0 +1,16 @@
+{
+  "name": "ex-ditector-diff-evidence",
+  "version": "1.0.0",
+  "description": "A5 Diff & Evidence — immutable evidence index from content/html sha256 diffs.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

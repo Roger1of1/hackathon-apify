@@ -1,0 +1,22 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-policy-gate",
+  "title": "Ex-Ditector A0 — Policy Gate",
+  "description": "Compliance gate for Self Footprint Audit Pro. Validates scope_type, rejects prohibited scopes with legal alternatives, requires authorization for consented scopes, writes an immutable case + decision log, then metamorphs into discovery. Runs as Standby or as a normal run.",
+  "version": "1.0",
+  "meta": {
+    "templateId": "ex-ditector"
+  },
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Policy decisions",
+      "views": {}
+    }
+  },
+  "webServerSchema": {},
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 1024
+}

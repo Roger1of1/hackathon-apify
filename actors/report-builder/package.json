@@ -1,0 +1,16 @@
+{
+  "name": "ex-ditector-report-builder",
+  "version": "1.0.0",
+  "description": "A6 Report Builder — Obsidian Markdown + CSV + JSON report with compliant scoring.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

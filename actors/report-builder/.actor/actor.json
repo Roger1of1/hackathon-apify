@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-report-builder",
+  "title": "Ex-Ditector A6 — Report Builder",
+  "description": "Builds the final audit report in Obsidian Markdown + CSV + JSON. Uses only compliant scores (exposure, evidence_quality, actionability, distress_risk). High distress_risk surfaces a Closure Mode wellbeing block. Reached via metamorph from the Diff stage.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Report summaries",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 256,
+  "maxMemoryMbytes": 1024
+}

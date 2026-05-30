@@ -1,0 +1,18 @@
+{
+  "actorSpecification": 1,
+  "name": "ex-ditector-crawler",
+  "title": "Ex-Ditector A3 — Crawler",
+  "description": "AdaptivePlaywrightCrawler that captures public pages, computes content+html sha256, stores html and screenshots to a named KV store. On 401/403/429 it BACKS OFF and stops (no fingerprint evasion). Reached via metamorph from Discovery.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "Captures and backoff records",
+      "views": {}
+    }
+  },
+  "minMemoryMbytes": 2048,
+  "maxMemoryMbytes": 4096
+}

@@ -1,0 +1,46 @@
+{
+  "_comment": "SAFE DEMO TARGETS ONLY. Hard rule: demo data is the user's OWN public test page, a company/product news page, a public GitHub release page, or a hand-made static evidence HTML. NEVER a real ex, NEVER a real dating-app profile, NEVER a real private account, NEVER any non-consenting private individual. All entries below are synthetic/own-public and clearly labeled. Replace placeholder hosts with your OWN test assets before running the demo; do not substitute a real person's URL.",
+  "rules": [
+    "Only self / brand / public_figure(public-capacity) / safety_evidence(own) targets.",
+    "Single public URL, no login, respects robots.txt and rate limits.",
+    "No crawling outward from any URL.",
+    "If you cannot honestly classify a target into the scope_type enum, it does NOT belong here."
+  ],
+  "allowed": [
+    {
+      "id": "AU-01",
+      "scope_type": "self",
+      "label": "User's own public test page (you control this domain)",
+      "url": "https://example-own-test-page.invalid/roger/public-profile",
+      "note": "Synthetic placeholder. Use a page YOU own/control for the footprint-audit demo."
+    },
+    {
+      "id": "AU-02",
+      "scope_type": "brand",
+      "label": "Company / product news page",
+      "url": "https://www.example-company.invalid/newsroom/product-launch",
+      "note": "Public organizational/brand news. No individual re-identification."
+    },
+    {
+      "id": "AU-03",
+      "scope_type": "brand",
+      "label": "Public GitHub release page (open-source project)",
+      "url": "https://github.com/example-org/example-project/releases/tag/v1.0.0",
+      "note": "Public release notes of a project/org. robots-permitted, public, single URL."
+    },
+    {
+      "id": "AU-04",
+      "scope_type": "safety_evidence",
+      "label": "Hand-made static evidence HTML (about the user themselves)",
+      "url": "file:///Users/roger/Documents/hackathon1/ex-ditector/demo/sample-evidence.html",
+      "note": "Synthetic, locally authored evidence sample involving the user. Demonstrates single-item preservation + retention, not monitoring of any third party."
+    },
+    {
+      "id": "AU-05",
+      "scope_type": "public_figure",
+      "label": "Public figure's OFFICIAL public statement page (public capacity)",
+      "url": "https://www.example-official-org.invalid/press/official-statement",
+      "note": "Synthetic placeholder for an official/public-capacity page. Never a private individual."
+    }
+  ]
+}

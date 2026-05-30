@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ex-Ditector 合规版 · Self Footprint Audit Pro</title>
+  <meta name="description" content="把窥探前任的冲动反转成审计自己、保全证据、戒断强迫性查看的合规 OSINT 工具。" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主内容</a>
+
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#hero" aria-label="返回顶部">
+        <span class="brand-mark" aria-hidden="true">⌖</span>
+        <span class="brand-text">Ex-Ditector <em>合规版</em></span>
+      </a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="#gate" class="nav-pill">合规闸门</a>
+        <a href="#arch">架构</a>
+        <a href="#cards">炫技</a>
+        <a href="#report">报告结构</a>
+        <a href="#closure">戒断模式</a>
+        <a href="#plan">48h 计划</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" aria-label="切换菜单" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="eyebrow">合规 OSINT · Apify 驱动</p>
+        <h1 id="heroName">Ex-Ditector <span class="accent">合规版</span></h1>
+        <p class="hero-sub" id="heroSub">Self Footprint Audit Pro</p>
+        <p class="hero-one" id="heroOne"></p>
+
+        <div class="inversion" role="note" aria-label="合规声明">
+          <h2 id="invHead"></h2>
+          <p id="invBody"></p>
+          <ul id="invPoints" class="redlines"></ul>
+        </div>
+
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#gate">试用 Live 合规闸门 →</a>
+          <a class="btn btn-ghost" href="#arch">看架构</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE COMPLIANCE GATE -->
+    <section class="section gate" id="gate">
+      <div class="section-head">
+        <span class="tag tag-star">★ 核心演示</span>
+        <h2>Live Compliance Gate · 合规闸门</h2>
+        <p class="lead">真实运行的客户端策略闸门。选择合法 scope 或自由输入请求，同一套 Policy Gate 逻辑会当场判定：拒绝（含原因 + 合法替代）或通过（展示流水线将要做什么）。</p>
+      </div>
+
+      <div class="gate-grid">
+        <div class="gate-panel">
+          <label class="field-label" for="scopeSelect">scope_type（只列出 5 个合法范围）</label>
+          <select id="scopeSelect" class="select">
+            <option value="">— 选择一个合法 scope（可选）—</option>
+          </select>
+
+          <label class="field-label" for="requestInput">或自由输入请求</label>
+          <textarea id="requestInput" class="textarea" rows="3" placeholder="例如：搜索我自己的姓名在公开网页上的出现情况"></textarea>
+
+          <div class="preset-row" id="presetRow" aria-label="示例请求"></div>
+
+          <div class="gate-actions">
+            <button id="runGate" class="btn btn-primary">运行合规闸门</button>
+            <button id="clearGate" class="btn btn-ghost">清空</button>
+          </div>
+        </div>
+
+        <div class="gate-result" id="gateResult" aria-live="polite">
+          <div class="gate-empty">
+            <span class="gate-empty-icon" aria-hidden="true">⌖</span>
+            <p>选择一个 scope 或输入请求，然后运行闸门。<br/>逻辑在浏览器本地真实执行——没有假数据。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="section" id="arch">
+      <div class="section-head">
+        <h2>架构 · Actor 流水线</h2>
+        <p class="lead">A0 → A2 → A3 → A5 → A6 加 webhooks。点击任意节点查看其职责。</p>
+      </div>
+      <div class="arch-wrap">
+        <div class="arch-flow" id="archFlow" role="list"></div>
+        <div class="arch-webhooks" id="archWebhooks"></div>
+        <div class="arch-detail" id="archDetail" aria-live="polite">
+          <p class="muted">点击上方任意节点查看职责。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARDS -->
+    <section class="section" id="cards">
+      <div class="section-head">
+        <h2>炫技五卡 · 合规即设计</h2>
+        <p class="lead">每张卡：它是什么 + 合规加分。</p>
+      </div>
+      <div class="cards-grid" id="cardsGrid"></div>
+    </section>
+
+    <!-- REPORT -->
+    <section class="section" id="report">
+      <div class="section-head">
+        <h2>自我足迹报告 · 结构预览</h2>
+        <p class="lead" id="reportLabel"></p>
+      </div>
+      <div class="report-banner">
+        本节仅展示报告的 <strong>结构 / schema</strong>，不包含任何真实抓取数据，也不虚构关于任何人的发现。
+      </div>
+      <div class="report-grid">
+        <div class="report-scores" id="reportScores"></div>
+        <div class="report-index">
+          <h3>evidence index 字段</h3>
+          <table class="ev-table" id="evTable">
+            <thead><tr><th>字段</th><th>说明</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLOSURE MODE -->
+    <section class="section closure" id="closure">
+      <div class="section-head">
+        <h2 id="closureHead"></h2>
+        <p class="lead" id="closureIntro"></p>
+      </div>
+      <div class="closure-grid" id="closureGrid"></div>
+      <div class="closure-demo" id="closureDemo">
+        <h3>反向 UI 示例</h3>
+        <div class="closure-card" id="closureCard">
+          <div class="closure-card-head">
+            <span class="distress-badge">高困扰风险 · 已折叠</span>
+            <button class="btn btn-tiny" id="revealBtn">需要二次确认才展开</button>
+          </div>
+          <div class="closure-collapsed" id="closureCollapsed">内容已折叠以保护你。展开前请确认你现在适合查看。</div>
+        </div>
+        <div class="closure-controls">
+          <button class="btn btn-ghost" id="cooldownBtn">开始冷却计时</button>
+          <button class="btn btn-ghost" id="todayBtn">今天不打开</button>
+          <button class="btn btn-ghost" id="handoffBtn">移交可信联系人</button>
+        </div>
+        <p class="closure-status" id="closureStatus" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- PLAN -->
+    <section class="section" id="plan">
+      <div class="section-head">
+        <h2>48h 构建计划 · 任务板</h2>
+        <p class="lead">实时状态。</p>
+      </div>
+      <div class="plan-board" id="planBoard"></div>
+    </section>
+
+    <!-- APIFY REAL-RUN AFFORDANCE -->
+    <section class="section apify" id="apify">
+      <div class="section-head">
+        <h2>真实运行（Apify）</h2>
+      </div>
+      <div class="apify-box" id="apifyBox">
+        <p class="apify-state" id="apifyState">未连接真实 Apify（需 token + 已部署 actor）。</p>
+        <p class="muted">本 demo 不模拟抓取成功。要真实运行，需要在环境中提供 <code>APIFY_TOKEN</code> 与已部署的 actor IDs（A0/A2/A3/A5/A6）。缺失时此处明确显示未连接，绝不伪造结果。</p>
+        <div class="apify-fields">
+          <input id="apifyToken" class="input" type="password" placeholder="APIFY_TOKEN（留空 = 未连接）" autocomplete="off" />
+          <input id="apifyActors" class="input" type="text" placeholder="actor IDs，逗号分隔（如 user/a0,user/a2…）" />
+          <button class="btn btn-ghost" id="apifyCheck">检查连接状态</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Ex-Ditector 合规版 · 冲动 → 自我保护。窥探 → 戒断。</p>
+    <p class="muted">合规红线写进代码：scope 枚举 + prohibited 模式拒绝 + 工具层白名单。</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Apify local storage (datasets, key-value stores, request queues)
+apify_storage/
+storage/
+**/apify_storage/
+**/storage/
+crawlee_storage/
+**/crawlee_storage/
+
+# Secrets — never commit a real APIFY_TOKEN
+.env
+*.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+dist/
+build/
+node_modules/
+.DS_Store
+storage/
+apify_storage/

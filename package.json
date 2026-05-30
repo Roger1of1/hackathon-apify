@@ -1,0 +1,24 @@
+{
+  "name": "ex-ditector",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self Footprint Audit Pro — a compliant Apify-driven OSINT toolkit for auditing YOUR OWN public digital footprint, preserving public evidence, and reducing compulsive checking. Enforces hard red lines against private-person tracking and romantic inference.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "workspaces": [
+    "shared",
+    "actors/policy-gate",
+    "actors/discovery",
+    "actors/crawler",
+    "actors/diff-evidence",
+    "actors/report-builder"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "test": "node test/run-compliance-tests.js",
+    "test:scope": "node -e \"const {validateScope}=require('./shared/scope.js'); console.log(JSON.stringify(validateScope({scope_type:'private_person_tracking'}),null,2))\""
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "title": "Ex-Ditector Discovery Input",
+  "description": "Normally provided automatically via metamorph from the Policy Gate. The same compliant scope enum is enforced here as defense in depth.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "description": "Compliant scope only. Prohibited scopes are absent and cannot be selected.",
+      "editor": "select",
+      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+      "enumTitles": [
+        "Self — audit my own public footprint",
+        "Consented — written authorization on file",
+        "Public figure — genuine public figure acting publicly",
+        "Brand — a company/brand/product I may monitor",
+        "Safety evidence — preserve public evidence of harm to me"
+      ],
+      "default": "self"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "description": "Case identifier issued by the Policy Gate. Leave blank only for isolated dev runs.",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "description": "Named key-value store holding the immutable CASE record.",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "target_urls": {
+      "title": "Target URLs",
+      "type": "array",
+      "description": "Public, logged-out seed URLs to enqueue. Login-walled private hosts are blocked.",
+      "editor": "stringList"
+    },
+    "authorization_evidence_url": {
+      "title": "Authorization evidence URL (for 'consented')",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "max_pages": {
+      "title": "Max pages (cost cap)",
+      "type": "integer",
+      "editor": "number",
+      "default": 50,
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "checks_per_day": {
+      "title": "Checks per day (wellbeing signal)",
+      "type": "integer",
+      "editor": "number",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": ["scope_type"]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "ex-ditector-policy-gate",
+  "version": "1.0.0",
+  "description": "A0 Policy Gate — compliance gate + metamorph router for Ex-Ditector.",
+  "type": "commonjs",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "title": "Ex-Ditector Diff & Evidence Input",
+  "description": "Normally provided automatically via metamorph from the Crawler.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "scope_type": {
+      "title": "Scope type",
+      "type": "string",
+      "editor": "select",
+      "enum": ["self", "consented", "public_figure", "brand", "safety_evidence"],
+      "enumTitles": ["Self", "Consented", "Public figure", "Brand", "Safety evidence"],
+      "default": "self"
+    },
+    "case_id": {
+      "title": "Case ID",
+      "type": "string",
+      "editor": "textfield"
+    },
+    "case_store_name": {
+      "title": "Case KV store name",
+      "type": "string",
+      "editor": "textfield",
+      "default": "ex-ditector-case"
+    },
+    "checks_per_day": {
+      "title": "Checks per day (wellbeing signal)",
+      "type": "integer",
+      "editor": "number",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": ["scope_type"]
+}
